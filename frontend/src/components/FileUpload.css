@@ -1,0 +1,197 @@
+.file-upload {
+  width: 100%;
+}
+
+.dropzone {
+  border: 3px dashed var(--border-primary);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-12);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-default);
+  background: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.dropzone::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-50) 0%,
+    var(--color-secondary-50) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-default);
+  z-index: 0;
+}
+
+.dropzone:hover::before {
+  opacity: 0.5;
+}
+
+.dropzone-active {
+  border-color: var(--color-primary-500);
+  background: var(--color-primary-50);
+  transform: scale(1.02);
+}
+
+.dropzone-active::before {
+  opacity: 0.8;
+}
+
+.dropzone-content {
+  position: relative;
+  z-index: 1;
+}
+
+.dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-4);
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  color: white;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  transition: all var(--duration-normal) var(--ease-default);
+}
+
+.dropzone:hover .dropzone-icon {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: var(--shadow-primary);
+}
+
+.dropzone-text {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.dropzone-subtext {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.dropzone-hint {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* File List */
+.file-list {
+  margin-top: var(--space-6);
+  padding: var(--space-6);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-primary);
+}
+
+.file-list-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.file-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.file-item:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateX(4px);
+}
+
+.file-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--color-primary-100), var(--color-secondary-100));
+  color: var(--color-primary-600);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.file-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-item-name {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1) 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-item-size {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.file-item-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  color: var(--text-tertiary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+  flex-shrink: 0;
+}
+
+.file-item-remove:hover {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dropzone {
+    padding: var(--space-8);
+  }
+
+  .dropzone-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .dropzone-text {
+    font-size: var(--text-lg);
+  }
+}

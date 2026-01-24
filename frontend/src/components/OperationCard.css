@@ -1,0 +1,113 @@
+.operation-card {
+  background: white;
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-default);
+  position: relative;
+  overflow: hidden;
+}
+
+.operation-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary-500), var(--color-secondary-500));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-normal) var(--ease-default);
+}
+
+.operation-card:hover::before {
+  transform: scaleX(1);
+}
+
+.operation-card-active {
+  border-color: var(--color-primary-500);
+  box-shadow: var(--shadow-primary);
+}
+
+.operation-card-active::before {
+  transform: scaleX(1);
+}
+
+.operation-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.operation-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--color-primary-100), var(--color-secondary-100));
+  color: var(--color-primary-600);
+  border-radius: var(--radius-xl);
+  flex-shrink: 0;
+  transition: all var(--duration-normal) var(--ease-default);
+}
+
+.operation-card:hover .operation-card-icon {
+  transform: scale(1.1) rotate(-5deg);
+  background: linear-gradient(135deg, var(--color-primary-200), var(--color-secondary-200));
+}
+
+.operation-card-active .operation-card-icon {
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
+  color: white;
+}
+
+.operation-card-info {
+  flex: 1;
+}
+
+.operation-card-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.operation-card-description {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.operation-card-content {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .operation-card {
+    padding: var(--space-4);
+  }
+
+  .operation-card-header {
+    gap: var(--space-3);
+  }
+
+  .operation-card-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .operation-card-title {
+    font-size: var(--text-lg);
+  }
+
+  .operation-card-description {
+    font-size: var(--text-sm);
+  }
+}
