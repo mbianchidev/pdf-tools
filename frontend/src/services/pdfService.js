@@ -3,11 +3,10 @@ import axios from 'axios';
 // Use environment variable or default to production setup (nginx proxy)
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/pdf';
 
+// Create axios instance without Content-Type header
+// Axios will automatically set multipart/form-data with boundary for FormData
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
 });
 
 export const pdfService = {
