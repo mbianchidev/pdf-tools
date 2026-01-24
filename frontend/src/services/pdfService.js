@@ -143,8 +143,16 @@ export const downloadBlob = (blob, filename) => {
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
+  
+  try {
+    document.body.appendChild(link);
+    link.click();
+  } finally {
+    // Ensure cleanup happens even if click fails
+    document.body.removeChild(link);
+    // Use setTimeout to ensure the download has started before revoking
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  }
 };
