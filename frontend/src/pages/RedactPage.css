@@ -1,0 +1,119 @@
+/* RedactPage specific styles */
+.redaction-count {
+  font-size: 12px;
+  color: var(--gray-500);
+  background: var(--gray-100);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.draw-hint {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin: 0 0 12px 0;
+  padding: 10px;
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px dashed var(--primary);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.redactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.redaction-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--gray-50);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.redaction-item:hover {
+  background: var(--gray-100);
+}
+
+.redaction-item.selected {
+  border-color: var(--primary);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.redaction-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.redaction-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.redaction-dims {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+.redaction-page {
+  font-size: 11px;
+  color: var(--gray-500);
+  background: var(--gray-200);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.redaction-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  border-radius: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.redaction-delete:hover {
+  background: var(--error);
+  color: white;
+}
+
+/* Redact mode cursor and overlays */
+.pdf-page-wrapper.redact-mode {
+  user-select: none;
+}
+
+.redact-overlay {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.redact-overlay.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+}
+
+.redact-overlay.drawing {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px dashed var(--primary);
+  pointer-events: none;
+}
