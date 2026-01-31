@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Combine, Download, Trash2, GripVertical, ArrowUp, ArrowDown, Eye, FileText } from 'lucide-react';
+import { ArrowLeft, Combine, Download, Trash2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -21,16 +21,7 @@ const MergePage = () => {
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [selectedFileUrl, setSelectedFileUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [previewLoading, setPreviewLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
-  
-  // Result preview state
-  const [mergedBlob, setMergedBlob] = useState(null);
-  const [mergedUrl, setMergedUrl] = useState(null);
-  const [showingResult, setShowingResult] = useState(false);
-  const [resultNumPages, setResultNumPages] = useState(null);
-  const [resultPage, setResultPage] = useState(1);
-  const [resultScale, setResultScale] = useState(1);
 
   const addToast = (message, type = 'success', duration = 5000) => {
     const id = Date.now();
@@ -52,18 +43,8 @@ const MergePage = () => {
     }
   }, [files, selectedFileIndex]);
 
-  // Cleanup merged URL on unmount
-  useEffect(() => {
-    return () => {
-      if (mergedUrl) URL.revokeObjectURL(mergedUrl);
-    };
-  }, [mergedUrl]);
-
   const handleFilesChange = useCallback((newFiles) => {
     setFiles(newFiles);
-    setMergedBlob(null);
-    setMergedUrl(null);
-    setShowingResult(false);
     if (newFiles.length > 0 && selectedFileIndex >= newFiles.length) {
       setSelectedFileIndex(newFiles.length - 1);
     }
@@ -76,52 +57,15 @@ const MergePage = () => {
     newFiles.splice(toIndex, 0, movedFile);
     setFiles(newFiles);
     setSelectedFileIndex(toIndex);
-    setMergedBlob(null);
-    setMergedUrl(null);
-    setShowingResult(false);
   };
 
   const removeFile = (index) => {
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
-    setMergedBlob(null);
-    setMergedUrl(null);
-    setShowingResult(false);
     if (selectedFileIndex >= newFiles.length && newFiles.length > 0) {
       setSelectedFileIndex(newFiles.length - 1);
     } else if (newFiles.length === 0) {
       setSelectedFileIndex(0);
-    }
-  };
-
-  const handlePreviewResult = async () => {
-    if (files.length < 2) {
-      addToast('Please upload at least 2 PDF files', 'error');
-      return;
-    }
-
-    setPreviewLoading(true);
-    try {
-      const result = await pdfService.merge(files);
-      setMergedBlob(result);
-      const url = URL.createObjectURL(result);
-      setMergedUrl(url);
-      setShowingResult(true);
-      setResultPage(1);
-      addToast('Preview generated!', 'success');
-    } catch (error) {
-      console.error('Preview error:', error);
-      addToast(error.response?.data?.message || error.message || 'Failed to generate preview', 'error');
-    } finally {
-      setPreviewLoading(false);
-    }
-  };
-
-  const handleDownload = () => {
-    if (mergedBlob) {
-      const baseName = files[0].name.replace(/\.[pP][dD][fF]$/, '');
-      downloadBlob(mergedBlob, `${baseName}_merged.pdf`);
-      addToast('Downloaded!', 'success');
     }
   };
 
@@ -143,11 +87,6 @@ const MergePage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const onResultLoadSuccess = ({ numPages }) => {
-    setResultNumPages(numPages);
-    setResultPage(1);
   };
 
   return (
@@ -176,10 +115,10 @@ const MergePage = () => {
                 <div className="file-order-list">
                   {files.map((file, index) => (
                     <motion.div key={`${file.name}-${index}`}
-                      className={`file-order-item ${selectedFileIndex === index && !showingResult ? 'active' : ''}`}
+                      className={`file-order-item ${selectedFileIndex === index ? 'active' : ''}`}
                       initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
                       <div className="file-order-grip"><GripVertical size={16} /></div>
-                      <div className="file-order-info" onClick={() => { setSelectedFileIndex(index); setShowingResult(false); }}>
+                      <div className="file-order-info" onClick={() => setSelectedFileIndex(index)}>
                         <span className="file-order-number">{index + 1}</span>
                         <span className="file-order-name">{file.name}</span>
                         <span className="file-order-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
@@ -193,7 +132,7 @@ const MergePage = () => {
                   ))}
                 </div>
                 <div className="add-more-files">
-                  <FileUpload onFilesChange={(newFiles) => { setFiles([...files, ...newFiles]); setMergedBlob(null); setShowingResult(false); }} files={[]} multiple={true} maxFiles={20 - files.length} />
+                  <FileUpload onFilesChange={(newFiles) => { setFiles([...files, ...newFiles]); }} files={[]} multiple={true} maxFiles={20 - files.length} />
                 </div>
               </>
             )}
@@ -201,42 +140,16 @@ const MergePage = () => {
 
           {files.length >= 2 && (
             <div className="sidebar-actions">
-              <Button onClick={handlePreviewResult} loading={previewLoading} disabled={previewLoading || files.length < 2}
-                icon={<Eye size={20} />} fullWidth size="lg" variant="secondary">
-                {previewLoading ? 'Generating...' : 'Preview Result'}
+              <Button onClick={handleMerge} loading={loading} disabled={loading || files.length < 2}
+                icon={<Download size={20} />} fullWidth size="lg">
+                {loading ? 'Merging...' : 'Merge & Download'}
               </Button>
-              {mergedBlob ? (
-                <Button onClick={handleDownload} icon={<Download size={20} />} fullWidth size="lg" style={{ marginTop: 8 }}>
-                  Download Merged PDF
-                </Button>
-              ) : (
-                <Button onClick={handleMerge} loading={loading} disabled={loading || files.length < 2}
-                  icon={<Download size={20} />} fullWidth size="lg" style={{ marginTop: 8 }}>
-                  {loading ? 'Merging...' : 'Merge & Download'}
-                </Button>
-              )}
             </div>
           )}
         </aside>
 
         <main className="operation-preview">
-          {showingResult && mergedUrl ? (
-            <>
-              <div className="preview-header result-header">
-                <h3><FileText size={18} /> Merged Result Preview</h3>
-                <div className="page-nav">
-                  <button disabled={resultPage <= 1} onClick={() => setResultPage(p => p - 1)}>←</button>
-                  <span>Page {resultPage} of {resultNumPages || '?'}</span>
-                  <button disabled={resultPage >= (resultNumPages || 1)} onClick={() => setResultPage(p => p + 1)}>→</button>
-                </div>
-              </div>
-              <div className="pdf-preview-container">
-                <Document file={mergedUrl} onLoadSuccess={onResultLoadSuccess} loading={<div className="loading-placeholder">Loading merged PDF...</div>}>
-                  <Page pageNumber={resultPage} scale={resultScale} renderTextLayer={false} renderAnnotationLayer={false} />
-                </Document>
-              </div>
-            </>
-          ) : files.length > 0 && selectedFileUrl ? (
+          {files.length > 0 && selectedFileUrl ? (
             <>
               <div className="preview-header">
                 <h3>Preview: {files[selectedFileIndex]?.name}</h3>

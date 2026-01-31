@@ -187,11 +187,7 @@
   line-height: 1.5;
 }
 
-.operation-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
+/* Note: .operation-content styles moved to OperationPage.css */
 
 .input-row {
   display: grid;

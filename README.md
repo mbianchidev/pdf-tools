@@ -2,6 +2,12 @@
 
 A comprehensive PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
 
+## Documentation
+
+- **[Frontend README](frontend/README.md)** - React application documentation
+- **[Backend README](backend/README.md)** - Spring Boot API documentation
+- **[AGENTS.md](AGENTS.md)** - Agent navigation guide for AI assistants
+
 ## Features
 
 ### PDF Operations
@@ -18,7 +24,7 @@ A comprehensive PDF manipulation application with a modern React frontend and ro
 
 ### Technology Stack
 - **Backend**: Java 17, Spring Boot 3.2.1, Apache PDFBox, iText, Apache POI
-- **Frontend**: React 18, Vite, Framer Motion, Axios
+- **Frontend**: React 19, Vite 7, Framer Motion, Axios
 - **Deployment**: Docker, Docker Compose, Nginx
 
 ## Quick Start

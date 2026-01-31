@@ -21,6 +21,10 @@ frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 
+# Root node_modules (for playwright/testing tools)
+node_modules/
+package-lock.json
+
 # Temporary files
 *.tmp
 *.temp
