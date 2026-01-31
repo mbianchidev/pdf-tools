@@ -199,7 +199,7 @@ class PdfServiceTest {
             byte[] pdf = createValidPdf(3);
             MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", pdf);
 
-            PdfOperationResult result = pdfService.addWatermark(file, "CONFIDENTIAL", "test.pdf");
+            PdfOperationResult result = pdfService.addWatermark(file, "CONFIDENTIAL", null, null, 45f, 0.3f, "test.pdf");
 
             assertTrue(result.isSuccess());
             assertEquals("Watermark added successfully", result.getMessage());
@@ -218,7 +218,7 @@ class PdfServiceTest {
             byte[] pdf = createValidPdf(1);
             MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", pdf);
 
-            PdfOperationResult result = pdfService.addText(file, "Hello World", 100f, 500f, 1, "test.pdf");
+            PdfOperationResult result = pdfService.addText(file, "Hello World", 100f, 500f, 1, 12f, "HELVETICA", "#000000", "test.pdf");
 
             assertTrue(result.isSuccess());
             assertEquals("Text added successfully", result.getMessage());
@@ -232,7 +232,7 @@ class PdfServiceTest {
             MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", pdf);
 
             assertThrows(PdfProcessingException.class, () -> {
-                pdfService.addText(file, "Hello", 100f, 500f, 5, "test.pdf");
+                pdfService.addText(file, "Hello", 100f, 500f, 5, 12f, "HELVETICA", "#000000", "test.pdf");
             });
         }
     }

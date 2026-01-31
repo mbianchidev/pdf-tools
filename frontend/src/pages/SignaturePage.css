@@ -1,0 +1,161 @@
+/* SignaturePage specific styles */
+.signature-mode-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 2px solid var(--gray-200);
+  background: white;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.mode-tab.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+/* Type signature */
+.type-signature {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Draw signature */
+.draw-signature {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.signature-canvas {
+  width: 100%;
+  height: 100px;
+  border: 2px dashed var(--gray-300);
+  border-radius: 8px;
+  background: white;
+  cursor: crosshair;
+}
+
+.canvas-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.canvas-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.canvas-btn:hover {
+  border-color: var(--gray-400);
+  background: var(--gray-50);
+}
+
+.canvas-btn.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.canvas-btn.primary:hover {
+  background: var(--primary-dark);
+}
+
+/* Upload signature */
+.upload-signature {
+  margin-top: 8px;
+}
+
+/* Signature preview */
+.signature-preview-box {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sig-preview-img {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  background: white;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--gray-200);
+}
+
+.download-sig-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--gray-300);
+  background: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.download-sig-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Signature overlay on PDF */
+.signature-overlay {
+  position: absolute;
+  border: 2px dashed var(--primary);
+  border-radius: 4px;
+  padding: 4px;
+  background: rgba(139, 92, 246, 0.05);
+  user-select: none;
+}
+
+.signature-overlay img {
+  display: block;
+  pointer-events: none;
+}
+
+.signature-overlay:hover {
+  background: rgba(139, 92, 246, 0.1);
+}

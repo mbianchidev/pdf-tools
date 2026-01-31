@@ -42,22 +42,35 @@ public class PdfService {
      * Merge multiple PDFs into one
      */
     public PdfOperationResult mergePdfs(List<MultipartFile> files, String originalFilename) throws PdfProcessingException {
+        List<PDDocument> sourceDocs = new ArrayList<>();
         try {
             PDDocument mergedDoc = new PDDocument();
             
             for (MultipartFile file : files) {
-                try (PDDocument doc = Loader.loadPDF(file.getBytes())) {
-                    for (PDPage page : doc.getPages()) {
-                        mergedDoc.addPage(page);
-                    }
+                PDDocument doc = Loader.loadPDF(file.getBytes());
+                sourceDocs.add(doc); // Keep reference to prevent closing
+                
+                for (int i = 0; i < doc.getNumberOfPages(); i++) {
+                    PDPage page = doc.getPage(i);
+                    // Import page to new document to avoid reference issues
+                    mergedDoc.importPage(page);
                 }
             }
 
             File outputFile = saveDocument(mergedDoc, "merged", originalFilename);
             mergedDoc.close();
+            
+            // Close source documents after merged doc is saved
+            for (PDDocument doc : sourceDocs) {
+                doc.close();
+            }
 
             return new PdfOperationResult(true, "PDFs merged successfully", outputFile.getName());
         } catch (Exception e) {
+            // Clean up on error
+            for (PDDocument doc : sourceDocs) {
+                try { doc.close(); } catch (Exception ignored) {}
+            }
             throw new PdfProcessingException("Failed to merge PDFs: " + e.getMessage(), e);
         }
     }
@@ -191,27 +204,36 @@ public class PdfService {
     }
 
     /**
-     * Add watermark to PDF
+     * Add watermark to PDF with positioning
      */
-    public PdfOperationResult addWatermark(MultipartFile file, String watermarkText, String originalFilename) 
+    public PdfOperationResult addWatermark(MultipartFile file, String watermarkText, 
+            Float x, Float y, float rotation, float opacity, String originalFilename) 
             throws PdfProcessingException {
+        // Enforce max 30 chars
+        if (watermarkText.length() > 30) {
+            watermarkText = watermarkText.substring(0, 30);
+        }
+        
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             for (PDPage page : document.getPages()) {
                 PDPageContentStream contentStream = new PDPageContentStream(
                     document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
-                // Set watermark properties
-                contentStream.setNonStrokingColor(Color.LIGHT_GRAY);
+                // Set watermark properties with opacity
+                int grayValue = (int)(255 * (1 - opacity));
+                contentStream.setNonStrokingColor(new Color(grayValue, grayValue, grayValue));
                 contentStream.beginText();
                 contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 60);
                 
-                // Center and rotate watermark
                 PDRectangle pageSize = page.getMediaBox();
                 float pageWidth = pageSize.getWidth();
                 float pageHeight = pageSize.getHeight();
                 
-                contentStream.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(45), 
-                    pageWidth / 2, pageHeight / 2));
+                // Use provided position or center
+                float posX = (x != null) ? x : pageWidth / 2;
+                float posY = (y != null) ? y : pageHeight / 2;
+                
+                contentStream.setTextMatrix(Matrix.getRotateInstance(Math.toRadians(rotation), posX, posY));
                 contentStream.showText(watermarkText);
                 contentStream.endText();
                 contentStream.close();
@@ -226,9 +248,10 @@ public class PdfService {
     }
 
     /**
-     * Add text to PDF
+     * Add text to PDF with font customization
      */
-    public PdfOperationResult addText(MultipartFile file, String text, float x, float y, int pageNum, String originalFilename) 
+    public PdfOperationResult addText(MultipartFile file, String text, float x, float y, int pageNum, 
+            float fontSize, String fontName, String fontColor, String originalFilename) 
             throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             if (pageNum < 1 || pageNum > document.getNumberOfPages()) {
@@ -239,8 +262,25 @@ public class PdfService {
             PDPageContentStream contentStream = new PDPageContentStream(
                 document, page, PDPageContentStream.AppendMode.APPEND, true, true);
 
+            // Parse font name
+            Standard14Fonts.FontName font = Standard14Fonts.FontName.HELVETICA;
+            try {
+                font = Standard14Fonts.FontName.valueOf(fontName.toUpperCase().replace("-", "_"));
+            } catch (IllegalArgumentException ignored) {
+                // Use default HELVETICA if invalid font name
+            }
+
+            // Parse color from hex
+            Color color = Color.BLACK;
+            try {
+                color = Color.decode(fontColor);
+            } catch (NumberFormatException ignored) {
+                // Use black if invalid color
+            }
+
             contentStream.beginText();
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
+            contentStream.setFont(new PDType1Font(font), fontSize);
+            contentStream.setNonStrokingColor(color);
             contentStream.newLineAtOffset(x, y);
             contentStream.showText(text);
             contentStream.endText();
@@ -314,12 +354,57 @@ public class PdfService {
     }
 
     /**
+     * Redact multiple areas in PDF
+     */
+    public PdfOperationResult redactMultiple(MultipartFile file, String redactionsJson, String originalFilename) 
+            throws PdfProcessingException {
+        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
+            // Parse JSON array of redactions: [{x, y, width, height, pageNum}, ...]
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            java.util.List<java.util.Map<String, Object>> redactions = mapper.readValue(redactionsJson, 
+                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<java.util.Map<String, Object>>>(){});
+            
+            for (java.util.Map<String, Object> redaction : redactions) {
+                int pageNum = ((Number) redaction.get("pageNum")).intValue();
+                float x = ((Number) redaction.get("x")).floatValue();
+                float y = ((Number) redaction.get("y")).floatValue();
+                float width = ((Number) redaction.get("width")).floatValue();
+                float height = ((Number) redaction.get("height")).floatValue();
+                
+                if (pageNum < 1 || pageNum > document.getNumberOfPages()) continue;
+                
+                PDPage page = document.getPage(pageNum - 1);
+                PDPageContentStream contentStream = new PDPageContentStream(
+                    document, page, PDPageContentStream.AppendMode.APPEND, true, true);
+                
+                contentStream.setNonStrokingColor(Color.BLACK);
+                contentStream.addRect(x, y, width, height);
+                contentStream.fill();
+                contentStream.close();
+            }
+
+            File outputFile = saveDocument(document, "redacted", originalFilename);
+
+            return new PdfOperationResult(true, "Content redacted successfully", outputFile.getName());
+        } catch (Exception e) {
+            throw new PdfProcessingException("Failed to redact content: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Convert PDF to Markdown
      */
     public PdfOperationResult convertToMarkdown(MultipartFile file, String originalFilename) throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
             String text = stripper.getText(document);
+
+            // Check if any text was extracted
+            if (text == null || text.trim().isEmpty()) {
+                // Return a message indicating no text could be extracted
+                text = "[No extractable text found in this PDF. The document may contain only images or scanned content.]";
+            }
 
             // Simple markdown conversion
             StringBuilder markdown = new StringBuilder();
@@ -351,16 +436,25 @@ public class PdfService {
     public PdfOperationResult convertToDocx(MultipartFile file, String originalFilename) throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
             String text = stripper.getText(document);
 
             XWPFDocument docxDocument = new XWPFDocument();
             
-            String[] paragraphs = text.split("\n\n");
-            for (String para : paragraphs) {
-                if (!para.trim().isEmpty()) {
-                    XWPFParagraph paragraph = docxDocument.createParagraph();
-                    XWPFRun run = paragraph.createRun();
-                    run.setText(para.trim());
+            // Check if any text was extracted
+            if (text == null || text.trim().isEmpty()) {
+                // Add a paragraph indicating no text was found
+                XWPFParagraph paragraph = docxDocument.createParagraph();
+                XWPFRun run = paragraph.createRun();
+                run.setText("[No extractable text found in this PDF. The document may contain only images or scanned content.]");
+            } else {
+                String[] paragraphs = text.split("\n\n");
+                for (String para : paragraphs) {
+                    if (!para.trim().isEmpty()) {
+                        XWPFParagraph paragraph = docxDocument.createParagraph();
+                        XWPFRun run = paragraph.createRun();
+                        run.setText(para.trim());
+                    }
                 }
             }
 

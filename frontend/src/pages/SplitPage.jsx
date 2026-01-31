@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Scissors, ArrowLeft, Download, Plus, X, GripVertical } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import FileUpload from '../components/FileUpload';
 import Button from '../components/Button';
 import ToastContainer from '../components/Toast';
@@ -14,6 +16,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 const SplitPage = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
+  const [fileUrl, setFileUrl] = useState(null);
   const [numPages, setNumPages] = useState(null);
   const [pageGroups, setPageGroups] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -30,10 +33,23 @@ const SplitPage = () => {
   };
 
   const handleFilesChange = useCallback((files) => {
-    setFile(files[0] || null);
+    const newFile = files[0] || null;
+    setFile(newFile);
     setPageGroups([]);
     setNumPages(null);
+    if (newFile) {
+      setFileUrl(URL.createObjectURL(newFile));
+    } else {
+      setFileUrl(null);
+    }
   }, []);
+
+  // Cleanup URL on unmount
+  useEffect(() => {
+    return () => {
+      if (fileUrl) URL.revokeObjectURL(fileUrl);
+    };
+  }, [fileUrl]);
 
   const onDocumentLoadSuccess = ({ numPages: pages }) => {
     setNumPages(pages);
@@ -250,7 +266,7 @@ const SplitPage = () => {
               </div>
               <div className="split-page-grid">
                 <Document
-                  file={file}
+                  file={fileUrl}
                   onLoadSuccess={onDocumentLoadSuccess}
                   loading={<div className="loading">Loading PDF...</div>}
                 >

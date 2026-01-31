@@ -69,8 +69,12 @@ public class PdfController {
     public ResponseEntity<PdfOperationResult> addWatermark(
             @RequestParam("file") MultipartFile file,
             @RequestParam("text") String watermarkText,
+            @RequestParam(value = "x", required = false) Float x,
+            @RequestParam(value = "y", required = false) Float y,
+            @RequestParam(value = "rotation", defaultValue = "45") float rotation,
+            @RequestParam(value = "opacity", defaultValue = "0.3") float opacity,
             @RequestParam(value = "originalFilename", required = false) String originalFilename) throws PdfProcessingException {
-        PdfOperationResult result = pdfService.addWatermark(file, watermarkText, originalFilename);
+        PdfOperationResult result = pdfService.addWatermark(file, watermarkText, x, y, rotation, opacity, originalFilename);
         return ResponseEntity.ok(result);
     }
 
@@ -81,8 +85,11 @@ public class PdfController {
             @RequestParam(value = "x", defaultValue = "50") float x,
             @RequestParam(value = "y", defaultValue = "750") float y,
             @RequestParam(value = "page", defaultValue = "1") int pageNum,
+            @RequestParam(value = "fontSize", defaultValue = "12") float fontSize,
+            @RequestParam(value = "fontName", defaultValue = "HELVETICA") String fontName,
+            @RequestParam(value = "fontColor", defaultValue = "#000000") String fontColor,
             @RequestParam(value = "originalFilename", required = false) String originalFilename) throws PdfProcessingException {
-        PdfOperationResult result = pdfService.addText(file, text, x, y, pageNum, originalFilename);
+        PdfOperationResult result = pdfService.addText(file, text, x, y, pageNum, fontSize, fontName, fontColor, originalFilename);
         return ResponseEntity.ok(result);
     }
 
@@ -108,6 +115,15 @@ public class PdfController {
             @RequestParam(value = "page", defaultValue = "1") int pageNum,
             @RequestParam(value = "originalFilename", required = false) String originalFilename) throws PdfProcessingException {
         PdfOperationResult result = pdfService.redactText(file, x, y, width, height, pageNum, originalFilename);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/redact-multiple")
+    public ResponseEntity<PdfOperationResult> redactMultiple(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("redactions") String redactionsJson,
+            @RequestParam(value = "originalFilename", required = false) String originalFilename) throws PdfProcessingException {
+        PdfOperationResult result = pdfService.redactMultiple(file, redactionsJson, originalFilename);
         return ResponseEntity.ok(result);
     }
 

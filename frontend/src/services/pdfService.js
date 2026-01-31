@@ -92,22 +92,29 @@ export const pdfService = {
     return performOperationAndDownload('/remove', formData, file.name);
   },
 
-  // Add watermark
-  addWatermark: async (file, text) => {
+  // Add watermark with positioning
+  addWatermark: async (file, text, x = null, y = null, rotation = 45, opacity = 0.3) => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('text', text);
+    if (x !== null) formData.append('x', x);
+    if (y !== null) formData.append('y', y);
+    formData.append('rotation', rotation);
+    formData.append('opacity', opacity);
     return performOperationAndDownload('/watermark', formData, file.name);
   },
 
-  // Add text to PDF
-  addText: async (file, text, x, y, page) => {
+  // Add text to PDF with font customization
+  addText: async (file, text, x, y, page, fontSize = 12, fontName = 'HELVETICA', fontColor = '#000000') => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('text', text);
     formData.append('x', x);
     formData.append('y', y);
     formData.append('page', page);
+    formData.append('fontSize', fontSize);
+    formData.append('fontName', fontName);
+    formData.append('fontColor', fontColor);
     return performOperationAndDownload('/add-text', formData, file.name);
   },
 
@@ -122,7 +129,7 @@ export const pdfService = {
     return performOperationAndDownload('/add-signature', formData, file.name);
   },
 
-  // Redact content
+  // Redact content (single)
   redact: async (file, x, y, width, height, page) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -132,6 +139,14 @@ export const pdfService = {
     formData.append('height', height);
     formData.append('page', page);
     return performOperationAndDownload('/redact', formData, file.name);
+  },
+
+  // Redact multiple areas
+  redactMultiple: async (file, redactions) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('redactions', JSON.stringify(redactions));
+    return performOperationAndDownload('/redact-multiple', formData, file.name);
   },
 
   // Convert to Markdown
