@@ -41,7 +41,7 @@ public class PdfService {
     /**
      * Merge multiple PDFs into one
      */
-    public PdfOperationResult mergePdfs(List<MultipartFile> files) throws PdfProcessingException {
+    public PdfOperationResult mergePdfs(List<MultipartFile> files, String originalFilename) throws PdfProcessingException {
         try {
             PDDocument mergedDoc = new PDDocument();
             
@@ -53,7 +53,7 @@ public class PdfService {
                 }
             }
 
-            File outputFile = saveDocument(mergedDoc, "merged");
+            File outputFile = saveDocument(mergedDoc, "merged", originalFilename);
             mergedDoc.close();
 
             return new PdfOperationResult(true, "PDFs merged successfully", outputFile.getName());
@@ -63,23 +63,54 @@ public class PdfService {
     }
 
     /**
-     * Split PDF into separate pages
+     * Split PDF into separate documents based on page groups
+     * @param groups - comma-separated page groups, e.g. "1-3,4-5" creates two PDFs
+     *                 If null or empty, splits into individual pages
      */
-    public PdfOperationResult splitPdf(MultipartFile file) throws PdfProcessingException {
+    public PdfOperationResult splitPdf(MultipartFile file, String groups, String originalFilename) throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             List<String> outputFiles = new ArrayList<>();
             int pageCount = document.getNumberOfPages();
+            String baseName = getBaseFilename(originalFilename, "split");
 
-            for (int i = 0; i < pageCount; i++) {
-                PDDocument singlePageDoc = new PDDocument();
-                singlePageDoc.addPage(document.getPage(i));
-                
-                File outputFile = saveDocument(singlePageDoc, "page_" + (i + 1));
-                outputFiles.add(outputFile.getName());
-                singlePageDoc.close();
+            if (groups == null || groups.trim().isEmpty()) {
+                // Split into individual pages (legacy behavior)
+                for (int i = 0; i < pageCount; i++) {
+                    PDDocument singlePageDoc = new PDDocument();
+                    singlePageDoc.addPage(document.getPage(i));
+                    
+                    File outputFile = new File(getUploadDir(),
+                        baseName + "_page" + (i + 1) + "_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf");
+                    singlePageDoc.save(outputFile);
+                    outputFiles.add(outputFile.getName());
+                    singlePageDoc.close();
+                }
+            } else {
+                // Split into custom groups
+                String[] groupArray = groups.split(";");
+                int groupNum = 1;
+                for (String group : groupArray) {
+                    PDDocument groupDoc = new PDDocument();
+                    List<Integer> pageNums = parsePageGroup(group.trim(), pageCount);
+                    
+                    for (Integer pageNum : pageNums) {
+                        if (pageNum > 0 && pageNum <= pageCount) {
+                            groupDoc.addPage(document.getPage(pageNum - 1));
+                        }
+                    }
+                    
+                    if (groupDoc.getNumberOfPages() > 0) {
+                        File outputFile = new File(getUploadDir(),
+                            baseName + "_part" + groupNum + "_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf");
+                        groupDoc.save(outputFile);
+                        outputFiles.add(outputFile.getName());
+                    }
+                    groupDoc.close();
+                    groupNum++;
+                }
             }
 
-            return new PdfOperationResult(true, "PDF split into " + pageCount + " pages", 
+            return new PdfOperationResult(true, "PDF split into " + outputFiles.size() + " documents", 
                 String.join(",", outputFiles));
         } catch (Exception e) {
             throw new PdfProcessingException("Failed to split PDF: " + e.getMessage(), e);
@@ -87,9 +118,36 @@ public class PdfService {
     }
 
     /**
+     * Parse page group string like "1-3" or "1,2,5" or "1-3,5"
+     */
+    private List<Integer> parsePageGroup(String group, int maxPages) {
+        List<Integer> pages = new ArrayList<>();
+        String[] parts = group.split(",");
+        for (String part : parts) {
+            part = part.trim();
+            if (part.contains("-")) {
+                String[] range = part.split("-");
+                int start = Integer.parseInt(range[0].trim());
+                int end = Integer.parseInt(range[1].trim());
+                for (int i = start; i <= end && i <= maxPages; i++) {
+                    if (i > 0 && !pages.contains(i)) {
+                        pages.add(i);
+                    }
+                }
+            } else {
+                int pageNum = Integer.parseInt(part);
+                if (pageNum > 0 && pageNum <= maxPages && !pages.contains(pageNum)) {
+                    pages.add(pageNum);
+                }
+            }
+        }
+        return pages;
+    }
+
+    /**
      * Extract specific pages from PDF
      */
-    public PdfOperationResult extractPages(MultipartFile file, List<Integer> pageNumbers) 
+    public PdfOperationResult extractPages(MultipartFile file, List<Integer> pageNumbers, String originalFilename) 
             throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             PDDocument extractedDoc = new PDDocument();
@@ -100,7 +158,7 @@ public class PdfService {
                 }
             }
 
-            File outputFile = saveDocument(extractedDoc, "extracted");
+            File outputFile = saveDocument(extractedDoc, "extracted", originalFilename);
             extractedDoc.close();
 
             return new PdfOperationResult(true, "Pages extracted successfully", outputFile.getName());
@@ -112,7 +170,7 @@ public class PdfService {
     /**
      * Remove specific pages from PDF
      */
-    public PdfOperationResult removePages(MultipartFile file, List<Integer> pageNumbers) 
+    public PdfOperationResult removePages(MultipartFile file, List<Integer> pageNumbers, String originalFilename) 
             throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             // Sort in reverse order to remove from end to start
@@ -124,7 +182,7 @@ public class PdfService {
                 }
             }
 
-            File outputFile = saveDocument(document, "removed_pages");
+            File outputFile = saveDocument(document, "removed", originalFilename);
 
             return new PdfOperationResult(true, "Pages removed successfully", outputFile.getName());
         } catch (Exception e) {
@@ -135,7 +193,7 @@ public class PdfService {
     /**
      * Add watermark to PDF
      */
-    public PdfOperationResult addWatermark(MultipartFile file, String watermarkText) 
+    public PdfOperationResult addWatermark(MultipartFile file, String watermarkText, String originalFilename) 
             throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             for (PDPage page : document.getPages()) {
@@ -159,7 +217,7 @@ public class PdfService {
                 contentStream.close();
             }
 
-            File outputFile = saveDocument(document, "watermarked");
+            File outputFile = saveDocument(document, "watermarked", originalFilename);
 
             return new PdfOperationResult(true, "Watermark added successfully", outputFile.getName());
         } catch (Exception e) {
@@ -170,7 +228,7 @@ public class PdfService {
     /**
      * Add text to PDF
      */
-    public PdfOperationResult addText(MultipartFile file, String text, float x, float y, int pageNum) 
+    public PdfOperationResult addText(MultipartFile file, String text, float x, float y, int pageNum, String originalFilename) 
             throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             if (pageNum < 1 || pageNum > document.getNumberOfPages()) {
@@ -188,7 +246,7 @@ public class PdfService {
             contentStream.endText();
             contentStream.close();
 
-            File outputFile = saveDocument(document, "text_added");
+            File outputFile = saveDocument(document, "text_added", originalFilename);
 
             return new PdfOperationResult(true, "Text added successfully", outputFile.getName());
         } catch (Exception e) {
@@ -200,7 +258,7 @@ public class PdfService {
      * Add signature image to PDF
      */
     public PdfOperationResult addSignature(MultipartFile pdfFile, MultipartFile signatureFile, 
-            float x, float y, int pageNum) throws PdfProcessingException {
+            float x, float y, int pageNum, String originalFilename) throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(pdfFile.getBytes())) {
             if (pageNum < 1 || pageNum > document.getNumberOfPages()) {
                 throw new PdfProcessingException("Invalid page number");
@@ -219,7 +277,7 @@ public class PdfService {
                 pdImage.getWidth() * scale, pdImage.getHeight() * scale);
             contentStream.close();
 
-            File outputFile = saveDocument(document, "signed");
+            File outputFile = saveDocument(document, "signed", originalFilename);
 
             return new PdfOperationResult(true, "Signature added successfully", outputFile.getName());
         } catch (Exception e) {
@@ -231,7 +289,7 @@ public class PdfService {
      * Redact text in PDF (simple black box redaction)
      */
     public PdfOperationResult redactText(MultipartFile file, float x, float y, float width, 
-            float height, int pageNum) throws PdfProcessingException {
+            float height, int pageNum, String originalFilename) throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             if (pageNum < 1 || pageNum > document.getNumberOfPages()) {
                 throw new PdfProcessingException("Invalid page number");
@@ -247,7 +305,7 @@ public class PdfService {
             contentStream.fill();
             contentStream.close();
 
-            File outputFile = saveDocument(document, "redacted");
+            File outputFile = saveDocument(document, "redacted", originalFilename);
 
             return new PdfOperationResult(true, "Content redacted successfully", outputFile.getName());
         } catch (Exception e) {
@@ -258,7 +316,7 @@ public class PdfService {
     /**
      * Convert PDF to Markdown
      */
-    public PdfOperationResult convertToMarkdown(MultipartFile file) throws PdfProcessingException {
+    public PdfOperationResult convertToMarkdown(MultipartFile file, String originalFilename) throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
@@ -276,8 +334,9 @@ public class PdfService {
                 }
             }
 
+            String baseName = getBaseFilename(originalFilename, "markdown");
             File outputFile = new File(getUploadDir(), 
-                UUID.randomUUID().toString() + ".md");
+                baseName + "_" + UUID.randomUUID().toString().substring(0, 8) + ".md");
             Files.write(outputFile.toPath(), markdown.toString().getBytes());
 
             return new PdfOperationResult(true, "PDF converted to Markdown", outputFile.getName());
@@ -289,7 +348,7 @@ public class PdfService {
     /**
      * Convert PDF to DOCX
      */
-    public PdfOperationResult convertToDocx(MultipartFile file) throws PdfProcessingException {
+    public PdfOperationResult convertToDocx(MultipartFile file, String originalFilename) throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
@@ -305,8 +364,9 @@ public class PdfService {
                 }
             }
 
+            String baseName = getBaseFilename(originalFilename, "docx");
             File outputFile = new File(getUploadDir(), 
-                UUID.randomUUID().toString() + ".docx");
+                baseName + "_" + UUID.randomUUID().toString().substring(0, 8) + ".docx");
             try (FileOutputStream out = new FileOutputStream(outputFile)) {
                 docxDocument.write(out);
             }
@@ -333,13 +393,33 @@ public class PdfService {
     }
 
     /**
-     * Helper method to save document
+     * Helper method to save document with original filename and operation suffix
      */
-    private File saveDocument(PDDocument document, String prefix) throws IOException {
+    private File saveDocument(PDDocument document, String operationSuffix, String originalFilename) throws IOException {
+        String baseName = getBaseFilename(originalFilename, operationSuffix);
         File outputFile = new File(getUploadDir(), 
-            prefix + "_" + UUID.randomUUID().toString() + ".pdf");
+            baseName + "_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf");
         document.save(outputFile);
         return outputFile;
+    }
+
+    /**
+     * Helper method to save document (legacy, without original filename)
+     */
+    private File saveDocument(PDDocument document, String prefix) throws IOException {
+        return saveDocument(document, prefix, null);
+    }
+
+    /**
+     * Get base filename from original filename or use default prefix
+     */
+    private String getBaseFilename(String originalFilename, String operationSuffix) {
+        if (originalFilename != null && !originalFilename.isEmpty()) {
+            // Remove .pdf extension and add operation suffix
+            String baseName = originalFilename.replaceAll("\\.[pP][dD][fF]$", "");
+            return baseName + "_" + operationSuffix;
+        }
+        return operationSuffix;
     }
 
     /**

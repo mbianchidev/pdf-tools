@@ -38,6 +38,17 @@ services:
       timeout: 10s
       retries: 3
 
+  startup-message:
+    image: alpine:latest
+    container_name: pdf-tools-startup-message
+    depends_on:
+      frontend:
+        condition: service_healthy
+    command: >
+      /bin/sh -c "echo '' && echo '========================================' && echo '  PDF Tools is ready!' && echo '  Access the app at: http://localhost:80' && echo '========================================' && echo ''"
+    networks:
+      - pdf-tools-network
+
 networks:
   pdf-tools-network:
     driver: bridge

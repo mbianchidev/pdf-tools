@@ -9,6 +9,29 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+// Helper function to perform operation and then download the result
+const performOperationAndDownload = async (endpoint, formData, originalFilename) => {
+  // Add original filename to formData if provided
+  if (originalFilename) {
+    formData.append('originalFilename', originalFilename);
+  }
+  
+  // First, call the operation endpoint to get the result with filename
+  const operationResponse = await api.post(endpoint, formData);
+  const result = operationResponse.data;
+  
+  if (!result.success) {
+    throw new Error(result.message || 'Operation failed');
+  }
+  
+  // Then download the file using the filename from the result
+  const downloadResponse = await api.get(`/download/${result.outputFilename}`, {
+    responseType: 'blob',
+  });
+  
+  return downloadResponse.data;
+};
+
 export const pdfService = {
   // Merge multiple PDFs
   merge: async (files) => {
@@ -16,20 +39,41 @@ export const pdfService = {
     files.forEach((file) => {
       formData.append('files', file);
     });
-    const response = await api.post('/merge', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    // Use first file's name as base for the merged output
+    const originalFilename = files[0]?.name || 'document.pdf';
+    return performOperationAndDownload('/merge', formData, originalFilename);
   },
 
-  // Split PDF into individual pages
-  split: async (file) => {
+  // Split PDF into individual pages or custom groups
+  split: async (file, groups = null) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post('/split', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    if (groups) {
+      formData.append('groups', groups);
+    }
+    formData.append('originalFilename', file.name);
+    
+    // Split returns multiple files as comma-separated filenames
+    const operationResponse = await api.post('/split', formData);
+    const result = operationResponse.data;
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Operation failed');
+    }
+    
+    // The outputFilename contains comma-separated filenames
+    const filenames = result.outputFilename.split(',');
+    
+    if (filenames.length > 1) {
+      // Return info for multiple files
+      return { filenames, message: result.message };
+    } else {
+      // Single file - download and return blob
+      const downloadResponse = await api.get(`/download/${filenames[0]}`, {
+        responseType: 'blob',
+      });
+      return { blob: downloadResponse.data, filenames };
+    }
   },
 
   // Extract specific pages
@@ -37,10 +81,7 @@ export const pdfService = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('pages', pages);
-    const response = await api.post('/extract', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/extract', formData, file.name);
   },
 
   // Remove specific pages
@@ -48,10 +89,7 @@ export const pdfService = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('pages', pages);
-    const response = await api.post('/remove', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/remove', formData, file.name);
   },
 
   // Add watermark
@@ -59,10 +97,7 @@ export const pdfService = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('text', text);
-    const response = await api.post('/watermark', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/watermark', formData, file.name);
   },
 
   // Add text to PDF
@@ -73,10 +108,7 @@ export const pdfService = {
     formData.append('x', x);
     formData.append('y', y);
     formData.append('page', page);
-    const response = await api.post('/add-text', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/add-text', formData, file.name);
   },
 
   // Add signature to PDF
@@ -87,10 +119,7 @@ export const pdfService = {
     formData.append('x', x);
     formData.append('y', y);
     formData.append('page', page);
-    const response = await api.post('/add-signature', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/add-signature', formData, file.name);
   },
 
   // Redact content
@@ -102,30 +131,21 @@ export const pdfService = {
     formData.append('width', width);
     formData.append('height', height);
     formData.append('page', page);
-    const response = await api.post('/redact', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/redact', formData, file.name);
   },
 
   // Convert to Markdown
   convertToMarkdown: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post('/convert/markdown', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/convert/markdown', formData, file.name);
   },
 
   // Convert to DOCX
   convertToDocx: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post('/convert/docx', formData, {
-      responseType: 'blob',
-    });
-    return response.data;
+    return performOperationAndDownload('/convert/docx', formData, file.name);
   },
 
   // Download file

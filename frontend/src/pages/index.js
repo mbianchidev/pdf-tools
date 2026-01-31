@@ -1,0 +1,10 @@
+export { default as MergePage } from './MergePage';
+export { default as SplitPage } from './SplitPage';
+export { default as ExtractPage } from './ExtractPage';
+export { default as RemovePage } from './RemovePage';
+export { default as WatermarkPage } from './WatermarkPage';
+export { default as AddTextPage } from './AddTextPage';
+export { default as SignaturePage } from './SignaturePage';
+export { default as RedactPage } from './RedactPage';
+export { default as ConvertMarkdownPage } from './ConvertMarkdownPage';
+export { default as ConvertDocxPage } from './ConvertDocxPage';

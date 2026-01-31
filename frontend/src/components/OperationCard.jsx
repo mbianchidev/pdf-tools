@@ -10,6 +10,11 @@ const OperationCard = ({
   onClick,
   children
 }) => {
+  const handleContentClick = (e) => {
+    // Stop propagation to prevent card toggle when interacting with content
+    e.stopPropagation();
+  };
+
   return (
     <motion.div
       className={`operation-card ${isActive ? 'operation-card-active' : ''}`}
@@ -34,6 +39,7 @@ const OperationCard = ({
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.3 }}
+          onClick={handleContentClick}
         >
           {children}
         </motion.div>
