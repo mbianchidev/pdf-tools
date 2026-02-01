@@ -7,12 +7,15 @@ backend/.idea/
 backend/*.iml
 backend/*.iws
 backend/*.ipr
+backend/out/
+backend/.gradle/
 
 # Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/.vite/
+frontend/.env
 frontend/.env.local
 frontend/.env.development.local
 frontend/.env.test.local
@@ -20,20 +23,42 @@ frontend/.env.production.local
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+frontend/coverage/
+frontend/.next/
 
 # Root node_modules (for playwright/testing tools)
 node_modules/
 package-lock.json
 
-# Temporary files
+# Temporary files and uploads
 *.tmp
 *.temp
 /tmp/
 **/tmp/
+/uploads/
+**/uploads/
+pdf-uploads/
+
+# Sensitive files
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.jks
+secrets.yml
+credentials.json
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
 # IDE
 .vscode/
@@ -41,10 +66,29 @@ Thumbs.db
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+.factorypath
 
 # Logs
 *.log
 logs/
+*.log.*
 
 # Docker
 *.dockerignore
+
+# Test coverage
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# Build artifacts
+*.jar
+*.war
+*.ear
+*.class

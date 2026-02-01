@@ -1,5 +1,10 @@
 # PDF Tools
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+
 A comprehensive PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
 
 ## Documentation
@@ -330,23 +335,50 @@ ports:
   - API keys or JWT tokens
   - File scanning for malware
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! We appreciate your interest in improving PDF Tools.
 
-## License
+To get started:
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+1. Read the [Contributing Guidelines](CONTRIBUTING.md)
+2. Check out [good first issues](https://github.com/mbianchidev/pdf-tools/labels/good%20first%20issue)
+3. Fork the repository and create your feature branch
+4. Submit a pull request
 
-## Support
+Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions.
 
-For issues and questions:
-- Open an issue on GitHub
-- Check existing documentation in the `frontend/docs` directory
+## 📜 License
 
-## Acknowledgments
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- Apache PDFBox for PDF manipulation
-- iText for advanced PDF features
-- Apache POI for DOCX conversion
-- React and Vite for modern frontend development
+## 🔒 Security
+
+Security is important to us. If you discover a security vulnerability, please follow our [Security Policy](SECURITY.md) to report it responsibly.
+
+## 💬 Support
+
+Need help? Check out our [Support Guide](SUPPORT.md) for:
+
+- Documentation and resources
+- How to report bugs
+- How to request features
+- Community guidelines
+
+For questions and discussions, visit [GitHub Discussions](https://github.com/mbianchidev/pdf-tools/discussions).
+
+## 📋 Code of Conduct
+
+This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+## 🙏 Acknowledgments
+
+- [Apache PDFBox](https://pdfbox.apache.org/) for PDF manipulation
+- [iText](https://itextpdf.com/) for advanced PDF features
+- [Apache POI](https://poi.apache.org/) for DOCX conversion
+- [React](https://react.dev/) and [Vite](https://vitejs.dev/) for modern frontend development
+- All our [contributors](https://github.com/mbianchidev/pdf-tools/graphs/contributors) who help improve this project
+
+---
+
+Made with ❤️ by the PDF Tools community

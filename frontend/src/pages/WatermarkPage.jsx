@@ -30,7 +30,6 @@ const WatermarkPage = () => {
   const [opacity, setOpacity] = useState(0.3);
   
   const [dragging, setDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -90,8 +89,6 @@ const WatermarkPage = () => {
   const handleMouseDown = (e) => {
     e.preventDefault();
     setDragging(true);
-    const rect = e.target.getBoundingClientRect();
-    setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   };
 
   const handleMouseMove = useCallback((e) => {

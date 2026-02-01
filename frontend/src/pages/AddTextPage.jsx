@@ -100,16 +100,16 @@ const AddTextPage = () => {
       fontName: 'HELVETICA',
       fontColor: '#000000',
     };
-    setTextItems([...textItems, newItem]);
+    setTextItems(prevItems => [...prevItems, newItem]);
     setSelectedItemId(newItem.id);
   };
 
-  const updateTextItem = (id, updates) => {
-    setTextItems(textItems.map(item => item.id === id ? { ...item, ...updates } : item));
-  };
+  const updateTextItem = useCallback((id, updates) => {
+    setTextItems(prevItems => prevItems.map(item => item.id === id ? { ...item, ...updates } : item));
+  }, []);
 
   const removeTextItem = (id) => {
-    setTextItems(textItems.filter(item => item.id !== id));
+    setTextItems(prevItems => prevItems.filter(item => item.id !== id));
     if (selectedItemId === id) setSelectedItemId(null);
   };
 
@@ -130,7 +130,7 @@ const AddTextPage = () => {
       x: Math.max(0, Math.min(x, pageDimensions.width - 50)),
       y: Math.max(0, Math.min(y, pageDimensions.height - 20)),
     });
-  }, [dragging, selectedItemId, scale, pageDimensions, dragOffset, textItems]);
+  }, [dragging, selectedItemId, scale, pageDimensions, dragOffset, updateTextItem]);
 
   const handleMouseUp = useCallback(() => setDragging(false), []);
 

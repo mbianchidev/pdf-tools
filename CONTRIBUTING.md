@@ -13,7 +13,7 @@ Thank you for your interest in contributing to PDF Tools! This document provides
 
 ## Code of Conduct
 
-This project adheres to a code of conduct. By participating, you are expected to uphold this code. Please be respectful and constructive in all interactions.
+This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior through GitHub issues or the contact methods specified in the Code of Conduct.
 
 ## Getting Started
 
