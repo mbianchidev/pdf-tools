@@ -1,0 +1,39 @@
+# Code Owners
+#
+# This file defines individuals or teams responsible for code in this repository.
+# Code owners are automatically requested for review when someone opens a pull request
+# that modifies code that they own.
+#
+# More info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repository
+* @mbianchidev
+
+# Backend Java code
+/backend/ @mbianchidev
+/backend/src/main/java/ @mbianchidev
+/backend/pom.xml @mbianchidev
+
+# Frontend React code
+/frontend/ @mbianchidev
+/frontend/src/ @mbianchidev
+/frontend/package.json @mbianchidev
+
+# Docker and deployment configuration
+/docker-compose.yml @mbianchidev
+/backend/Dockerfile @mbianchidev
+/frontend/Dockerfile @mbianchidev
+/frontend/nginx.conf @mbianchidev
+
+# Documentation
+/*.md @mbianchidev
+/frontend/README.md @mbianchidev
+/backend/README.md @mbianchidev
+
+# GitHub configuration and workflows
+/.github/ @mbianchidev
+
+# Configuration files
+/.gitignore @mbianchidev
+/backend/src/main/resources/ @mbianchidev
+/frontend/vite.config.js @mbianchidev
