@@ -28,6 +28,8 @@ const PdfViewer = ({
     if (file) {
       // Create object URL for the file
       const url = URL.createObjectURL(file);
+      // Reset viewer state when new file is loaded
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPdfUrl(url);
       setLoading(true);
       setError(null);

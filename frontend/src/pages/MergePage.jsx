@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { ArrowLeft, Combine, Download, Trash2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
