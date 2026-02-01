@@ -17,10 +17,11 @@ We take the security of PDF Tools seriously. If you discover a security vulnerab
 
 **Please do NOT report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them via:
+Instead, please report them using GitHub's Security Advisory feature:
 
-- **Email**: Create a GitHub issue with the title "SECURITY: [Brief Description]" and mark it as a security advisory
-- **GitHub Security Advisory**: Use the [Security Advisory](https://github.com/mbianchidev/pdf-tools/security/advisories/new) feature
+- **GitHub Security Advisory**: Use the [Security Advisory](https://github.com/mbianchidev/pdf-tools/security/advisories/new) feature to report vulnerabilities privately
+
+This ensures the vulnerability can be assessed and fixed before being publicly disclosed.
 
 ### What to Include
 
