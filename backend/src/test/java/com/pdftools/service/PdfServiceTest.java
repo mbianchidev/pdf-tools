@@ -121,7 +121,7 @@ class PdfServiceTest {
             PdfOperationResult result = pdfService.splitPdf(file, null, "test.pdf");
 
             assertTrue(result.isSuccess());
-            assertTrue(result.getMessage().contains("3 pages"));
+            assertTrue(result.getMessage().contains("3 documents"));
             assertNotNull(result.getOutputFilename());
             String[] filenames = result.getOutputFilename().split(",");
             assertEquals(3, filenames.length);
