@@ -5,7 +5,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
-A comprehensive PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
+A comprehensive locally hostable PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
 
 ## Documentation
 
