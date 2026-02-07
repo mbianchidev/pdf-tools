@@ -398,7 +398,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("../etc/passwd");
             });
-            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
+            assertTrue(exception.getMessage().contains("path separator") || exception.getMessage().contains("parent directory"));
         }
         
         @Test
@@ -407,7 +407,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("..\\..\\..\\windows\\system32\\config\\sam");
             });
-            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
+            assertTrue(exception.getMessage().contains("path separator") || exception.getMessage().contains("parent directory"));
         }
         
         @Test
@@ -416,7 +416,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("/etc/passwd");
             });
-            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
+            assertTrue(exception.getMessage().contains("path separator"));
         }
         
         @Test
@@ -425,7 +425,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("C:\\Windows\\System32\\config\\sam");
             });
-            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
+            assertTrue(exception.getMessage().contains("path separator"));
         }
         
         @Test
@@ -467,10 +467,12 @@ class PdfServiceTest {
         @Test
         @DisplayName("Should reject invalid characters in filename")
         void testDownloadFile_InvalidCharacters() {
+            // Note: The new validation is more lenient and allows most characters except path separators
+            // This test now focuses on path separators
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
-                pdfService.downloadFile("test<>.pdf");
+                pdfService.downloadFile("test/file.pdf");
             });
-            assertTrue(exception.getMessage().contains("alphanumeric"));
+            assertTrue(exception.getMessage().contains("path separator"));
         }
         
         @Test
@@ -479,7 +481,83 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("malicious.exe");
             });
-            assertTrue(exception.getMessage().contains("extension") || exception.getMessage().contains("alphanumeric"));
+            assertTrue(exception.getMessage().contains("extension"));
+        }
+        
+        @Test
+        @DisplayName("Should allow filenames with spaces")
+        void testDownloadFile_FilenameWithSpaces() throws Exception {
+            Path testFile = tempDir.resolve("My Report File.pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("My Report File.pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow filenames with consecutive dots")
+        void testDownloadFile_FilenameWithConsecutiveDots() throws Exception {
+            Path testFile = tempDir.resolve("report..v1.pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("report..v1.pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow filenames with special characters")
+        void testDownloadFile_FilenameWithSpecialChars() throws Exception {
+            Path testFile = tempDir.resolve("file (copy) [2].pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("file (copy) [2].pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Regression: Upload with spaces should be downloadable")
+        void testUploadAndDownload_WithSpacesInOriginalFilename() throws Exception {
+            // Simulate an upload with spaces in the original filename
+            byte[] pdf = createValidPdf(1);
+            MockMultipartFile file = new MockMultipartFile("file", "My Report.pdf", "application/pdf", pdf);
+            
+            // Process the file (using merge as an example operation)
+            PdfOperationResult result = pdfService.mergePdfs(Arrays.asList(file), "My Report.pdf");
+            
+            // The generated filename should be downloadable
+            assertTrue(result.isSuccess());
+            assertNotNull(result.getOutputFilename());
+            
+            // Try to download the generated file
+            byte[] downloaded = pdfService.downloadFile(result.getOutputFilename());
+            assertNotNull(downloaded);
+            assertTrue(downloaded.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Regression: Upload with dots should be downloadable")
+        void testUploadAndDownload_WithDotsInOriginalFilename() throws Exception {
+            // Simulate an upload with consecutive dots in the original filename
+            byte[] pdf = createValidPdf(1);
+            MockMultipartFile file = new MockMultipartFile("file", "report..v1.pdf", "application/pdf", pdf);
+            
+            // Process the file (using merge as an example operation)
+            PdfOperationResult result = pdfService.mergePdfs(Arrays.asList(file), "report..v1.pdf");
+            
+            // The generated filename should be downloadable
+            assertTrue(result.isSuccess());
+            assertNotNull(result.getOutputFilename());
+            
+            // Try to download the generated file
+            byte[] downloaded = pdfService.downloadFile(result.getOutputFilename());
+            assertNotNull(downloaded);
+            assertTrue(downloaded.length > 0);
         }
         
         @Test

@@ -542,11 +542,30 @@ public class PdfService {
             throw new PdfProcessingException("Invalid filename: null byte detected");
         }
         
-        // Only allow alphanumeric characters, single dots, hyphens, underscores
-        // This regex prevents path separators, parent directory references, multiple consecutive dots,
-        // and enforces valid file extensions (.pdf, .md, .docx)
-        if (!filename.matches("^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?\\.(pdf|md|docx)$")) {
-            throw new PdfProcessingException("Invalid filename: only alphanumeric characters, dots, hyphens, and underscores are allowed with .pdf, .md, or .docx extensions");
+        // Disallow any path separators to prevent directory traversal via the filename
+        if (filename.contains("/") || filename.contains("\\")) {
+            throw new PdfProcessingException("Invalid filename: path separators are not allowed");
+        }
+        
+        // Basic structure check: require a non-empty base name and an allowed extension
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot <= 0 || lastDot == filename.length() - 1) {
+            throw new PdfProcessingException("Invalid filename: missing or malformed file extension");
+        }
+        
+        String baseName = filename.substring(0, lastDot);
+        String extension = filename.substring(lastDot + 1).toLowerCase();
+        
+        if (!extension.equals("pdf") && !extension.equals("md") && !extension.equals("docx")) {
+            throw new PdfProcessingException("Invalid filename: only .pdf, .md, or .docx extensions are allowed");
+        }
+        
+        // Prevent obvious parent directory references while still allowing multiple dots in the base name
+        // (e.g., allow "report..v1.pdf" but reject "../secret.pdf")
+        if (baseName.equals("..")
+                || baseName.startsWith(".." + File.separator)
+                || baseName.contains(".." + File.separator)) {
+            throw new PdfProcessingException("Invalid filename: parent directory references are not allowed");
         }
     }
     
