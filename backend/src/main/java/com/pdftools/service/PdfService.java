@@ -528,12 +528,70 @@ public class PdfService {
     }
 
     /**
+     * Validate filename to prevent path traversal attacks
+     * @param filename The filename to validate
+     * @throws PdfProcessingException if the filename is invalid or contains path traversal attempts
+     */
+    private void validateFilename(String filename) throws PdfProcessingException {
+        if (filename == null || filename.trim().isEmpty()) {
+            throw new PdfProcessingException("Filename cannot be null or empty");
+        }
+        
+        // Reject filenames with null bytes (common security issue)
+        if (filename.contains("\0")) {
+            throw new PdfProcessingException("Invalid filename: null byte detected");
+        }
+        
+        // Disallow any path separators to prevent directory traversal via the filename
+        if (filename.contains("/") || filename.contains("\\")) {
+            throw new PdfProcessingException("Invalid filename: path separators are not allowed");
+        }
+        
+        // Basic structure check: require a non-empty base name and an allowed extension
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot <= 0 || lastDot == filename.length() - 1) {
+            throw new PdfProcessingException("Invalid filename: missing or malformed file extension");
+        }
+        
+        String baseName = filename.substring(0, lastDot);
+        String extension = filename.substring(lastDot + 1).toLowerCase();
+        
+        if (!extension.equals("pdf") && !extension.equals("md") && !extension.equals("docx")) {
+            throw new PdfProcessingException("Invalid filename: only .pdf, .md, or .docx extensions are allowed");
+        }
+        
+        // Prevent obvious parent directory references while still allowing multiple dots in the base name
+        // (e.g., allow "report..v1.pdf" but reject "../secret.pdf")
+        if (baseName.equals("..")
+                || baseName.startsWith(".." + File.separator)
+                || baseName.contains(".." + File.separator)) {
+            throw new PdfProcessingException("Invalid filename: parent directory references are not allowed");
+        }
+    }
+    
+    /**
      * Download file
      */
     public byte[] downloadFile(String filename) throws PdfProcessingException {
         try {
+            // Validate filename to prevent path traversal attacks
+            validateFilename(filename);
+            
             Path filePath = Paths.get(uploadDir, filename);
-            return Files.readAllBytes(filePath);
+            
+            // Additional security check: ensure the resolved path is within the upload directory
+            Path uploadPath = Paths.get(uploadDir).toRealPath();
+            Path resolvedPath = filePath.toRealPath();
+            
+            if (!resolvedPath.startsWith(uploadPath)) {
+                throw new PdfProcessingException("Access denied: file is outside the allowed directory");
+            }
+            
+            return Files.readAllBytes(resolvedPath);
+        } catch (PdfProcessingException e) {
+            throw e;
+        } catch (java.nio.file.NoSuchFileException e) {
+            throw new PdfProcessingException("File not found: " + filename, e);
         } catch (Exception e) {
             throw new PdfProcessingException("Failed to download file: " + e.getMessage(), e);
         }

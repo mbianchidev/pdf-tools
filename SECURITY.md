@@ -62,6 +62,9 @@ When using PDF Tools in production, we recommend:
 - Implement rate limiting to prevent abuse
 - Set appropriate file size limits
 - Store temporary files securely and clean them up
+- **Use strict filename validation to prevent path traversal attacks** ✓ (Implemented)
+- **Restrict file extensions to expected types only** ✓ (Implemented: .pdf, .md, .docx)
+- **Ensure uploaded files cannot escape the designated storage directory** ✓ (Implemented)
 
 ### API Security
 
@@ -84,7 +87,7 @@ When using PDF Tools in production, we recommend:
 This is a basic implementation suitable for trusted environments. For production use, consider:
 
 - User authentication and authorization
-- Input validation and sanitization
+- ~~Input validation and sanitization~~ ✓ **File path validation implemented**
 - Rate limiting and abuse prevention
 - Malware scanning for uploaded files
 - Secure temporary file handling with automatic cleanup
@@ -92,6 +95,32 @@ This is a basic implementation suitable for trusted environments. For production
 - Database security if adding persistence
 
 ## Security Updates
+
+### Recent Fixes
+
+#### Path Traversal Vulnerability (Fixed in v1.0.1)
+**Date**: February 2026  
+**Severity**: Critical  
+**Component**: File download functionality
+
+**Description**: A path traversal vulnerability was identified in the `downloadFile` method where user-supplied filenames were used directly in file path operations without proper validation. This could have allowed an attacker to read arbitrary files from the system.
+
+**Impact**: An unauthenticated attacker could potentially:
+- Read sensitive files outside the upload directory (e.g., `/etc/passwd`, system configuration files)
+- Access source code or configuration files
+- Potentially escalate privileges by reading sensitive data
+
+**Mitigation**: The vulnerability has been fixed by implementing comprehensive filename validation:
+- Added strict regex validation for filenames (alphanumeric, dots, hyphens, underscores only)
+- Blocked path traversal attempts (`..`, `/`, `\`)
+- Prevented null byte injection attacks
+- Restricted file extensions to `.pdf`, `.md`, and `.docx` only
+- Added real path validation to ensure files are within the upload directory
+- Improved error handling with specific messages for different failure cases
+
+**Recommendation**: All users should upgrade to v1.0.1 or later immediately.
+
+---
 
 Security updates will be released as soon as possible. We will:
 

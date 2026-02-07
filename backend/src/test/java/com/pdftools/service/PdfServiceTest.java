@@ -391,5 +391,209 @@ class PdfServiceTest {
                 pdfService.downloadFile("nonexistent.pdf");
             });
         }
+        
+        @Test
+        @DisplayName("Should reject path traversal with ../")
+        void testDownloadFile_PathTraversal_ParentDirectory() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("../etc/passwd");
+            });
+            assertTrue(exception.getMessage().contains("path separator") || exception.getMessage().contains("parent directory"));
+        }
+        
+        @Test
+        @DisplayName("Should reject path traversal with ..")
+        void testDownloadFile_PathTraversal_DoubleDot() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("..\\..\\..\\windows\\system32\\config\\sam");
+            });
+            assertTrue(exception.getMessage().contains("path separator") || exception.getMessage().contains("parent directory"));
+        }
+        
+        @Test
+        @DisplayName("Should reject absolute paths with /")
+        void testDownloadFile_AbsolutePath_Unix() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("/etc/passwd");
+            });
+            assertTrue(exception.getMessage().contains("path separator"));
+        }
+        
+        @Test
+        @DisplayName("Should reject absolute paths with \\")
+        void testDownloadFile_AbsolutePath_Windows() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("C:\\Windows\\System32\\config\\sam");
+            });
+            assertTrue(exception.getMessage().contains("path separator"));
+        }
+        
+        @Test
+        @DisplayName("Should reject null byte injection")
+        void testDownloadFile_NullByteInjection() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("test.pdf\0.jpg");
+            });
+            assertTrue(exception.getMessage().contains("null byte"));
+        }
+        
+        @Test
+        @DisplayName("Should reject null filename")
+        void testDownloadFile_NullFilename() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile(null);
+            });
+            assertTrue(exception.getMessage().contains("null or empty"));
+        }
+        
+        @Test
+        @DisplayName("Should reject empty filename")
+        void testDownloadFile_EmptyFilename() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("");
+            });
+            assertTrue(exception.getMessage().contains("null or empty"));
+        }
+        
+        @Test
+        @DisplayName("Should reject whitespace-only filename")
+        void testDownloadFile_WhitespaceFilename() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("   ");
+            });
+            assertTrue(exception.getMessage().contains("null or empty"));
+        }
+        
+        @Test
+        @DisplayName("Should reject invalid characters in filename")
+        void testDownloadFile_InvalidCharacters() {
+            // Note: The new validation is more lenient and allows most characters except path separators
+            // This test now focuses on path separators
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("test/file.pdf");
+            });
+            assertTrue(exception.getMessage().contains("path separator"));
+        }
+        
+        @Test
+        @DisplayName("Should reject invalid file extensions")
+        void testDownloadFile_InvalidExtension() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("malicious.exe");
+            });
+            assertTrue(exception.getMessage().contains("extension"));
+        }
+        
+        @Test
+        @DisplayName("Should allow filenames with spaces")
+        void testDownloadFile_FilenameWithSpaces() throws Exception {
+            Path testFile = tempDir.resolve("My Report File.pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("My Report File.pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow filenames with consecutive dots")
+        void testDownloadFile_FilenameWithConsecutiveDots() throws Exception {
+            Path testFile = tempDir.resolve("report..v1.pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("report..v1.pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow filenames with special characters")
+        void testDownloadFile_FilenameWithSpecialChars() throws Exception {
+            Path testFile = tempDir.resolve("file (copy) [2].pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("file (copy) [2].pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Regression: Upload with spaces should be downloadable")
+        void testUploadAndDownload_WithSpacesInOriginalFilename() throws Exception {
+            // Simulate an upload with spaces in the original filename
+            byte[] pdf = createValidPdf(1);
+            MockMultipartFile file = new MockMultipartFile("file", "My Report.pdf", "application/pdf", pdf);
+            
+            // Process the file (using merge as an example operation)
+            PdfOperationResult result = pdfService.mergePdfs(Arrays.asList(file), "My Report.pdf");
+            
+            // The generated filename should be downloadable
+            assertTrue(result.isSuccess());
+            assertNotNull(result.getOutputFilename());
+            
+            // Try to download the generated file
+            byte[] downloaded = pdfService.downloadFile(result.getOutputFilename());
+            assertNotNull(downloaded);
+            assertTrue(downloaded.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Regression: Upload with dots should be downloadable")
+        void testUploadAndDownload_WithDotsInOriginalFilename() throws Exception {
+            // Simulate an upload with consecutive dots in the original filename
+            byte[] pdf = createValidPdf(1);
+            MockMultipartFile file = new MockMultipartFile("file", "report..v1.pdf", "application/pdf", pdf);
+            
+            // Process the file (using merge as an example operation)
+            PdfOperationResult result = pdfService.mergePdfs(Arrays.asList(file), "report..v1.pdf");
+            
+            // The generated filename should be downloadable
+            assertTrue(result.isSuccess());
+            assertNotNull(result.getOutputFilename());
+            
+            // Try to download the generated file
+            byte[] downloaded = pdfService.downloadFile(result.getOutputFilename());
+            assertNotNull(downloaded);
+            assertTrue(downloaded.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow valid .pdf files")
+        void testDownloadFile_ValidPdfFilename() throws Exception {
+            Path testFile = tempDir.resolve("valid-file_123.pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("valid-file_123.pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow valid .md files")
+        void testDownloadFile_ValidMdFilename() throws Exception {
+            Path testFile = tempDir.resolve("document.md");
+            Files.write(testFile, "# Test".getBytes());
+
+            byte[] result = pdfService.downloadFile("document.md");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow valid .docx files")
+        void testDownloadFile_ValidDocxFilename() throws Exception {
+            Path testFile = tempDir.resolve("document.docx");
+            Files.write(testFile, new byte[]{1, 2, 3, 4});
+
+            byte[] result = pdfService.downloadFile("document.docx");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
     }
 }
