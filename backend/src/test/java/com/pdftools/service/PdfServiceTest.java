@@ -391,5 +391,131 @@ class PdfServiceTest {
                 pdfService.downloadFile("nonexistent.pdf");
             });
         }
+        
+        @Test
+        @DisplayName("Should reject path traversal with ../")
+        void testDownloadFile_PathTraversal_ParentDirectory() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("../etc/passwd");
+            });
+            assertTrue(exception.getMessage().contains("path traversal"));
+        }
+        
+        @Test
+        @DisplayName("Should reject path traversal with ..")
+        void testDownloadFile_PathTraversal_DoubleDot() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("..\\..\\..\\windows\\system32\\config\\sam");
+            });
+            assertTrue(exception.getMessage().contains("path traversal"));
+        }
+        
+        @Test
+        @DisplayName("Should reject absolute paths with /")
+        void testDownloadFile_AbsolutePath_Unix() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("/etc/passwd");
+            });
+            assertTrue(exception.getMessage().contains("path traversal"));
+        }
+        
+        @Test
+        @DisplayName("Should reject absolute paths with \\")
+        void testDownloadFile_AbsolutePath_Windows() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("C:\\Windows\\System32\\config\\sam");
+            });
+            assertTrue(exception.getMessage().contains("path traversal"));
+        }
+        
+        @Test
+        @DisplayName("Should reject null byte injection")
+        void testDownloadFile_NullByteInjection() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("test.pdf\0.jpg");
+            });
+            assertTrue(exception.getMessage().contains("null byte"));
+        }
+        
+        @Test
+        @DisplayName("Should reject null filename")
+        void testDownloadFile_NullFilename() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile(null);
+            });
+            assertTrue(exception.getMessage().contains("null or empty"));
+        }
+        
+        @Test
+        @DisplayName("Should reject empty filename")
+        void testDownloadFile_EmptyFilename() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("");
+            });
+            assertTrue(exception.getMessage().contains("null or empty"));
+        }
+        
+        @Test
+        @DisplayName("Should reject whitespace-only filename")
+        void testDownloadFile_WhitespaceFilename() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("   ");
+            });
+            assertTrue(exception.getMessage().contains("null or empty"));
+        }
+        
+        @Test
+        @DisplayName("Should reject invalid characters in filename")
+        void testDownloadFile_InvalidCharacters() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("test<>.pdf");
+            });
+            assertTrue(exception.getMessage().contains("alphanumeric"));
+        }
+        
+        @Test
+        @DisplayName("Should reject invalid file extensions")
+        void testDownloadFile_InvalidExtension() {
+            PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
+                pdfService.downloadFile("malicious.exe");
+            });
+            assertTrue(exception.getMessage().contains("extension"));
+        }
+        
+        @Test
+        @DisplayName("Should allow valid .pdf files")
+        void testDownloadFile_ValidPdfFilename() throws Exception {
+            Path testFile = tempDir.resolve("valid-file_123.pdf");
+            Files.write(testFile, createValidPdf(1));
+
+            byte[] result = pdfService.downloadFile("valid-file_123.pdf");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow valid .md files")
+        void testDownloadFile_ValidMdFilename() throws Exception {
+            Path testFile = tempDir.resolve("document.md");
+            Files.write(testFile, "# Test".getBytes());
+
+            byte[] result = pdfService.downloadFile("document.md");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+        
+        @Test
+        @DisplayName("Should allow valid .docx files")
+        void testDownloadFile_ValidDocxFilename() throws Exception {
+            Path testFile = tempDir.resolve("document.docx");
+            Files.write(testFile, new byte[]{1, 2, 3, 4});
+
+            byte[] result = pdfService.downloadFile("document.docx");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
     }
 }

@@ -528,12 +528,57 @@ public class PdfService {
     }
 
     /**
+     * Validate filename to prevent path traversal attacks
+     * @param filename The filename to validate
+     * @throws PdfProcessingException if the filename is invalid or contains path traversal attempts
+     */
+    private void validateFilename(String filename) throws PdfProcessingException {
+        if (filename == null || filename.trim().isEmpty()) {
+            throw new PdfProcessingException("Filename cannot be null or empty");
+        }
+        
+        // Reject filenames with path separators or parent directory references
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            throw new PdfProcessingException("Invalid filename: path traversal attempt detected");
+        }
+        
+        // Reject filenames with null bytes (common security issue)
+        if (filename.contains("\0")) {
+            throw new PdfProcessingException("Invalid filename: null byte detected");
+        }
+        
+        // Only allow alphanumeric characters, dots, hyphens, underscores
+        if (!filename.matches("^[a-zA-Z0-9._-]+$")) {
+            throw new PdfProcessingException("Invalid filename: only alphanumeric characters, dots, hyphens, and underscores are allowed");
+        }
+        
+        // Ensure the filename ends with a valid extension
+        if (!filename.toLowerCase().matches(".*\\.(pdf|md|docx)$")) {
+            throw new PdfProcessingException("Invalid file extension: only .pdf, .md, and .docx files are allowed");
+        }
+    }
+    
+    /**
      * Download file
      */
     public byte[] downloadFile(String filename) throws PdfProcessingException {
         try {
+            // Validate filename to prevent path traversal attacks
+            validateFilename(filename);
+            
             Path filePath = Paths.get(uploadDir, filename);
-            return Files.readAllBytes(filePath);
+            
+            // Additional security check: ensure the resolved path is within the upload directory
+            Path uploadPath = Paths.get(uploadDir).toRealPath();
+            Path resolvedPath = filePath.toRealPath();
+            
+            if (!resolvedPath.startsWith(uploadPath)) {
+                throw new PdfProcessingException("Access denied: file is outside the allowed directory");
+            }
+            
+            return Files.readAllBytes(resolvedPath);
+        } catch (PdfProcessingException e) {
+            throw e;
         } catch (Exception e) {
             throw new PdfProcessingException("Failed to download file: " + e.getMessage(), e);
         }
