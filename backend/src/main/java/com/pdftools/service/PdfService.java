@@ -543,14 +543,10 @@ public class PdfService {
         }
         
         // Only allow alphanumeric characters, single dots, hyphens, underscores
-        // This regex prevents path separators, parent directory references, and multiple consecutive dots
+        // This regex prevents path separators, parent directory references, multiple consecutive dots,
+        // and enforces valid file extensions (.pdf, .md, .docx)
         if (!filename.matches("^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?\\.(pdf|md|docx)$")) {
-            throw new PdfProcessingException("Invalid filename: only alphanumeric characters, dots, hyphens, and underscores are allowed");
-        }
-        
-        // Ensure the filename ends with a valid extension
-        if (!filename.toLowerCase().matches(".*\\.(pdf|md|docx)$")) {
-            throw new PdfProcessingException("Invalid file extension: only .pdf, .md, and .docx files are allowed");
+            throw new PdfProcessingException("Invalid filename: only alphanumeric characters, dots, hyphens, and underscores are allowed with .pdf, .md, or .docx extensions");
         }
     }
     
