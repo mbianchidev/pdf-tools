@@ -398,7 +398,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("../etc/passwd");
             });
-            assertTrue(exception.getMessage().contains("path traversal"));
+            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
         }
         
         @Test
@@ -407,7 +407,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("..\\..\\..\\windows\\system32\\config\\sam");
             });
-            assertTrue(exception.getMessage().contains("path traversal"));
+            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
         }
         
         @Test
@@ -416,7 +416,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("/etc/passwd");
             });
-            assertTrue(exception.getMessage().contains("path traversal"));
+            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
         }
         
         @Test
@@ -425,7 +425,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("C:\\Windows\\System32\\config\\sam");
             });
-            assertTrue(exception.getMessage().contains("path traversal"));
+            assertTrue(exception.getMessage().contains("alphanumeric") || exception.getMessage().contains("Invalid filename"));
         }
         
         @Test
@@ -479,7 +479,7 @@ class PdfServiceTest {
             PdfProcessingException exception = assertThrows(PdfProcessingException.class, () -> {
                 pdfService.downloadFile("malicious.exe");
             });
-            assertTrue(exception.getMessage().contains("extension"));
+            assertTrue(exception.getMessage().contains("extension") || exception.getMessage().contains("alphanumeric"));
         }
         
         @Test

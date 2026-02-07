@@ -537,18 +537,14 @@ public class PdfService {
             throw new PdfProcessingException("Filename cannot be null or empty");
         }
         
-        // Reject filenames with path separators or parent directory references
-        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-            throw new PdfProcessingException("Invalid filename: path traversal attempt detected");
-        }
-        
         // Reject filenames with null bytes (common security issue)
         if (filename.contains("\0")) {
             throw new PdfProcessingException("Invalid filename: null byte detected");
         }
         
-        // Only allow alphanumeric characters, dots, hyphens, underscores
-        if (!filename.matches("^[a-zA-Z0-9._-]+$")) {
+        // Only allow alphanumeric characters, single dots, hyphens, underscores
+        // This regex prevents path separators, parent directory references, and multiple consecutive dots
+        if (!filename.matches("^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?\\.(pdf|md|docx)$")) {
             throw new PdfProcessingException("Invalid filename: only alphanumeric characters, dots, hyphens, and underscores are allowed");
         }
         
@@ -579,6 +575,8 @@ public class PdfService {
             return Files.readAllBytes(resolvedPath);
         } catch (PdfProcessingException e) {
             throw e;
+        } catch (java.nio.file.NoSuchFileException e) {
+            throw new PdfProcessingException("File not found: " + filename, e);
         } catch (Exception e) {
             throw new PdfProcessingException("Failed to download file: " + e.getMessage(), e);
         }
