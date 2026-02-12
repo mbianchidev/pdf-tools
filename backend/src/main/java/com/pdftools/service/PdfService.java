@@ -505,12 +505,25 @@ public class PdfService {
     }
 
     /**
-     * Get base filename from original filename or use default prefix
+     * Get base filename from original filename or use default prefix.
+     * Sanitizes the filename to prevent path traversal attacks.
      */
     private String getBaseFilename(String originalFilename, String operationSuffix) {
         if (originalFilename != null && !originalFilename.isEmpty()) {
+            // Sanitize: reject null bytes
+            String sanitized = originalFilename.replace("\0", "");
+            // Strip any directory components (both Unix and Windows separators)
+            int lastSlash = sanitized.lastIndexOf('/');
+            int lastBackslash = sanitized.lastIndexOf('\\');
+            int lastSep = Math.max(lastSlash, lastBackslash);
+            if (lastSep >= 0) {
+                sanitized = sanitized.substring(lastSep + 1);
+            }
+            if (sanitized.isEmpty()) {
+                return operationSuffix;
+            }
             // Remove .pdf extension and add operation suffix
-            String baseName = originalFilename.replaceAll("\\.[pP][dD][fF]$", "");
+            String baseName = sanitized.replaceAll("\\.[pP][dD][fF]$", "");
             return baseName + "_" + operationSuffix;
         }
         return operationSuffix;

@@ -318,6 +318,21 @@ class PdfServiceTest {
             assertNotNull(result.getOutputFilename());
             assertTrue(result.getOutputFilename().endsWith(".md"));
         }
+
+        @Test
+        @DisplayName("Should sanitize path traversal in originalFilename")
+        void testConvertToMarkdown_PathTraversal() throws Exception {
+            byte[] pdf = createValidPdf(1);
+            MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", pdf);
+
+            PdfOperationResult result = pdfService.convertToMarkdown(file, "../../etc/malicious.pdf");
+
+            assertTrue(result.isSuccess());
+            // Output file should not contain path separators
+            assertFalse(result.getOutputFilename().contains("/"));
+            assertFalse(result.getOutputFilename().contains("\\"));
+            assertTrue(result.getOutputFilename().endsWith(".md"));
+        }
     }
 
     @Nested
@@ -335,6 +350,21 @@ class PdfServiceTest {
             assertTrue(result.isSuccess());
             assertEquals("PDF converted to DOCX", result.getMessage());
             assertNotNull(result.getOutputFilename());
+            assertTrue(result.getOutputFilename().endsWith(".docx"));
+        }
+
+        @Test
+        @DisplayName("Should sanitize path traversal in originalFilename")
+        void testConvertToDocx_PathTraversal() throws Exception {
+            byte[] pdf = createValidPdf(1);
+            MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", pdf);
+
+            PdfOperationResult result = pdfService.convertToDocx(file, "../../etc/malicious.pdf");
+
+            assertTrue(result.isSuccess());
+            // Output file should not contain path separators
+            assertFalse(result.getOutputFilename().contains("/"));
+            assertFalse(result.getOutputFilename().contains("\\"));
             assertTrue(result.getOutputFilename().endsWith(".docx"));
         }
     }
