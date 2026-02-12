@@ -506,11 +506,20 @@ public class PdfService {
 
     /**
      * Get base filename from original filename or use default prefix.
-     * Sanitizes the filename to prevent path traversal attacks.
+     * <p>
+     * This method is used to construct a new output filename from user input.
+     * It sanitizes the filename to prevent path traversal by removing any
+     * directory components and embedded null bytes before appending the
+     * {@code operationSuffix}.
+     * <p>
+     * Note: For validating user-supplied filenames when downloading existing
+     * files, {@code validateFilename(...)} is stricter and rejects null bytes
+     * outright. Here we intentionally take a more permissive approach since we
+     * are only generating a new filename, not resolving an existing one.
      */
     private String getBaseFilename(String originalFilename, String operationSuffix) {
         if (originalFilename != null && !originalFilename.isEmpty()) {
-            // Sanitize: reject null bytes
+            // Sanitize: remove embedded null bytes when constructing an output filename
             String sanitized = originalFilename.replace("\0", "");
             // Strip any directory components (both Unix and Windows separators)
             int lastSlash = sanitized.lastIndexOf('/');
@@ -519,11 +528,16 @@ public class PdfService {
             if (lastSep >= 0) {
                 sanitized = sanitized.substring(lastSep + 1);
             }
+            // If sanitization removed everything (e.g., "../../"), fall back to operationSuffix
             if (sanitized.isEmpty()) {
                 return operationSuffix;
             }
             // Remove .pdf extension and add operation suffix
             String baseName = sanitized.replaceAll("\\.[pP][dD][fF]$", "");
+            // Handle edge case where the filename is only an extension (e.g., ".pdf")
+            if (baseName.isEmpty()) {
+                return operationSuffix;
+            }
             return baseName + "_" + operationSuffix;
         }
         return operationSuffix;

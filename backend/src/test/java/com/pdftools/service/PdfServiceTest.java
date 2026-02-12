@@ -106,6 +106,24 @@ class PdfServiceTest {
                 pdfService.mergePdfs(Arrays.asList(invalidFile), "test.pdf");
             });
         }
+
+        @Test
+        @DisplayName("Should sanitize path traversal in originalFilename")
+        void testMergePdfs_PathTraversal() throws Exception {
+            byte[] pdf1 = createValidPdf(1);
+            byte[] pdf2 = createValidPdf(1);
+
+            MockMultipartFile file1 = new MockMultipartFile("file", "test1.pdf", "application/pdf", pdf1);
+            MockMultipartFile file2 = new MockMultipartFile("file", "test2.pdf", "application/pdf", pdf2);
+
+            PdfOperationResult result = pdfService.mergePdfs(Arrays.asList(file1, file2), "../../etc/malicious.pdf");
+
+            assertTrue(result.isSuccess());
+            assertFalse(result.getOutputFilename().contains("/"));
+            assertFalse(result.getOutputFilename().contains("\\"));
+            assertTrue(result.getOutputFilename().startsWith("malicious_"));
+            assertTrue(result.getOutputFilename().endsWith(".pdf"));
+        }
     }
 
     @Nested
@@ -136,6 +154,23 @@ class PdfServiceTest {
             assertThrows(PdfProcessingException.class, () -> {
                 pdfService.splitPdf(invalidFile, null, "test.pdf");
             });
+        }
+
+        @Test
+        @DisplayName("Should sanitize path traversal in originalFilename")
+        void testSplitPdf_PathTraversal() throws Exception {
+            byte[] pdf = createValidPdf(2);
+            MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", pdf);
+
+            PdfOperationResult result = pdfService.splitPdf(file, null, "../../etc/malicious.pdf");
+
+            assertTrue(result.isSuccess());
+            String[] filenames = result.getOutputFilename().split(",");
+            for (String filename : filenames) {
+                assertFalse(filename.contains("/"));
+                assertFalse(filename.contains("\\"));
+                assertTrue(filename.startsWith("malicious_"));
+            }
         }
     }
 
