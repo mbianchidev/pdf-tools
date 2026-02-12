@@ -331,6 +331,8 @@ class PdfServiceTest {
             // Output file should not contain path separators
             assertFalse(result.getOutputFilename().contains("/"));
             assertFalse(result.getOutputFilename().contains("\\"));
+            // Sanitized name should start with the extracted filename portion
+            assertTrue(result.getOutputFilename().startsWith("malicious_"));
             assertTrue(result.getOutputFilename().endsWith(".md"));
         }
     }
@@ -365,6 +367,8 @@ class PdfServiceTest {
             // Output file should not contain path separators
             assertFalse(result.getOutputFilename().contains("/"));
             assertFalse(result.getOutputFilename().contains("\\"));
+            // Sanitized name should start with the extracted filename portion
+            assertTrue(result.getOutputFilename().startsWith("malicious_"));
             assertTrue(result.getOutputFilename().endsWith(".docx"));
         }
     }
