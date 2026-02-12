@@ -519,7 +519,7 @@ public class PdfService {
      */
     private String getBaseFilename(String originalFilename, String operationSuffix) {
         if (originalFilename != null && !originalFilename.isEmpty()) {
-            // Sanitize: remove embedded null bytes when constructing an output filename
+            // Sanitize: remove null bytes
             String sanitized = originalFilename.replace("\0", "");
             // Strip any directory components (both Unix and Windows separators)
             int lastSlash = sanitized.lastIndexOf('/');
@@ -528,7 +528,7 @@ public class PdfService {
             if (lastSep >= 0) {
                 sanitized = sanitized.substring(lastSep + 1);
             }
-            // If sanitization removed everything (e.g., "../../"), fall back to operationSuffix
+            // If nothing remains after stripping separators (e.g., "///"), fall back to operationSuffix
             if (sanitized.isEmpty()) {
                 return operationSuffix;
             }
