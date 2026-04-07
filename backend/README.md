@@ -10,7 +10,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 | Apache PDFBox | 3.0.1 | PDF manipulation |
 | iText | 8.0.2 | Advanced PDF operations |
 | Apache POI | 5.2.5 | DOCX generation |
-| Java | 17 | Runtime |
+| Java | 25 | Runtime |
 
 ## Features
 
@@ -29,7 +29,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 ## Getting Started
 
 ### Prerequisites
-- Java 17 or higher
+- Java 25 or higher
 - Maven 3.6+
 
 ### Running Locally

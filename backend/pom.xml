@@ -19,7 +19,7 @@
     <description>Backend for PDF manipulation application</description>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>25</java.version>
         <pdfbox.version>3.0.7</pdfbox.version>
         <itext.version>9.6.0</itext.version>
     </properties>
