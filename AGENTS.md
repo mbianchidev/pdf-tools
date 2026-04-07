@@ -10,7 +10,7 @@ This document provides comprehensive project information for AI agents to effici
 |--------|---------|
 | **Type** | Full-stack web application |
 | **Frontend** | React 19 + Vite 7 |
-| **Backend** | Java 17 + Spring Boot 3.2.1 |
+| **Backend** | Java 25 + Spring Boot 3.2.1 |
 | **Deployment** | Docker Compose |
 | **Ports** | Frontend: 80, Backend: 8080 |
 
@@ -174,7 +174,7 @@ docker compose down
 
 ### Local development
 ```bash
-# Backend (requires Java 17 & Maven)
+# Backend (requires Java 25 & Maven)
 cd backend && mvn spring-boot:run
 
 # Frontend (requires Node.js)
