@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
 import './Toast.css';

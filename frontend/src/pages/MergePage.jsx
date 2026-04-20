@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { ArrowLeft, Combine, Download, Trash2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -23,6 +22,7 @@ const MergePage = () => {
   const [selectedFileUrl, setSelectedFileUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const urlRef = useRef(null);
 
   const addToast = (message, type = 'success', duration = 5000) => {
     const id = Date.now();
@@ -33,23 +33,41 @@ const MergePage = () => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  // Update selected file URL when selection changes
-  useEffect(() => {
-    if (files.length > 0 && files[selectedFileIndex]) {
-      const url = URL.createObjectURL(files[selectedFileIndex]);
+  const updatePreviewUrl = useCallback((index, fileList) => {
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+    if (fileList.length > 0 && fileList[index]) {
+      const url = URL.createObjectURL(fileList[index]);
+      urlRef.current = url;
       setSelectedFileUrl(url);
-      return () => URL.revokeObjectURL(url);
     } else {
       setSelectedFileUrl(null);
     }
-  }, [files, selectedFileIndex]);
+  }, []);
+
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (urlRef.current) {
+        URL.revokeObjectURL(urlRef.current);
+      }
+    };
+  }, []);
 
   const handleFilesChange = useCallback((newFiles) => {
     setFiles(newFiles);
-    if (newFiles.length > 0 && selectedFileIndex >= newFiles.length) {
-      setSelectedFileIndex(newFiles.length - 1);
+    let newIndex = selectedFileIndex;
+    if (newFiles.length === 0) {
+      newIndex = 0;
+      setSelectedFileIndex(0);
+    } else if (selectedFileIndex >= newFiles.length) {
+      newIndex = newFiles.length - 1;
+      setSelectedFileIndex(newIndex);
     }
-  }, [selectedFileIndex]);
+    updatePreviewUrl(newIndex, newFiles);
+  }, [selectedFileIndex, updatePreviewUrl]);
 
   const moveFile = (fromIndex, toIndex) => {
     if (toIndex < 0 || toIndex >= files.length) return;
@@ -58,16 +76,24 @@ const MergePage = () => {
     newFiles.splice(toIndex, 0, movedFile);
     setFiles(newFiles);
     setSelectedFileIndex(toIndex);
+    updatePreviewUrl(toIndex, newFiles);
   };
 
   const removeFile = (index) => {
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
-    if (selectedFileIndex >= newFiles.length && newFiles.length > 0) {
-      setSelectedFileIndex(newFiles.length - 1);
-    } else if (newFiles.length === 0) {
+    let newIndex = selectedFileIndex;
+    if (newFiles.length === 0) {
+      newIndex = 0;
       setSelectedFileIndex(0);
+    } else if (selectedFileIndex >= newFiles.length) {
+      newIndex = newFiles.length - 1;
+      setSelectedFileIndex(newIndex);
+    } else if (index < selectedFileIndex) {
+      newIndex = selectedFileIndex - 1;
+      setSelectedFileIndex(newIndex);
     }
+    updatePreviewUrl(newIndex, newFiles);
   };
 
   const handleMerge = async () => {
@@ -119,7 +145,7 @@ const MergePage = () => {
                       className={`file-order-item ${selectedFileIndex === index ? 'active' : ''}`}
                       initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
                       <div className="file-order-grip"><GripVertical size={16} /></div>
-                      <div className="file-order-info" onClick={() => setSelectedFileIndex(index)}>
+                      <div className="file-order-info" onClick={() => { setSelectedFileIndex(index); updatePreviewUrl(index, files); }}>
                         <span className="file-order-number">{index + 1}</span>
                         <span className="file-order-name">{file.name}</span>
                         <span className="file-order-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
@@ -133,7 +159,7 @@ const MergePage = () => {
                   ))}
                 </div>
                 <div className="add-more-files">
-                  <FileUpload onFilesChange={(newFiles) => { setFiles([...files, ...newFiles]); }} files={[]} multiple={true} maxFiles={20 - files.length} />
+                  <FileUpload onFilesChange={(newFiles) => { const combined = [...files, ...newFiles]; setFiles(combined); updatePreviewUrl(selectedFileIndex, combined); }} files={[]} multiple={true} maxFiles={20 - files.length} />
                 </div>
               </>
             )}
