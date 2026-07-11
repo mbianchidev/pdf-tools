@@ -20,8 +20,8 @@
 
     <properties>
         <java.version>25</java.version>
-        <pdfbox.version>3.0.7</pdfbox.version>
-        <itext.version>9.6.0</itext.version>
+        <pdfbox.version>3.0.8</pdfbox.version>
+        <itext.version>9.7.0</itext.version>
     </properties>
 
     <dependencies>
