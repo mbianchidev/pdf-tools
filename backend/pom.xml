@@ -21,7 +21,7 @@
     <properties>
         <java.version>25</java.version>
         <pdfbox.version>3.0.8</pdfbox.version>
-        <itext.version>9.7.0</itext.version>
+        <itext.version>9.7.1</itext.version>
     </properties>
 
     <dependencies>
