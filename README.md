@@ -7,6 +7,9 @@
 
 A comprehensive locally hostable PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
 
+The root landing page documents self-hosting only. PDF workflows run from tool routes
+inside a deployed instance; the public landing does not upload or process documents.
+
 ## Documentation
 
 - **[Frontend README](frontend/README.md)** - React application documentation
@@ -14,12 +17,14 @@ A comprehensive locally hostable PDF manipulation application with a modern Reac
 - **[Architecture](docs/architecture.md)** - Jobs, storage, persistence, and operation boundaries
 - **[Jobs API v1](docs/api-v1.md)** - Versioned asynchronous API contract
 - **[Development](docs/development.md)** - Local, Docker, SeaweedFS, and validation workflows
+- **[Product](PRODUCT.md)** - Durable product truth and self-hosting position
+- **[Design system](DESIGN.md)** - Shared img-tools family visual language
 - **[AGENTS.md](AGENTS.md)** - Agent navigation guide for AI assistants
 
 ## Features
 
 ### PDF Operations
-- **Merge PDFs** - Combine multiple PDF files into one
+- **Merge PDFs** - Disk-backed ordered merge with strict validation, limits, progress, and cancellation
 - **Split PDF** - Split a PDF into individual pages
 - **Extract Pages** - Extract specific pages from a PDF
 - **Remove Pages** - Remove specific pages from a PDF

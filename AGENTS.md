@@ -103,12 +103,17 @@ pdf-tools/
 
 ### When modifying PDF operations:
 - **Operation contract**: `backend/src/main/java/com/pdftools/operations/PdfOperation.java`
+- **Merge implementation**: `backend/src/main/java/com/pdftools/operations/merge/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`
 - **Legacy frontend API**: `frontend/src/services/pdfService.js`
 
 ### When modifying UI/styling:
+- **Visual authority**: `DESIGN.md`
+- **Product truth**: `PRODUCT.md`
+- **Global tokens and typography**: `frontend/src/index.css`
+- **Landing surface**: `frontend/src/App.jsx`, `frontend/src/App.css`
 - **Shared operation page styles**: `frontend/src/pages/OperationPage.css`
 - **Global styles**: `frontend/src/App.css`
 - **Page-specific styles**: `frontend/src/pages/[PageName].css`

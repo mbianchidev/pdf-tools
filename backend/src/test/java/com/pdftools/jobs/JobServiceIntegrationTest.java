@@ -9,6 +9,7 @@ import com.pdftools.jobs.persistence.JobRepository;
 import com.pdftools.operations.OperationContext;
 import com.pdftools.operations.OperationOutput;
 import com.pdftools.operations.PdfOperation;
+import com.pdftools.operations.merge.LegacyMergeWorkspaceRegistry;
 import com.pdftools.storage.StorageService;
 import com.pdftools.storage.StoredResource;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,10 @@ import org.springframework.http.HttpStatus;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -59,6 +64,9 @@ class JobServiceIntegrationTest {
 
     @Autowired
     private JobProperties jobProperties;
+
+    @Autowired
+    private LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry;
 
     @Test
     void persistsRunsAndStreamsAJobOutput() throws Exception {
@@ -145,21 +153,57 @@ class JobServiceIntegrationTest {
             jobProperties.getWorkRoot().resolve(active.getId() + "-active")
         );
         Files.writeString(activeWorkspace.resolve("in-use.tmp"), "temporary");
-
-        recoveryService.recoverStaleWork();
-
-        assertEquals(JobStatus.FAILED, jobRepository.findById(expired.getId()).orElseThrow().getStatus());
-        assertEquals(JobStatus.RUNNING, jobRepository.findById(active.getId()).orElseThrow().getStatus());
-        assertEquals(
-            JobStatus.CANCELLED,
-            jobRepository.findById(cancelled.getId()).orElseThrow().getStatus()
+        Path legacyWorkspace = Files.createDirectories(
+            jobProperties.getWorkRoot().resolve(".legacy-merge-stale")
         );
-        assertFalse(Files.exists(orphanWorkspace));
-        assertTrue(Files.exists(activeWorkspace));
+        Files.writeString(legacyWorkspace.resolve("source.pdf"), "temporary");
+        Files.setLastModifiedTime(
+            legacyWorkspace,
+            FileTime.from(now.minus(jobProperties.getOrphanGrace()).minusSeconds(1))
+        );
+        Path activeLegacyWorkspace = Files.createDirectories(
+            jobProperties.getWorkRoot().resolve(".legacy-merge-active")
+        );
+        Path activeLegacyLock = activeLegacyWorkspace.resolve(".active.lock");
+        Files.writeString(activeLegacyLock, "");
+        Files.setLastModifiedTime(
+            activeLegacyWorkspace,
+            FileTime.from(now.minus(jobProperties.getOrphanGrace()).minusSeconds(1))
+        );
+
+        legacyWorkspaceRegistry.register(activeLegacyWorkspace);
+        try {
+            try (FileChannel channel = FileChannel.open(
+                    activeLegacyLock,
+                    StandardOpenOption.WRITE);
+                 FileLock ignored = channel.lock()) {
+                recoveryService.recoverStaleWork();
+
+                assertEquals(
+                    JobStatus.FAILED,
+                    jobRepository.findById(expired.getId()).orElseThrow().getStatus()
+                );
+                assertEquals(
+                    JobStatus.RUNNING,
+                    jobRepository.findById(active.getId()).orElseThrow().getStatus()
+                );
+                assertEquals(
+                    JobStatus.CANCELLED,
+                    jobRepository.findById(cancelled.getId()).orElseThrow().getStatus()
+                );
+                assertFalse(Files.exists(orphanWorkspace));
+                assertFalse(Files.exists(legacyWorkspace));
+                assertTrue(Files.exists(activeWorkspace));
+                assertTrue(Files.exists(activeLegacyWorkspace));
+            }
+        } finally {
+            legacyWorkspaceRegistry.unregister(activeLegacyWorkspace);
+        }
 
         jobRepository.deleteAllById(List.of(expired.getId(), active.getId(), cancelled.getId()));
         recoveryService.recoverStaleWork();
         assertFalse(Files.exists(activeWorkspace));
+        assertFalse(Files.exists(activeLegacyWorkspace));
     }
 
     @Test

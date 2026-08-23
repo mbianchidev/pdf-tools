@@ -2,6 +2,13 @@ package com.pdftools.service;
 
 import com.pdftools.dto.PdfOperationResult;
 import com.pdftools.exception.PdfProcessingException;
+import com.pdftools.config.JobProperties;
+import com.pdftools.operations.OperationException;
+import com.pdftools.operations.merge.MergeProperties;
+import com.pdftools.operations.merge.MergeSource;
+import com.pdftools.operations.merge.PdfMergeEngine;
+import com.pdftools.operations.merge.LegacyMergeWorkspaceRegistry;
+import com.pdftools.util.FilenameSanitizer;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -16,6 +23,9 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,54 +34,209 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class PdfService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PdfService.class);
+    private static final Set<String> PDF_MEDIA_TYPES = Set.of(
+        "application/pdf",
+        "application/x-pdf",
+        "application/octet-stream"
+    );
+
     @Value("${pdf.upload.dir}")
     private String uploadDir;
 
+    private final PdfMergeEngine mergeEngine;
+    private final MergeProperties mergeProperties;
+    private final JobProperties jobProperties;
+    private final LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry;
+
     public PdfService() {
-        // Constructor
+        this.mergeProperties = new MergeProperties();
+        this.mergeEngine = new PdfMergeEngine(mergeProperties);
+        this.jobProperties = new JobProperties();
+        this.legacyWorkspaceRegistry = new LegacyMergeWorkspaceRegistry();
+    }
+
+    @Autowired
+    public PdfService(
+            PdfMergeEngine mergeEngine,
+            MergeProperties mergeProperties,
+            JobProperties jobProperties,
+            LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry) {
+        this.mergeEngine = mergeEngine;
+        this.mergeProperties = mergeProperties;
+        this.jobProperties = jobProperties;
+        this.legacyWorkspaceRegistry = legacyWorkspaceRegistry;
     }
 
     /**
      * Merge multiple PDFs into one
      */
     public PdfOperationResult mergePdfs(List<MultipartFile> files, String originalFilename) throws PdfProcessingException {
-        List<PDDocument> sourceDocs = new ArrayList<>();
+        validateLegacyMergeFiles(files);
+        Path workspace = null;
+        Path outputPath = null;
+        FileChannel workspaceLockChannel = null;
+        FileLock workspaceLock = null;
         try {
-            PDDocument mergedDoc = new PDDocument();
-            
-            for (MultipartFile file : files) {
-                PDDocument doc = Loader.loadPDF(file.getBytes());
-                sourceDocs.add(doc); // Keep reference to prevent closing
-                
-                for (int i = 0; i < doc.getNumberOfPages(); i++) {
-                    PDPage page = doc.getPage(i);
-                    // Import page to new document to avoid reference issues
-                    mergedDoc.importPage(page);
+            File outputDirectory = getUploadDir();
+            Files.createDirectories(jobProperties.getWorkRoot());
+            workspace = Files.createTempDirectory(
+                jobProperties.getWorkRoot(),
+                ".legacy-merge-"
+            );
+            workspaceLockChannel = FileChannel.open(
+                workspace.resolve(".active.lock"),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE
+            );
+            workspaceLock = workspaceLockChannel.lock();
+            legacyWorkspaceRegistry.register(workspace);
+            List<MergeSource> sources = new ArrayList<>();
+            for (int index = 0; index < files.size(); index++) {
+                MultipartFile file = files.get(index);
+                String filename = FilenameSanitizer.sanitize(
+                    file.getOriginalFilename(),
+                    "input-" + (index + 1) + ".pdf"
+                );
+                Path inputPath = workspace.resolve(String.format(
+                    Locale.ROOT,
+                    "%04d-%s",
+                    index + 1,
+                    filename
+                ));
+                try (InputStream input = file.getInputStream()) {
+                    Files.copy(input, inputPath);
                 }
+                sources.add(new MergeSource(
+                    index + 1,
+                    inputPath,
+                    filename,
+                    Files.size(inputPath)
+                ));
             }
 
-            File outputFile = saveDocument(mergedDoc, "merged", originalFilename);
-            mergedDoc.close();
-            
-            // Close source documents after merged doc is saved
-            for (PDDocument doc : sourceDocs) {
-                doc.close();
-            }
+            String baseName = getBaseFilename(originalFilename, "merged");
+            outputPath = outputDirectory.toPath().resolve(
+                baseName + "_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf"
+            );
+            mergeEngine.merge(sources, outputPath, ignored -> {
+            }, () -> {
+            });
 
-            return new PdfOperationResult(true, "PDFs merged successfully", outputFile.getName());
+            return new PdfOperationResult(
+                true,
+                "PDFs merged successfully",
+                outputPath.getFileName().toString()
+            );
+        } catch (OperationException exception) {
+            deleteOutput(outputPath);
+            throw new PdfProcessingException(exception.getMessage(), exception);
         } catch (Exception e) {
-            // Clean up on error
-            for (PDDocument doc : sourceDocs) {
-                try { doc.close(); } catch (Exception ignored) {}
-            }
+            deleteOutput(outputPath);
             throw new PdfProcessingException("Failed to merge PDFs: " + e.getMessage(), e);
+        } finally {
+            releaseWorkspaceLock(workspaceLock, workspaceLockChannel);
+            legacyWorkspaceRegistry.unregister(workspace);
+            deleteWorkspace(workspace);
+        }
+    }
+
+    private void releaseWorkspaceLock(FileLock lock, FileChannel channel) {
+        try {
+            if (lock != null && lock.isValid()) {
+                lock.release();
+            }
+        } catch (IOException exception) {
+            logger.warn("Failed to release legacy merge workspace lock", exception);
+        }
+        try {
+            if (channel != null) {
+                channel.close();
+            }
+        } catch (IOException exception) {
+            logger.warn("Failed to close legacy merge workspace lock channel", exception);
+        }
+    }
+
+    private void validateLegacyMergeFiles(List<MultipartFile> files) throws PdfProcessingException {
+        if (files == null || files.size() < 2 || files.size() > mergeProperties.getMaxFiles()) {
+            throw new PdfProcessingException(
+                "Merge requires between 2 and " + mergeProperties.getMaxFiles() + " PDF files"
+            );
+        }
+
+        long totalBytes = 0;
+        for (int index = 0; index < files.size(); index++) {
+            MultipartFile file = files.get(index);
+            String filename = FilenameSanitizer.sanitize(
+                file.getOriginalFilename(),
+                "input-" + (index + 1) + ".pdf"
+            );
+            String mediaType = file.getContentType() == null
+                ? "application/octet-stream"
+                : file.getContentType().toLowerCase(Locale.ROOT);
+            if (file.isEmpty()
+                    || !hasPdfStem(filename)
+                    || !PDF_MEDIA_TYPES.contains(mediaType)) {
+                throw new PdfProcessingException(
+                    "Every merge input must be a non-empty PDF"
+                );
+            }
+            try {
+                totalBytes = Math.addExact(totalBytes, file.getSize());
+            } catch (ArithmeticException exception) {
+                throw new PdfProcessingException("Merge inputs exceed the total size limit");
+            }
+        }
+        if (totalBytes > mergeProperties.getMaxTotalInputBytes()) {
+            throw new PdfProcessingException("Merge inputs exceed the total size limit");
+        }
+    }
+
+    private boolean hasPdfStem(String filename) {
+        String lower = filename.toLowerCase(Locale.ROOT);
+        return lower.endsWith(".pdf")
+            && !filename.substring(0, filename.length() - 4).isBlank();
+    }
+
+    private void deleteOutput(Path outputPath) {
+        if (outputPath == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(outputPath);
+        } catch (IOException exception) {
+            logger.warn("Failed to remove partial legacy merge output {}", outputPath, exception);
+        }
+    }
+
+    private void deleteWorkspace(Path workspace) {
+        if (workspace == null || !Files.exists(workspace)) {
+            return;
+        }
+        try (var paths = Files.walk(workspace)) {
+            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException exception) {
+                    logger.warn("Failed to remove legacy merge workspace path {}", path, exception);
+                }
+            });
+        } catch (IOException exception) {
+            logger.warn("Failed to inspect legacy merge workspace {}", workspace, exception);
         }
     }
 
@@ -548,8 +713,9 @@ public class PdfService {
      */
     private File getUploadDir() throws IOException {
         File dir = new File(uploadDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
+        Files.createDirectories(dir.toPath());
+        if (!dir.isDirectory()) {
+            throw new IOException("Upload path is not a directory: " + dir);
         }
         return dir;
     }

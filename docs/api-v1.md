@@ -116,3 +116,9 @@ The shared grammar accepts:
 Operations select one of three duplicate policies: keep, deduplicate, or reject.
 Descending ranges, empty tokens, page zero, and out-of-range pages are invalid.
 An expression may expand to at most 100,000 page selections.
+
+## Merge PDF
+
+`operation=merge` accepts 2-20 ordered PDF inputs and an optional
+`options.outputFilename`. See [Merge PDF](operations/merge.md) for validation, resource,
+and fidelity details.

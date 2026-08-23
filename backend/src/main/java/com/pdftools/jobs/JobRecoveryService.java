@@ -1,6 +1,7 @@
 package com.pdftools.jobs;
 
 import com.pdftools.config.JobProperties;
+import com.pdftools.operations.merge.LegacyMergeWorkspaceRegistry;
 import com.pdftools.jobs.persistence.JobRepository;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -13,6 +14,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -29,6 +34,7 @@ public class JobRecoveryService {
     private final JobDispatcher dispatcher;
     private final JobProperties properties;
     private final TransactionTemplate transactionTemplate;
+    private final LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry;
 
     public JobRecoveryService(
             JobRepository jobRepository,
@@ -36,13 +42,15 @@ public class JobRecoveryService {
             JobEventService eventService,
             JobDispatcher dispatcher,
             JobProperties properties,
-            TransactionTemplate transactionTemplate) {
+            TransactionTemplate transactionTemplate,
+            LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry) {
         this.jobRepository = jobRepository;
         this.jobMapper = jobMapper;
         this.eventService = eventService;
         this.dispatcher = dispatcher;
         this.properties = properties;
         this.transactionTemplate = transactionTemplate;
+        this.legacyWorkspaceRegistry = legacyWorkspaceRegistry;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -124,13 +132,56 @@ public class JobRecoveryService {
         try (var paths = Files.list(root)) {
             paths.filter(Files::isDirectory).forEach(path -> {
                 UUID jobId = workspaceJobId(path);
-                if (jobId == null || hasRunningJob(jobId)) {
+                if (jobId == null) {
+                    if (isStaleLegacyWorkspace(path)) {
+                        deleteWorkspace(path);
+                    }
+                    return;
+                }
+                if (hasRunningJob(jobId)) {
                     return;
                 }
                 deleteWorkspace(path);
             });
         } catch (IOException exception) {
             logger.warn("Failed to scan stale PDF job workspaces", exception);
+        }
+    }
+
+    private boolean isStaleLegacyWorkspace(Path workspace) {
+        if (!workspace.getFileName().toString().startsWith(".legacy-merge-")) {
+            return false;
+        }
+        if (hasActiveLegacyLock(workspace)) {
+            return false;
+        }
+        try {
+            return Files.getLastModifiedTime(workspace)
+                .toInstant()
+                .isBefore(Instant.now().minus(properties.getOrphanGrace()));
+        } catch (IOException exception) {
+            logger.warn("Failed to read legacy workspace age {}", workspace, exception);
+            return false;
+        }
+    }
+
+    private boolean hasActiveLegacyLock(Path workspace) {
+        if (legacyWorkspaceRegistry.isActive(workspace)) {
+            return true;
+        }
+        Path lockPath = workspace.resolve(".active.lock");
+        if (!Files.exists(lockPath)) {
+            return false;
+        }
+        try (FileChannel channel = FileChannel.open(lockPath, StandardOpenOption.WRITE)) {
+            try (FileLock lock = channel.tryLock()) {
+                return lock == null;
+            } catch (OverlappingFileLockException exception) {
+                return true;
+            }
+        } catch (IOException exception) {
+            logger.warn("Failed to inspect legacy workspace lock {}", lockPath, exception);
+            return true;
         }
     }
 

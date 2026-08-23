@@ -597,7 +597,10 @@ class PdfServiceTest {
             MockMultipartFile file = new MockMultipartFile("file", "My Report.pdf", "application/pdf", pdf);
             
             // Process the file (using merge as an example operation)
-            PdfOperationResult result = pdfService.mergePdfs(Arrays.asList(file), "My Report.pdf");
+            PdfOperationResult result = pdfService.mergePdfs(
+                Arrays.asList(file, file),
+                "My Report.pdf"
+            );
             
             // The generated filename should be downloadable
             assertTrue(result.isSuccess());
@@ -617,7 +620,10 @@ class PdfServiceTest {
             MockMultipartFile file = new MockMultipartFile("file", "report..v1.pdf", "application/pdf", pdf);
             
             // Process the file (using merge as an example operation)
-            PdfOperationResult result = pdfService.mergePdfs(Arrays.asList(file), "report..v1.pdf");
+            PdfOperationResult result = pdfService.mergePdfs(
+                Arrays.asList(file, file),
+                "report..v1.pdf"
+            );
             
             // The generated filename should be downloadable
             assertTrue(result.isSuccess());
