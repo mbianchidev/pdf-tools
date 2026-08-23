@@ -113,9 +113,8 @@ public class PdfService {
                 );
                 Path inputPath = workspace.resolve(String.format(
                     Locale.ROOT,
-                    "%04d-%s",
-                    index + 1,
-                    filename
+                    "input-%04d.bin",
+                    index + 1
                 ));
                 try (InputStream input = file.getInputStream()) {
                     Files.copy(input, inputPath);
@@ -128,9 +127,8 @@ public class PdfService {
                 ));
             }
 
-            String baseName = getBaseFilename(originalFilename, "merged");
             outputPath = outputDirectory.toPath().resolve(
-                baseName + "_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf"
+                "merged_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf"
             );
             mergeEngine.merge(sources, outputPath, ignored -> {
             }, () -> {

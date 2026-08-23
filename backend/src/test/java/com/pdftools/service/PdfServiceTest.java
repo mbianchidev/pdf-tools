@@ -108,7 +108,7 @@ class PdfServiceTest {
         }
 
         @Test
-        @DisplayName("Should sanitize path traversal in originalFilename")
+        @DisplayName("Should ignore user filenames when naming legacy merge output")
         void testMergePdfs_PathTraversal() throws Exception {
             byte[] pdf1 = createValidPdf(1);
             byte[] pdf2 = createValidPdf(1);
@@ -121,7 +121,7 @@ class PdfServiceTest {
             assertTrue(result.isSuccess());
             assertFalse(result.getOutputFilename().contains("/"));
             assertFalse(result.getOutputFilename().contains("\\"));
-            assertTrue(result.getOutputFilename().startsWith("malicious_"));
+            assertTrue(result.getOutputFilename().startsWith("merged_"));
             assertTrue(result.getOutputFilename().endsWith(".pdf"));
         }
     }

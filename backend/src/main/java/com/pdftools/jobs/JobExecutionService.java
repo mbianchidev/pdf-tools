@@ -161,15 +161,10 @@ public class JobExecutionService {
             if (isCancellationRequested(jobId, workerId)) {
                 throw new OperationCancelledException();
             }
-            String filename = FilenameSanitizer.sanitize(
-                input.getOriginalFilename(),
-                "input-" + input.getPosition()
-            );
             Path target = workspace.resolve(String.format(
                 Locale.ROOT,
-                "input-%04d-%s",
-                input.getPosition(),
-                filename
+                "input-%04d.bin",
+                input.getPosition()
             ));
             try (StoredResource resource = storageService.get(input.getStorageKey())) {
                 Files.copy(resource.inputStream(), target);
