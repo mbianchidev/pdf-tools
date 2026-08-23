@@ -9,8 +9,10 @@ This document provides comprehensive project information for AI agents to effici
 | Aspect | Details |
 |--------|---------|
 | **Type** | Full-stack web application |
-| **Frontend** | React 19 + Vite 7 |
-| **Backend** | Java 25 + Spring Boot 3.2.1 |
+| **Frontend** | React 19 + Vite 8 |
+| **Backend** | Java 25 + Spring Boot 4.1 |
+| **Persistence** | PostgreSQL 18 + Flyway |
+| **Storage** | Local streaming storage / SeaweedFS S3 |
 | **Deployment** | Docker Compose |
 | **Ports** | Frontend: 80, Backend: 8080 |
 
@@ -24,8 +26,11 @@ pdf-tools/
 │   ├── src/main/java/com/pdftools/
 │   │   ├── PdfToolsApplication.java    # Main application entry
 │   │   ├── config/                      # Spring configuration
+│   │   ├── jobs/                        # /api/v1/jobs lifecycle
+│   │   ├── operations/                  # Modular PDF operation contract
+│   │   ├── storage/                     # Local and S3 streaming adapters
 │   │   ├── controller/
-│   │   │   └── PdfController.java       # REST API endpoints
+│   │   │   └── PdfController.java       # Legacy REST API endpoints
 │   │   ├── dto/                         # Data transfer objects
 │   │   ├── exception/                   # Custom exceptions
 │   │   └── service/
@@ -76,7 +81,7 @@ pdf-tools/
 | Library | Version | Purpose |
 |---------|---------|---------|
 | React | 19.2 | UI framework |
-| Vite | 7.x | Build tool |
+| Vite | 8.x | Build tool |
 | react-pdf | latest | PDF rendering |
 | react-router-dom | 7.x | Routing |
 | axios | latest | HTTP client |
@@ -86,19 +91,22 @@ pdf-tools/
 ### Backend
 | Library | Version | Purpose |
 |---------|---------|---------|
-| Spring Boot | 3.2.1 | Application framework |
+| Spring Boot | 4.1 | Application framework |
 | Apache PDFBox | 3.x | PDF manipulation |
-| iText | 8.x | Advanced PDF operations |
 | Apache POI | 5.x | DOCX generation |
+| PostgreSQL | 18 | Job metadata |
+| Flyway | managed | Schema migrations |
 
 ---
 
 ## Key Files Reference
 
 ### When modifying PDF operations:
-- **Backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
-- **API endpoints**: `backend/src/main/java/com/pdftools/controller/PdfController.java`
-- **Frontend API calls**: `frontend/src/services/pdfService.js`
+- **Operation contract**: `backend/src/main/java/com/pdftools/operations/PdfOperation.java`
+- **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
+- **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
+- **Frontend job API**: `frontend/src/services/jobService.js`
+- **Legacy frontend API**: `frontend/src/services/pdfService.js`
 
 ### When modifying UI/styling:
 - **Shared operation page styles**: `frontend/src/pages/OperationPage.css`
@@ -115,11 +123,10 @@ pdf-tools/
 
 ### Adding PDF.js worker (required for react-pdf)
 ```javascript
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
+import '../lib/pdfWorker';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 ```
 
 ### File upload handling
@@ -178,7 +185,7 @@ docker compose down
 cd backend && mvn spring-boot:run
 
 # Frontend (requires Node.js)
-cd frontend && npm install && npm run dev
+cd frontend && npm ci && npm run dev
 ```
 
 ---
@@ -187,6 +194,11 @@ cd frontend && npm install && npm run dev
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| POST | `/api/v1/jobs` | Create an asynchronous operation |
+| GET | `/api/v1/jobs/{jobId}` | Read job status and outputs |
+| GET | `/api/v1/jobs/{jobId}/events` | Stream progress |
+| DELETE | `/api/v1/jobs/{jobId}` | Cancel a job |
+| GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an output |
 | POST | `/api/pdf/merge` | Merge multiple PDFs |
 | POST | `/api/pdf/split` | Split PDF into pages |
 | POST | `/api/pdf/extract` | Extract specific pages |

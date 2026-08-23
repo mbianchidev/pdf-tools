@@ -301,3 +301,10 @@
 .fade-in-up {
   animation: slideUp var(--duration-normal) var(--ease-default);
 }
+.route-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: var(--gray-600);
+  background: var(--gray-50);
+}

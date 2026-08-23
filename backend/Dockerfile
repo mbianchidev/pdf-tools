@@ -8,9 +8,14 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends curl gosu \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 10001 pdftools \
+    && useradd --system --uid 10001 --gid pdftools --home-dir /app pdftools
 COPY --from=build /app/target/*.jar app.jar
-RUN mkdir -p /tmp/pdf-uploads
+COPY docker-entrypoint.sh /usr/local/bin/pdf-tools-entrypoint
+RUN mkdir -p /tmp/pdf-storage /tmp/pdf-work /tmp/pdf-multipart \
+    && chown -R pdftools:pdftools /app /tmp/pdf-storage /tmp/pdf-work /tmp/pdf-multipart \
+    && chmod 0755 /usr/local/bin/pdf-tools-entrypoint
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["pdf-tools-entrypoint"]

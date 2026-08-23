@@ -6,10 +6,12 @@ A Java Spring Boot REST API for PDF manipulation operations.
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| Spring Boot | 3.2.1 | Application framework |
-| Apache PDFBox | 3.0.1 | PDF manipulation |
-| iText | 8.0.2 | Advanced PDF operations |
-| Apache POI | 5.2.5 | DOCX generation |
+| Spring Boot | 4.1 | Application framework |
+| Apache PDFBox | 3.0.8 | PDF manipulation |
+| PostgreSQL | 18 | Job metadata |
+| Flyway | managed | Schema migrations |
+| AWS SDK S3 | 2.54 | SeaweedFS-compatible artifact storage |
+| Apache POI | 5.5 | Office document generation |
 | Java | 25 | Runtime |
 
 ## Features
@@ -30,7 +32,8 @@ A Java Spring Boot REST API for PDF manipulation operations.
 
 ### Prerequisites
 - Java 25 or higher
-- Maven 3.6+
+- Maven 3.9+
+- PostgreSQL 18
 
 ### Running Locally
 
@@ -42,7 +45,8 @@ mvn clean package
 mvn spring-boot:run
 ```
 
-The API will be available at http://localhost:8080
+The API will be available at http://localhost:8080. Configure PostgreSQL through
+`DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`.
 
 ### Running with JAR
 
@@ -52,6 +56,19 @@ java -jar target/pdf-tools-backend-1.0.0.jar
 ```
 
 ## API Endpoints
+
+Versioned tools use the asynchronous jobs API documented in
+[`docs/api-v1.md`](../docs/api-v1.md):
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/jobs` | Validate, persist, and queue an operation |
+| GET | `/api/v1/jobs/{jobId}` | Read status and `outputs[]` |
+| GET | `/api/v1/jobs/{jobId}/events` | Stream SSE progress |
+| DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
+| GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
+
+The following legacy endpoints remain during migration:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -151,9 +168,13 @@ cors.allowed-origins=http://localhost:80,http://localhost:3000
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SPRING_PROFILES_ACTIVE` | `default` | Active Spring profile |
-| `PDF_UPLOAD_DIR` | `/tmp/pdf-uploads` | Temp file storage |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:80` | Allowed CORS origins |
+| `DATABASE_URL` | `jdbc:postgresql://localhost:5432/pdftools` | PostgreSQL JDBC URL |
+| `DATABASE_USERNAME` | `pdftools` | PostgreSQL user |
+| `DATABASE_PASSWORD` | `pdftools` | PostgreSQL password |
+| `PDF_STORAGE_TYPE` | `local` | `local` or `s3` artifact storage |
+| `PDF_STORAGE_LOCAL_ROOT` | `/tmp/pdf-storage/jobs` | Local artifact root |
+| `PDF_JOB_WORK_ROOT` | `/tmp/pdf-work` | Isolated worker root |
+| `CORS_ALLOWED_ORIGINS` | local frontend origins | Allowed CORS origins |
 
 ## Docker
 
@@ -170,8 +191,8 @@ docker run -p 8080:8080 pdf-tools-backend
 # Run all tests
 mvn test
 
-# Run with coverage
-mvn test jacoco:report
+# Compile without tests
+mvn -DskipTests compile
 ```
 
 ## Dependencies

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-25+-orange.svg)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
 A comprehensive locally hostable PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
@@ -11,6 +11,9 @@ A comprehensive locally hostable PDF manipulation application with a modern Reac
 
 - **[Frontend README](frontend/README.md)** - React application documentation
 - **[Backend README](backend/README.md)** - Spring Boot API documentation
+- **[Architecture](docs/architecture.md)** - Jobs, storage, persistence, and operation boundaries
+- **[Jobs API v1](docs/api-v1.md)** - Versioned asynchronous API contract
+- **[Development](docs/development.md)** - Local, Docker, SeaweedFS, and validation workflows
 - **[AGENTS.md](AGENTS.md)** - Agent navigation guide for AI assistants
 
 ## Features
@@ -28,9 +31,10 @@ A comprehensive locally hostable PDF manipulation application with a modern Reac
 - **Convert to DOCX** - Export PDF content as Word documents
 
 ### Technology Stack
-- **Backend**: Java 25, Spring Boot 3.2.1, Apache PDFBox, iText, Apache POI
-- **Frontend**: React 19, Vite 7, Framer Motion, Axios
-- **Deployment**: Docker, Docker Compose, Nginx
+- **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, PostgreSQL, Flyway
+- **Frontend**: React 19, Vite 8, react-pdf, Framer Motion, Axios
+- **Storage**: Local streaming storage in development; SeaweedFS S3 in production
+- **Deployment**: Docker Compose, PostgreSQL, Nginx
 
 ## Quick Start
 
@@ -47,11 +51,11 @@ git clone https://github.com/mbianchidev/pdf-tools.git
 cd pdf-tools
 
 # Build and start all services
-docker-compose up --build
+docker compose up --build
 
 # Access the application
 # Frontend: http://localhost
-# Backend API: http://localhost:8080/api/pdf
+# Backend API: http://localhost:8080/api/v1
 ```
 
 The application will be available at `http://localhost`. The frontend automatically proxies API requests to the backend.
@@ -76,6 +80,11 @@ npm run dev
 Frontend will run on `http://localhost:5173`
 
 ## API Documentation
+
+New and migrated tools use the asynchronous [`/api/v1/jobs`](docs/api-v1.md)
+contract with persisted progress, cancellation, multiple outputs, and streaming
+downloads. Existing `/api/pdf` routes remain available while tools migrate behind
+feature flags.
 
 ### Endpoints
 

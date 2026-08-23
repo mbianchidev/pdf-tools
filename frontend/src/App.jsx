@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -13,19 +13,18 @@ import {
   FileText,
   FileType,
 } from 'lucide-react';
-import {
-  MergePage,
-  SplitPage,
-  ExtractPage,
-  RemovePage,
-  WatermarkPage,
-  AddTextPage,
-  SignaturePage,
-  RedactPage,
-  ConvertMarkdownPage,
-  ConvertDocxPage,
-} from './pages';
 import './App.css';
+
+const MergePage = lazy(() => import('./pages/MergePage'));
+const SplitPage = lazy(() => import('./pages/SplitPage'));
+const ExtractPage = lazy(() => import('./pages/ExtractPage'));
+const RemovePage = lazy(() => import('./pages/RemovePage'));
+const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
+const AddTextPage = lazy(() => import('./pages/AddTextPage'));
+const SignaturePage = lazy(() => import('./pages/SignaturePage'));
+const RedactPage = lazy(() => import('./pages/RedactPage'));
+const ConvertMarkdownPage = lazy(() => import('./pages/ConvertMarkdownPage'));
+const ConvertDocxPage = lazy(() => import('./pages/ConvertDocxPage'));
 
 const operations = [
   {
@@ -172,19 +171,21 @@ function HomePage() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/merge" element={<MergePage />} />
-      <Route path="/split" element={<SplitPage />} />
-      <Route path="/extract" element={<ExtractPage />} />
-      <Route path="/remove" element={<RemovePage />} />
-      <Route path="/watermark" element={<WatermarkPage />} />
-      <Route path="/add-text" element={<AddTextPage />} />
-      <Route path="/signature" element={<SignaturePage />} />
-      <Route path="/redact" element={<RedactPage />} />
-      <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
-      <Route path="/convert-docx" element={<ConvertDocxPage />} />
-    </Routes>
+    <Suspense fallback={<div className="route-loading">Loading tool...</div>}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/merge" element={<MergePage />} />
+        <Route path="/split" element={<SplitPage />} />
+        <Route path="/extract" element={<ExtractPage />} />
+        <Route path="/remove" element={<RemovePage />} />
+        <Route path="/watermark" element={<WatermarkPage />} />
+        <Route path="/add-text" element={<AddTextPage />} />
+        <Route path="/signature" element={<SignaturePage />} />
+        <Route path="/redact" element={<RedactPage />} />
+        <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
+        <Route path="/convert-docx" element={<ConvertDocxPage />} />
+      </Routes>
+    </Suspense>
   );
 }
 

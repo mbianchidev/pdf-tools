@@ -360,9 +360,9 @@ public class PdfService {
             throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             // Parse JSON array of redactions: [{x, y, width, height, pageNum}, ...]
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
             java.util.List<java.util.Map<String, Object>> redactions = mapper.readValue(redactionsJson, 
-                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<java.util.Map<String, Object>>>(){});
+                new tools.jackson.core.type.TypeReference<java.util.List<java.util.Map<String, Object>>>(){});
             
             for (java.util.Map<String, Object> redaction : redactions) {
                 int pageNum = ((Number) redaction.get("pageNum")).intValue();

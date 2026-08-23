@@ -28,7 +28,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 | Library | Version | Purpose |
 |---------|---------|---------|
 | React | 19.2 | UI framework |
-| Vite | 7.x | Build tool |
+| Vite | 8.x | Build tool |
 | react-pdf | latest | PDF rendering |
 | react-router-dom | 7.x | Routing |
 | axios | latest | HTTP client |
@@ -38,8 +38,8 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- npm 9+
+- Node.js 22+
+- npm 10+
 
 ### Installation
 
@@ -61,6 +61,8 @@ The app will be available at http://localhost:5173
 | `npm run build` | Build production bundle |
 | `npm run preview` | Preview production build locally |
 | `npm run lint` | Run ESLint |
+| `npm test` | Run Vitest component and unit tests |
+| `npm run test:e2e` | Build and run Playwright tests |
 
 ## Project Structure
 
@@ -68,6 +70,9 @@ The app will be available at http://localhost:5173
 frontend/
 ├── src/
 │   ├── components/           # Reusable UI components
+│   ├── features/
+│   │   ├── editor/           # Page expressions, coordinates, thumbnails, editor
+│   │   └── jobs/             # Job state, SSE progress, and cancellation
 │   │   ├── Button.jsx        # Button with variants & loading states
 │   │   ├── FileUpload.jsx    # Drag-drop upload with previews
 │   │   ├── Input.jsx         # Form input with validation
@@ -87,7 +92,8 @@ frontend/
 │   │   ├── ConvertMarkdownPage.jsx
 │   │   └── OperationPage.css  # Shared operation styles
 │   ├── services/
-│   │   └── pdfService.js     # API client
+│   │   ├── jobService.js     # Versioned asynchronous jobs client
+│   │   └── pdfService.js     # Legacy API client during migration
 │   ├── App.jsx               # Main application
 │   ├── App.css               # Global styles
 │   └── main.jsx              # Entry point
@@ -152,7 +158,8 @@ frontend/
 
 ## API Integration
 
-The frontend communicates with the backend via `/api/pdf/*` endpoints. In production, nginx proxies these requests to the backend service.
+New tools communicate through `/api/v1/jobs`; legacy pages continue to use
+`/api/pdf/*` while they are migrated. Nginx disables buffering for SSE progress.
 
 ```javascript
 // pdfService.js
@@ -176,7 +183,7 @@ npm run build
 # Output is in dist/ directory
 ```
 
-The production build is optimized (~138KB gzipped) and can be served by any static file server.
+The production build can be served by any static file server that proxies `/api`.
 
 ## Docker
 
