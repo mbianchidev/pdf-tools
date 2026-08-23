@@ -1,0 +1,418 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-23T20:09:22.565+02:00",
+  "title": "Design System: PDF Tools",
+  "extensions": {
+    "colorMeta": {
+      "workbench-ink": {
+        "role": "neutral",
+        "displayName": "Workbench Ink",
+        "canonical": "#19172d",
+        "tonalRamp": ["#0c0b16", "#19172d", "#312e4b", "#49445f", "#6f6b83", "#aaa5bb", "#dedbea", "#f7f6fb"]
+      },
+      "workbench-ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Workbench Ink",
+        "canonical": "#312e4b",
+        "tonalRamp": ["#0c0b16", "#19172d", "#312e4b", "#49445f", "#6f6b83", "#aaa5bb", "#dedbea", "#f7f6fb"]
+      },
+      "cool-paper": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "canonical": "#f7f6fb",
+        "tonalRamp": ["#0c0b16", "#19172d", "#312e4b", "#6f6b83", "#aaa5bb", "#c8c3da", "#dedbea", "#f7f6fb"]
+      },
+      "sheet-white": {
+        "role": "neutral",
+        "displayName": "Sheet White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#19172d", "#312e4b", "#6f6b83", "#aaa5bb", "#c8c3da", "#dedbea", "#f0eef7", "#ffffff"]
+      },
+      "panel-muted": {
+        "role": "neutral",
+        "displayName": "Muted Panel",
+        "canonical": "#f0eef7",
+        "tonalRamp": ["#19172d", "#312e4b", "#49445f", "#7e7992", "#aaa5bb", "#c8c3da", "#dedbea", "#f0eef7"]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Cool Rule",
+        "canonical": "#dedbea",
+        "tonalRamp": ["#19172d", "#312e4b", "#49445f", "#6f6b83", "#7e7992", "#aaa5bb", "#c8c3da", "#dedbea"]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Strong Cool Rule",
+        "canonical": "#c8c3da",
+        "tonalRamp": ["#19172d", "#312e4b", "#49445f", "#6f6b83", "#7e7992", "#aaa5bb", "#c8c3da", "#dedbea"]
+      },
+      "muted-copy": {
+        "role": "neutral",
+        "displayName": "Muted Copy",
+        "canonical": "#6f6b83",
+        "tonalRamp": ["#19172d", "#312e4b", "#49445f", "#6f6b83", "#7e7992", "#aaa5bb", "#dedbea", "#f7f6fb"]
+      },
+      "proof-indigo": {
+        "role": "primary",
+        "displayName": "Proof Indigo",
+        "canonical": "#4f46e5",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#818cf8", "#c7d2fe", "#eef2ff"]
+      },
+      "proof-indigo-deep": {
+        "role": "primary",
+        "displayName": "Deep Proof Indigo",
+        "canonical": "#3730a3",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#818cf8", "#c7d2fe", "#eef2ff"]
+      },
+      "proof-indigo-soft": {
+        "role": "primary",
+        "displayName": "Soft Proof Indigo",
+        "canonical": "#e8e7ff",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4f46e5", "#818cf8", "#a5b4fc", "#c7d2fe", "#e8e7ff"]
+      },
+      "signal-coral": {
+        "role": "tertiary",
+        "displayName": "Signal Coral",
+        "canonical": "#ff706b",
+        "tonalRamp": ["#55100e", "#81201d", "#ad332f", "#d84a45", "#ff706b", "#ff9a96", "#ffc4c1", "#fff0ef"]
+      },
+      "signal-aqua": {
+        "role": "tertiary",
+        "displayName": "Signal Aqua",
+        "canonical": "#35c2b8",
+        "tonalRamp": ["#063e3a", "#075f58", "#0d8077", "#1ca49a", "#35c2b8", "#69d5cd", "#a8e7e2", "#ebfbfa"]
+      },
+      "focus-sun": {
+        "role": "tertiary",
+        "displayName": "Focus Sun",
+        "canonical": "#f2ce57",
+        "tonalRamp": ["#4d3a00", "#765900", "#9e7b0e", "#c49e28", "#f2ce57", "#f7df83", "#faedb4", "#fff9df"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Danger Red",
+        "canonical": "#c43c52",
+        "tonalRamp": ["#4c101c", "#751a2b", "#9d273d", "#c43c52", "#df7080", "#ef9daa", "#facdd4", "#fff1f3"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Success Green",
+        "canonical": "#197a64",
+        "tonalRamp": ["#082f28", "#0d4a3e", "#12644f", "#197a64", "#3f9a84", "#75b9a6", "#b7ddd2", "#ecf8f4"]
+      }
+    },
+    "typographyMeta": {
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "Lowercase product lockup with the indigo tools emphasis."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "First-view ownership proposition and oversized PDF artifact mark."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Major landing-section landmarks."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Operation names, upload prompts, and compact group headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Instructions, descriptions, metadata, and field content."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Confident button labels and compact interactive text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase sidebar sections, file-list headings, and small metadata."
+      },
+      "mono": {
+        "displayName": "System Evidence",
+        "purpose": "Commands, terminal chrome, runtime labels, and machine status."
+      }
+    },
+    "shadows": [
+      {
+        "name": "brand-offset",
+        "value": "5px 5px 0 #4f46e5",
+        "purpose": "Compact indigo proof mark behind the tilted brand square."
+      },
+      {
+        "name": "hero-artifact-offset",
+        "value": "22px 22px 0 #4f46e5",
+        "purpose": "Hard ownership offset behind the first-view PDF workbench."
+      },
+      {
+        "name": "terminal-proof-offset",
+        "value": "14px 14px 0 #4f46e5",
+        "purpose": "Turns the real installation command into a primary product artifact."
+      },
+      {
+        "name": "action-plinth",
+        "value": "0 7px 0 #19172d",
+        "purpose": "Physical base for primary and danger actions; deepens to 9px on hover."
+      },
+      {
+        "name": "quiet-surface",
+        "value": "0 1px 2px rgb(25 23 45 / 6%)",
+        "purpose": "Minimal separation for resting white surfaces."
+      },
+      {
+        "name": "artifact-ambient",
+        "value": "0 30px 80px rgb(35 28 78 / 18%)",
+        "purpose": "Soft atmosphere beneath the hero artifact, paired with the hard indigo offset."
+      },
+      {
+        "name": "upload-lift",
+        "value": "8px 8px 0 #e8e7ff",
+        "purpose": "Active upload target feedback paired with a -3px translation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-default",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Default physical easing for state changes and entrance motion."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Input and immediate state feedback."
+      },
+      {
+        "name": "duration-normal",
+        "value": "240ms",
+        "purpose": "Default component transitions."
+      },
+      {
+        "name": "duration-slow",
+        "value": "420ms",
+        "purpose": "Reserved for larger composition changes."
+      },
+      {
+        "name": "button-lift",
+        "value": "translateY(-2px)",
+        "purpose": "Confirms hover on actionable buttons."
+      },
+      {
+        "name": "upload-lift",
+        "value": "translate(-3px, -3px)",
+        "purpose": "Pairs upload-target movement with its soft-indigo offset."
+      },
+      {
+        "name": "link-nudge",
+        "value": "translateX(4px)",
+        "purpose": "Moves directional arrows without moving their labels."
+      },
+      {
+        "name": "hero-copy-enter",
+        "value": "opacity 0 to 1; translateY(18px) to 0; 500ms",
+        "purpose": "Introduces the ownership proposition once, without ongoing spectacle."
+      },
+      {
+        "name": "hero-artifact-enter",
+        "value": "opacity 0 to 1; rotate(-1deg) to 0; scale(0.96) to 1; 650ms; 80ms delay",
+        "purpose": "Settles the PDF artifact into the first viewport."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "560px"
+      },
+      {
+        "name": "compact",
+        "value": "768px"
+      },
+      {
+        "name": "landing-stack",
+        "value": "860px"
+      },
+      {
+        "name": "workbench-stack",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Brand Navigation",
+      "kind": "nav",
+      "refersTo": "brand-navigation",
+      "description": "Tilted ink-and-indigo product lockup with the quiet self-host and GitHub navigation treatment.",
+      "html": "<nav class=\"ds-brand-nav\" aria-label=\"Project links\"><a class=\"ds-brand\" href=\"#\"><span class=\"ds-brand-mark\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><rect x=\"7\" y=\"4\" width=\"11\" height=\"14\" rx=\"1\"></rect><path d=\"M5 7H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1\"></path></svg></span><span class=\"ds-brand-name\">pdf <strong>tools</strong></span></a><span class=\"ds-brand-links\"><a href=\"#self-host\">Self-host</a><a class=\"ds-brand-github\" href=\"#\">GitHub</a></span></nav>",
+      "css": ".ds-brand-nav { display: flex; align-items: center; justify-content: space-between; gap: 28px; color: var(--ink); font-family: var(--font-body); } .ds-brand, .ds-brand-links, .ds-brand-links a { display: inline-flex; align-items: center; } .ds-brand { gap: 12px; color: inherit; font-family: var(--font-display); font-size: 25px; font-weight: 560; letter-spacing: -0.04em; text-decoration: none; white-space: nowrap; } .ds-brand-mark { display: grid; width: 42px; height: 42px; place-items: center; color: white; background: var(--ink); box-shadow: 5px 5px 0 var(--iris); transform: rotate(-3deg); } .ds-brand-mark svg { width: 23px; height: 23px; } .ds-brand-name strong { color: var(--iris); font-weight: 760; } .ds-brand-links { gap: 28px; font-size: 15px; font-weight: 700; } .ds-brand-links a { min-height: 38px; color: inherit; text-decoration: none; } .ds-brand-github { padding: 0 13px; border: 1px solid var(--line); border-radius: 10px; } .ds-brand-links a:hover { color: var(--iris-dark); } .ds-brand a:focus-visible, .ds-brand-links a:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Decisive indigo action on a hard ink plinth.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Run operation</button>",
+      "css": ".ds-btn-primary { min-height: 44px; padding: 0 18px; color: white; background: var(--iris); border: 1px solid transparent; border-radius: 10px; box-shadow: 0 7px 0 var(--ink); font-family: var(--font-body); font-size: 15px; font-weight: 750; line-height: 1; transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; } .ds-btn-primary:hover { background: var(--iris-dark); box-shadow: 0 9px 0 var(--ink); transform: translateY(-2px); } .ds-btn-primary:active { box-shadow: 0 7px 0 var(--ink); transform: translateY(0); } .ds-btn-primary:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet indigo-backed action for supporting choices.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Add files</button>",
+      "css": ".ds-btn-secondary { min-height: 44px; padding: 0 18px; color: var(--iris-dark); background: var(--iris-soft); border: 1px solid #c9c5ff; border-radius: 10px; font-family: var(--font-body); font-size: 15px; font-weight: 750; line-height: 1; transition: transform 160ms ease, background 160ms ease, border-color 160ms ease; } .ds-btn-secondary:hover { background: #dad7ff; border-color: var(--iris); transform: translateY(-2px); } .ds-btn-secondary:active { transform: translateY(0); } .ds-btn-secondary:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Paper action with a cool structural rule.",
+      "html": "<button class=\"ds-btn-outline\" type=\"button\">Cancel job</button>",
+      "css": ".ds-btn-outline { min-height: 44px; padding: 0 18px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; font-family: var(--font-body); font-size: 15px; font-weight: 750; line-height: 1; transition: transform 160ms ease, color 160ms ease, background 160ms ease, border-color 160ms ease; } .ds-btn-outline:hover { color: var(--iris-dark); background: var(--iris-soft); border-color: #c9c5ff; transform: translateY(-2px); } .ds-btn-outline:active { transform: translateY(0); } .ds-btn-outline:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis control that remains visibly bounded.",
+      "html": "<button class=\"ds-btn-ghost\" type=\"button\">Back</button>",
+      "css": ".ds-btn-ghost { min-height: 44px; padding: 0 18px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 10px; font-family: var(--font-body); font-size: 15px; font-weight: 750; line-height: 1; transition: transform 160ms ease, color 160ms ease, background 160ms ease, border-color 160ms ease; } .ds-btn-ghost:hover { color: var(--iris-dark); background: var(--iris-soft); border-color: #c9c5ff; transform: translateY(-2px); } .ds-btn-ghost:active { transform: translateY(0); } .ds-btn-ghost:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive action with the same physical plinth as the primary button.",
+      "html": "<button class=\"ds-btn-danger\" type=\"button\">Remove pages</button>",
+      "css": ".ds-btn-danger { min-height: 44px; padding: 0 18px; color: white; background: var(--danger); border: 1px solid transparent; border-radius: 10px; box-shadow: 0 7px 0 var(--ink); font-family: var(--font-body); font-size: 15px; font-weight: 750; line-height: 1; transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease; } .ds-btn-danger:hover { background: #a92f45; box-shadow: 0 9px 0 var(--ink); transform: translateY(-2px); } .ds-btn-danger:active { box-shadow: 0 7px 0 var(--ink); transform: translateY(0); } .ds-btn-danger:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "text-field",
+      "description": "White operational field with a strong indigo focus state.",
+      "html": "<label class=\"ds-field\"><span>Watermark text</span><input type=\"text\" value=\"CONFIDENTIAL\" aria-label=\"Watermark text\"></label>",
+      "css": ".ds-field { display: grid; width: 100%; gap: 8px; color: var(--ink); font-family: var(--font-body); font-size: 14px; font-weight: 500; } .ds-field input { width: 100%; padding: 12px 16px; color: var(--ink); background: white; border: 2px solid var(--line); border-radius: var(--radius-lg); outline: none; font: 400 16px/1.55 var(--font-body); transition: border-color 150ms var(--ease-default), box-shadow 150ms var(--ease-default); } .ds-field input:hover { border-color: var(--line-strong); } .ds-field input:focus { border-color: var(--iris); box-shadow: 0 0 0 3px var(--color-primary-100); } .ds-field input:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }"
+    },
+    {
+      "name": "File Dropzone",
+      "kind": "custom",
+      "refersTo": "file-dropzone",
+      "description": "Square patterned paper target that lifts onto a soft-indigo offset.",
+      "html": "<div class=\"ds-dropzone\" role=\"button\" tabindex=\"0\"><span class=\"ds-dropzone-icon\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M12 16V4\"></path><path d=\"m7 9 5-5 5 5\"></path><path d=\"M5 20h14\"></path></svg></span><strong>Drag &amp; drop a PDF here</strong><small>or click to browse · Supports PDF files</small></div>",
+      "css": ".ds-dropzone { display: grid; min-height: 190px; place-items: center; align-content: center; gap: 10px; padding: 26px; color: var(--ink); text-align: center; background: linear-gradient(135deg, rgb(79 70 229 / 4%) 25%, transparent 25%) 0 0 / 24px 24px, var(--surface); border: 2px dashed var(--line-strong); font-family: var(--font-body); cursor: pointer; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; } .ds-dropzone-icon { display: grid; width: 58px; height: 58px; margin-bottom: 6px; place-items: center; color: var(--iris); background: var(--iris-soft); border: 1px solid #d2ceff; } .ds-dropzone-icon svg { width: 26px; height: 26px; } .ds-dropzone strong { font-family: var(--font-display); font-size: 20px; letter-spacing: -0.025em; } .ds-dropzone small { color: var(--muted); font-size: 12px; } .ds-dropzone:hover, .ds-dropzone:focus-visible { border-color: var(--iris); box-shadow: 8px 8px 0 var(--iris-soft); outline: none; transform: translate(-3px, -3px); }"
+    },
+    {
+      "name": "Terminal Proof Panel",
+      "kind": "custom",
+      "refersTo": "proof-terminal",
+      "description": "Real self-host commands presented as the primary installation proof.",
+      "html": "<section class=\"ds-terminal\" aria-label=\"Self-hosting commands\"><header><i></i><i></i><i></i><b>TERMINAL</b><button type=\"button\">Copy</button></header><pre><code>git clone https://github.com/mbianchidev/pdf-tools.git\ncd pdf-tools\ndocker compose up --build</code></pre><footer><span>Open http://localhost</span><strong>Docker 24+ · Compose v2</strong></footer></section>",
+      "css": ".ds-terminal { color: #d8d4e8; background: var(--ink); border: 1px solid #302b4d; box-shadow: 14px 14px 0 var(--iris); font-family: ui-monospace, monospace; } .ds-terminal header, .ds-terminal footer { display: flex; min-height: 42px; align-items: center; gap: 7px; padding: 0 18px; } .ds-terminal header { border-bottom: 1px solid rgb(255 255 255 / 9%); } .ds-terminal header i { width: 8px; height: 8px; background: var(--coral); border-radius: 50%; } .ds-terminal header i:nth-child(2) { background: var(--sun); } .ds-terminal header i:nth-child(3) { background: var(--aqua); } .ds-terminal header b { margin-left: auto; color: #aaa5bd; font-size: 10px; letter-spacing: 0.12em; } .ds-terminal button { min-height: 28px; padding: 0 9px; color: #d8d4e8; background: rgb(255 255 255 / 6%); border: 1px solid rgb(255 255 255 / 13%); border-radius: 6px; font: 750 10px/1 var(--font-body); } .ds-terminal button:hover { color: white; background: rgb(255 255 255 / 11%); } .ds-terminal button:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; } .ds-terminal pre { margin: 0; padding: 28px; overflow: auto; color: white; font: 16px/1.8 ui-monospace, monospace; white-space: pre-wrap; } .ds-terminal footer { justify-content: space-between; color: #aaa5bd; border-top: 1px solid rgb(255 255 255 / 9%); font-size: 10px; letter-spacing: 0.05em; } .ds-terminal footer strong { color: var(--aqua); }"
+    },
+    {
+      "name": "Operation Workbench",
+      "kind": "custom",
+      "refersTo": "workbench-preview",
+      "description": "Compact paper control rail beside a flat ink document preview.",
+      "html": "<section class=\"ds-workbench\"><header><button type=\"button\">← Back</button><strong>Merge PDFs</strong><small>Combine files in a chosen order</small></header><div class=\"ds-workbench-body\"><aside><b>FILES</b><div class=\"ds-workbench-file\">01 · report.pdf</div><div class=\"ds-workbench-file\">02 · appendix.pdf</div><button class=\"ds-workbench-run\" type=\"button\">Merge PDFs</button></aside><main><div class=\"ds-workbench-previewbar\"><strong>PREVIEW</strong><span>2 files</span></div><div class=\"ds-workbench-canvas\"><div class=\"ds-workbench-paper\">PDF</div></div></main></div></section>",
+      "css": ".ds-workbench { overflow: hidden; color: var(--ink); background: var(--surface-muted); border: 1px solid var(--line); font-family: var(--font-body); } .ds-workbench > header { display: grid; min-height: 70px; align-items: center; padding: 10px 18px; background: var(--surface); border-bottom: 1px solid var(--line); grid-template-columns: auto auto minmax(0, 1fr); gap: 20px; } .ds-workbench > header button { min-height: 40px; padding: 0 13px; color: var(--ink-soft); background: transparent; border: 1px solid var(--line); border-radius: 9px; font-weight: 700; } .ds-workbench > header button:hover { color: var(--iris-dark); background: var(--iris-soft); border-color: #c9c5ff; } .ds-workbench > header button:focus-visible, .ds-workbench-run:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; } .ds-workbench > header > strong { padding-left: 20px; border-left: 1px solid var(--line); font-family: var(--font-display); font-size: 22px; letter-spacing: -0.035em; } .ds-workbench > header small { justify-self: end; color: var(--muted); font-size: 12px; } .ds-workbench-body { display: grid; min-height: 360px; grid-template-columns: 220px minmax(0, 1fr); } .ds-workbench aside { display: flex; padding: 22px 20px; flex-direction: column; gap: 10px; background: var(--surface); border-right: 1px solid var(--line); } .ds-workbench aside > b { margin-bottom: 6px; color: var(--ink-soft); font-size: 11px; font-weight: 850; letter-spacing: 0.09em; } .ds-workbench-file { padding: 10px; background: var(--surface-muted); border: 1px solid var(--line); border-radius: 7px; font-size: 12px; } .ds-workbench-run { min-height: 44px; margin-top: auto; color: white; background: var(--iris); border: 0; border-radius: 10px; box-shadow: 0 7px 0 var(--ink); font-weight: 750; } .ds-workbench-run:hover { background: var(--iris-dark); transform: translateY(-2px); } .ds-workbench main { min-width: 0; color: #d6d1ea; background: #171526; } .ds-workbench-previewbar { display: flex; min-height: 44px; align-items: center; justify-content: space-between; padding: 0 18px; background: #12101f; border-bottom: 1px solid rgb(255 255 255 / 8%); font-size: 11px; } .ds-workbench-canvas { display: grid; min-height: 316px; place-items: center; padding: 30px; } .ds-workbench-paper { display: grid; width: 132px; aspect-ratio: 0.72; place-items: center; color: var(--iris); background: white; box-shadow: 0 18px 34px rgb(6 4 20 / 32%); font-family: var(--font-display); font-size: 34px; font-weight: 720; transform: rotate(-2deg); } @media (max-width: 640px) { .ds-workbench > header { grid-template-columns: auto 1fr; } .ds-workbench > header small { display: none; } .ds-workbench-body { grid-template-columns: 1fr; } .ds-workbench aside { border-right: 0; border-bottom: 1px solid var(--line); } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Owned Document Workbench",
+    "overview": "PDF Tools makes self-hosting visible as product proof. The landing surface is a docs-first Persuade experience, not a launchpad of generic tool cards: it leads with a clear ownership proposition, a concrete PDF workbench artifact, actual clone and Docker Compose commands, then a non-interactive inventory of what a deployed instance provides. The operation routes switch to Operate mode without changing worlds: controls live on light paper panels and documents are handled on a dark utility workbench.\n\nThe visual language is pinned to the `img-tools` family through the `pinned-reference` seed key while retaining PDF Tools' indigo identity. Variable Bricolage Grotesque supplies compressed, assertive display shapes; DM Sans handles instructional copy and controls; paper-white surfaces sit against a cool page; ink panels and monospace status strips make processing feel observable; indigo appears as proof, focus, and offset geometry. Motion is short and physical—load-in fades, small translations, restrained rotations, and direct hover lifts—and always supports hierarchy or state.",
+    "keyCharacteristics": [
+      "Self-hosting commands are evidence, not tertiary developer copy.",
+      "The first viewport pairs the ownership headline on the left with the PDF artifact on the right.",
+      "The landing reads like installation documentation with a persuasive thesis; capabilities remain non-interactive summaries.",
+      "Operation pages use a paper control rail beside an ink preview canvas.",
+      "Square panels and indigo offset shadows form the family signature; rounded shapes are concentrated on controls.",
+      "The pinned `img-tools` family language is the visual authority, not a generic PDF SaaS template."
+    ],
+    "rules": [
+      {
+        "name": "The Proof-Before-Capability Rule",
+        "body": "Show the real self-host path before the installed feature inventory; capability rows are evidence of the deployed product, not homepage launch controls.",
+        "section": "overview"
+      },
+      {
+        "name": "The Dual-Mode Rule",
+        "body": "The landing persuades through documentation and ownership evidence; operation routes switch to compact, task-first workbench behavior without changing the visual world.",
+        "section": "overview"
+      },
+      {
+        "name": "The Indigo Proof Rule",
+        "body": "Indigo marks ownership, primary actions, active state, PDF identity, and offset geometry; it does not become a full-page wash.",
+        "section": "colors"
+      },
+      {
+        "name": "The Paper-on-Ink Rule",
+        "body": "Instructions and controls sit on paper; terminals and PDF canvases sit on ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Signal-Dot Rule",
+        "body": "Coral, aqua, and sun are small signals or focus cues, never competing brand accents.",
+        "section": "colors"
+      },
+      {
+        "name": "The Proposition/Instruction Rule",
+        "body": "Bricolage makes propositions and section landmarks; DM Sans explains, labels, and controls.",
+        "section": "typography"
+      },
+      {
+        "name": "The System-Evidence Rule",
+        "body": "Monospace appears only where the interface is showing commands, runtime labels, or machine status.",
+        "section": "typography"
+      },
+      {
+        "name": "The Ownership Split Rule",
+        "body": "On wide screens, the first viewport keeps the ownership claim on the left and the PDF artifact on the right; collapse preserves that order.",
+        "section": "layout"
+      },
+      {
+        "name": "The Workbench Rail Rule",
+        "body": "Operation controls remain in a 360px paper rail beside the flexible ink preview until the 1024px stack breakpoint.",
+        "section": "layout"
+      },
+      {
+        "name": "The Offset-Is-Structural Rule",
+        "body": "Hard indigo or ink offsets identify owned artifacts and decisive actions; they are not generic decoration for every container.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Flat-Workbench Rule",
+        "body": "Control rails, capability lists, and preview chrome use borders and tonal contrast at rest; ambient lift is reserved for the hero artifact or interaction.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Square-Surface Rule",
+        "body": "Large surfaces, upload zones, terminals, and workbench panels stay square or nearly square; rounded corners belong primarily to controls and small states.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Controlled-Skew Rule",
+        "body": "Rotation is limited to the brand mark, stacked paper artifact, and proof badge; functional controls remain aligned.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do preserve the pinned `img-tools` family language: Bricolage display type, DM Sans utility copy, paper surfaces, ink workbenches, and indigo offsets.",
+      "Do lead the landing with the ownership proposition and PDF artifact, then show real self-host commands before installed capabilities.",
+      "Do use ink for terminals and document previews, and paper for instructions, controls, and uploaded-file structure.",
+      "Do keep capability presentation informational and visibly grouped rather than making every item a call to action.",
+      "Do retain the 360px desktop operation rail and the 1024px control-above-preview stack behavior.",
+      "Do keep motion quick, physical, and state-linked, with reduced-motion behavior respected globally."
+    ],
+    "donts": [
+      "Don't replace the landing with a generic grid of clickable PDF tool cards.",
+      "Don't put the capability inventory before the real deployment proof or turn it into the first-view action.",
+      "Don't swap the Bricolage/DM Sans pairing for a neutral system-only or conventional SaaS type stack.",
+      "Don't round every panel, add diffuse shadows to every surface, or dilute the hard-offset signature.",
+      "Don't use coral, aqua, or sun as competing CTA colors; indigo remains the sole brand authority.",
+      "Don't fabricate screenshots, usage metrics, testimonials, or fidelity claims to make the landing feel more commercial."
+    ]
+  }
+}

@@ -5,7 +5,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 ## Features
 
 ### PDF Operations
-- **Merge PDFs** - Combine multiple PDF files into one document
+- **Merge PDFs** - Ordered asynchronous merge with validation, progress, and cancellation
 - **Split PDF** - Split a PDF into individual pages or custom groups
 - **Extract Pages** - Extract specific pages (e.g., "1,3,5-7")
 - **Remove Pages** - Remove specific pages from a PDF
@@ -17,6 +17,8 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Convert to DOCX** - Convert PDF to Microsoft Word format
 
 ### UI Features
+- Documentation-first self-hosting landing page
+- Shared visual identity with `mbianchidev/img-tools`
 - Drag-and-drop file upload
 - Real-time PDF preview
 - Success/error toast notifications
@@ -70,6 +72,7 @@ The app will be available at http://localhost:5173
 frontend/
 ├── src/
 │   ├── components/           # Reusable UI components
+│   │   ├── Brand.jsx         # Shared pdf-tools identity
 │   ├── features/
 │   │   ├── editor/           # Page expressions, coordinates, thumbnails, editor
 │   │   └── jobs/             # Job state, SSE progress, and cancellation

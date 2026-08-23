@@ -1,7 +1,11 @@
-import React, { lazy, Suspense } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense, useState } from 'react';
+import { Route, Routes } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
+  ArrowRight,
+  Check,
+  Code2,
+  Copy,
   Combine,
   Scissors,
   FileOutput,
@@ -12,7 +16,9 @@ import {
   EyeOff,
   FileText,
   FileType,
+  LockKeyhole,
 } from 'lucide-react';
+import Brand from './components/Brand';
 import './App.css';
 
 const MergePage = lazy(() => import('./pages/MergePage'));
@@ -29,141 +35,297 @@ const ConvertDocxPage = lazy(() => import('./pages/ConvertDocxPage'));
 const operations = [
   {
     id: 'merge',
-    path: '/merge',
-    icon: <Combine size={28} />,
+    icon: Combine,
+    group: 'Organize',
     title: 'Merge PDFs',
     description: 'Combine multiple PDF files into a single document',
   },
   {
     id: 'split',
-    path: '/split',
-    icon: <Scissors size={28} />,
+    icon: Scissors,
+    group: 'Organize',
     title: 'Split PDF',
     description: 'Split a PDF into multiple documents',
   },
   {
     id: 'extract',
-    path: '/extract',
-    icon: <FileOutput size={28} />,
+    icon: FileOutput,
+    group: 'Organize',
     title: 'Extract Pages',
     description: 'Extract specific pages from a PDF',
   },
   {
     id: 'remove',
-    path: '/remove',
-    icon: <Trash2 size={28} />,
+    icon: Trash2,
+    group: 'Organize',
     title: 'Remove Pages',
     description: 'Remove specific pages from a PDF',
   },
   {
     id: 'watermark',
-    path: '/watermark',
-    icon: <Droplet size={28} />,
+    icon: Droplet,
+    group: 'Mark up',
     title: 'Add Watermark',
     description: 'Add a text watermark to all pages',
   },
   {
     id: 'add-text',
-    path: '/add-text',
-    icon: <Type size={28} />,
+    icon: Type,
+    group: 'Mark up',
     title: 'Add/Edit Text',
     description: 'Add or edit custom text at a specific position',
   },
   {
     id: 'add-signature',
-    path: '/signature',
-    icon: <PenTool size={28} />,
+    icon: PenTool,
+    group: 'Mark up',
     title: 'Add Signature',
     description: 'Add a signature image to your PDF',
   },
   {
     id: 'redact',
-    path: '/redact',
-    icon: <EyeOff size={28} />,
+    icon: EyeOff,
+    group: 'Mark up',
     title: 'Redact Content',
     description: 'Redact sensitive information from your PDF',
   },
   {
     id: 'convert-markdown',
-    path: '/convert-markdown',
-    icon: <FileText size={28} />,
+    icon: FileText,
+    group: 'Convert',
     title: 'Convert to Markdown',
     description: 'Convert PDF to Markdown format',
   },
   {
     id: 'convert-docx',
-    path: '/convert-docx',
-    icon: <FileType size={28} />,
+    icon: FileType,
+    group: 'Convert',
     title: 'Convert to DOCX',
     description: 'Convert PDF to Microsoft Word format',
   },
 ];
 
+const toolGroups = ['Organize', 'Mark up', 'Convert'];
+const INSTALL_COMMAND = `git clone https://github.com/mbianchidev/pdf-tools.git
+cd pdf-tools
+docker compose up --build`;
+
 function HomePage() {
-  const navigate = useNavigate();
+  const [copyStatus, setCopyStatus] = useState('idle');
+
+  const copyInstallCommand = async () => {
+    try {
+      await navigator.clipboard.writeText(INSTALL_COMMAND);
+      setCopyStatus('copied');
+    } catch (error) {
+      console.error('Failed to copy self-hosting commands:', error);
+      setCopyStatus('failed');
+    }
+  };
 
   return (
-    <div className="app">
-      {/* Header */}
-      <header className="app-header">
-        <div className="container">
-          <motion.div
-            className="header-content"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+    <div className="landing">
+      <header className="landing__header shell">
+        <Brand />
+        <nav className="landing__nav" aria-label="Project links">
+          <a href="#self-host">Self-host</a>
+          <a
+            className="button button--quiet button--small"
+            href="https://github.com/mbianchidev/pdf-tools"
+            target="_blank"
+            rel="noreferrer"
           >
-            <div className="header-logo">
-              <div className="logo-icon">
-                <FileText size={32} />
-              </div>
-              <h1 className="logo-text">PDF Tools</h1>
-            </div>
-            <p className="header-subtitle">
-              Professional PDF manipulation made simple
-            </p>
-          </motion.div>
-        </div>
+            <Code2 aria-hidden="true" />
+            GitHub
+          </a>
+        </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="app-main">
-        <div className="container">
-          <div className="operations-grid">
-            {operations.map((op, index) => (
-              <motion.div
-                key={op.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <div
-                  className="operation-card-link"
-                  onClick={() => navigate(op.path)}
-                >
-                  <div className="operation-card">
-                    <div className="operation-card-header">
-                      <div className="operation-card-icon">{op.icon}</div>
-                      <div className="operation-card-info">
-                        <h3 className="operation-card-title">{op.title}</h3>
-                        <p className="operation-card-description">{op.description}</p>
-                      </div>
-                    </div>
-                  </div>
+      <main>
+        <section className="hero shell">
+          <motion.div
+            className="hero__copy"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h1>
+              Your PDFs.
+              <span> Your server.</span>
+            </h1>
+            <p className="hero__lede">
+              Deploy one open-source workspace to combine, organize, edit,
+              convert, and secure documents under your own infrastructure.
+            </p>
+            <a className="text-link" href="#self-host">
+              Self-host PDF Tools
+              <ArrowRight aria-hidden="true" />
+            </a>
+            <p className="hero__trust">
+              <LockKeyhole aria-hidden="true" />
+              Open source · self-hosted · server-controlled files
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="hero__visual"
+            aria-label="PDF document workbench preview"
+            initial={{ opacity: 0, rotate: -1, scale: 0.96 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="document-board" aria-hidden="true">
+              <div className="document-board__top">
+                <span />
+                <span />
+                <span />
+                <b>PDF_WORKSPACE</b>
+              </div>
+              <div className="document-board__canvas">
+                <div className="paper paper--back">
+                  <i />
+                  <i />
+                  <i />
                 </div>
-              </motion.div>
-            ))}
+                <div className="paper paper--middle">
+                  <i />
+                  <i />
+                </div>
+                <div className="paper paper--front">
+                  <strong>PDF</strong>
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              </div>
+              <div className="document-board__strip">
+                <span>STREAMED</span>
+                <span>V1 JOBS · 2H</span>
+                <strong>READY</strong>
+              </div>
+            </div>
+            <div className="hero__badge">Runs where you deploy it</div>
+          </motion.div>
+        </section>
+
+        <section className="self-host" id="self-host">
+          <div className="shell">
+            <div className="section-heading">
+              <div>
+                <h2>Three steps to your own PDF workspace.</h2>
+              </div>
+              <p>
+                Docker Compose provisions the app, PostgreSQL job metadata,
+                and local streaming storage with one command.
+              </p>
+            </div>
+
+            <ol className="deploy-steps">
+              <li>
+                <span>1</span>
+                <div>
+                  <strong>Clone the source</strong>
+                  <p>Keep the deployment inspectable and under your control.</p>
+                </div>
+              </li>
+              <li>
+                <span>2</span>
+                <div>
+                  <strong>Start the stack</strong>
+                  <p>Build the frontend, API, and PostgreSQL services.</p>
+                </div>
+              </li>
+              <li>
+                <span>3</span>
+                <div>
+                  <strong>Open your instance</strong>
+                  <p>Use the workspace at your own hostname or localhost.</p>
+                </div>
+              </li>
+            </ol>
+
+            <div className="deploy-command" aria-label="Self-hosting commands">
+              <div className="deploy-command__bar">
+                <span />
+                <span />
+                <span />
+                <b>TERMINAL</b>
+                <button
+                  type="button"
+                  onClick={copyInstallCommand}
+                  aria-label="Copy self-hosting commands"
+                >
+                  {copyStatus === 'copied'
+                    ? <Check aria-hidden="true" />
+                    : <Copy aria-hidden="true" />}
+                  {copyStatus === 'copied'
+                    ? 'Copied'
+                    : copyStatus === 'failed' ? 'Select manually' : 'Copy'}
+                </button>
+              </div>
+              <pre><code>{INSTALL_COMMAND}</code></pre>
+              <div className="deploy-command__footer">
+                <span>Open http://localhost</span>
+                <strong>Docker 24+ · Compose v2</strong>
+              </div>
+            </div>
+
+            <p className="deployment-note">
+              For production, place the frontend behind TLS, inject database
+              credentials from your secret store, and switch artifact storage
+              to a private SeaweedFS S3 endpoint.
+            </p>
           </div>
-        </div>
+        </section>
+
+        <section className="hosted-tools" id="tools">
+          <div className="shell">
+            <div className="section-heading">
+              <div>
+                <h2>What your instance provides.</h2>
+              </div>
+              <p>
+                The installed workspace collects focused document workflows.
+                Merge already uses persisted progress, cancellation,
+                structured errors, and expiring outputs.
+              </p>
+            </div>
+
+            <div className="tool-columns">
+              {toolGroups.map((group) => (
+                <section className="tool-group" key={group}>
+                  <h3>{group}</h3>
+                  <div className="tool-list">
+                    {operations
+                      .filter((operation) => operation.group === group)
+                      .map(({ id, icon: Icon, title, description }) => (
+                        <div className="tool-summary" key={id}>
+                          <Icon aria-hidden="true" />
+                          <span>
+                            <strong>{title}</strong>
+                            <small>{description}</small>
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="app-footer">
-        <div className="container">
-          <p className="footer-text">
-            Built with React & Spring Boot • All processing happens on your server
-          </p>
-        </div>
+      <footer className="landing__footer shell">
+        <Brand compact />
+        <p>Open source, inspectable, and self-hosted under the MIT License.</p>
+        <a
+          href="https://github.com/mbianchidev/pdf-tools"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Source code
+          <ArrowRight aria-hidden="true" />
+        </a>
       </footer>
     </div>
   );
