@@ -146,3 +146,8 @@ It returns one PDF. See [Rotate PDF](operations/rotate.md).
 `operation=organize` accepts one PDF and an ordered `options.pages[]` plan. Repeated
 source pages duplicate, omitted source pages delete, order controls reordering, and
 each item carries a relative rotation. See [Organize PDF](operations/organize.md).
+
+## Crop PDF
+
+`operation=crop` accepts one PDF and either one normalized `crop` plus optional
+`pages`, or non-overlapping `crops[]` instructions. See [Crop PDF](operations/crop.md).

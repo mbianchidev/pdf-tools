@@ -19,6 +19,7 @@ import {
   LockKeyhole,
   RotateCw,
   Layers3,
+  Crop as CropIcon,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -29,6 +30,7 @@ const ExtractPage = lazy(() => import('./pages/ExtractPage'));
 const RemovePage = lazy(() => import('./pages/RemovePage'));
 const RotatePage = lazy(() => import('./pages/RotatePage'));
 const OrganizePage = lazy(() => import('./pages/OrganizePage'));
+const CropPage = lazy(() => import('./pages/CropPage'));
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
@@ -78,6 +80,13 @@ const operations = [
     group: 'Organize',
     title: 'Organize PDF',
     description: 'Reorder, rotate, duplicate, and delete pages',
+  },
+  {
+    id: 'crop',
+    icon: CropIcon,
+    group: 'Organize',
+    title: 'Crop PDF',
+    description: 'Apply shared or independent visual crop boxes',
   },
   {
     id: 'watermark',
@@ -360,6 +369,7 @@ function App() {
         <Route path="/remove" element={<RemovePage />} />
         <Route path="/rotate" element={<RotatePage />} />
         <Route path="/organize" element={<OrganizePage />} />
+        <Route path="/crop" element={<CropPage />} />
         <Route path="/watermark" element={<WatermarkPage />} />
         <Route path="/add-text" element={<AddTextPage />} />
         <Route path="/signature" element={<SignaturePage />} />

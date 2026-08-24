@@ -23,6 +23,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Remove** - Remove strict page ranges while retaining at least one page
 - **Rotate** - Apply shared or independent page rotations
 - **Organize** - Reorder, rotate, duplicate, and omit pages in one plan
+- **Crop** - Apply normalized shared or per-page crop boxes
 - **Watermark** - Add text watermarks with positioning
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
@@ -70,12 +71,13 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The `merge`, `split`, `remove`, `rotate`, and `organize` operations are enabled. Their contracts and fidelity limits are
+The `merge`, `split`, `remove`, `rotate`, `organize`, and `crop` operations are enabled. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
 Rotate options are documented in [`docs/operations/rotate.md`](../docs/operations/rotate.md).
 Organize plans are documented in [`docs/operations/organize.md`](../docs/operations/organize.md).
+Crop coordinates are documented in [`docs/operations/crop.md`](../docs/operations/crop.md).
 
 The following legacy endpoints remain during migration:
 
