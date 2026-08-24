@@ -105,6 +105,7 @@ pdf-tools/
 - **Operation contract**: `backend/src/main/java/com/pdftools/operations/PdfOperation.java`
 - **Merge implementation**: `backend/src/main/java/com/pdftools/operations/merge/`
 - **Split implementation**: `backend/src/main/java/com/pdftools/operations/split/`
+- **Remove implementation**: `backend/src/main/java/com/pdftools/operations/remove/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`

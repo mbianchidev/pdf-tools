@@ -5,27 +5,19 @@ import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationOutput;
 import com.pdftools.operations.OperationSubmission;
 import com.pdftools.operations.PdfOperation;
+import com.pdftools.operations.PdfOperationValidation;
 import com.pdftools.operations.ZipArtifactService;
 import com.pdftools.util.FilenameSanitizer;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 @Component
 public class SplitPdfOperation implements PdfOperation {
-
-    private static final Set<String> ACCEPTED_MEDIA_TYPES = Set.of(
-        "application/pdf",
-        "application/x-pdf",
-        "application/octet-stream"
-    );
 
     private final PdfSplitEngine splitEngine;
     private final ZipArtifactService zipArtifactService;
@@ -47,20 +39,7 @@ public class SplitPdfOperation implements PdfOperation {
 
     @Override
     public void validateSubmission(OperationSubmission submission) {
-        if (submission.files().size() != 1) {
-            throw new OperationException(
-                "INVALID_FILE_COUNT",
-                "Split requires exactly one PDF file"
-            );
-        }
-        OperationSubmission.UploadDescriptor file = submission.files().getFirst();
-        if (!hasPdfStem(file.filename())
-                || !ACCEPTED_MEDIA_TYPES.contains(file.mediaType().toLowerCase(Locale.ROOT))) {
-            throw new OperationException(
-                "INVALID_FILE_TYPE",
-                "Split input must be a PDF"
-            );
-        }
+        PdfOperationValidation.requireSinglePdf(submission, "Split");
 
         JsonNode options = submission.options();
         SplitMode mode = SplitMode.parse(options.path("mode").asText("individual"));
@@ -99,18 +78,12 @@ public class SplitPdfOperation implements PdfOperation {
                 }
             }
         }
-        if (options.has("outputFilename")) {
-            if (!options.get("outputFilename").isTextual()) {
-                throw new OperationException(
-                    "INVALID_OPTIONS",
-                    "outputFilename must be a string"
-                );
-            }
-            String outputFilename = options.get("outputFilename").asText().trim();
-            if (!outputFilename.isEmpty()) {
-                validateOutputFilename(outputFilename);
-            }
-        }
+        PdfOperationValidation.validateOptionalOutputFilename(
+            options,
+            ".zip",
+            120,
+            "Split"
+        );
     }
 
     @Override
@@ -155,27 +128,16 @@ public class SplitPdfOperation implements PdfOperation {
     private String outputFilename(JsonNode options, String firstFilename) {
         String requested = options.path("outputFilename").asText("").trim();
         if (!requested.isEmpty()) {
-            validateOutputFilename(requested);
+            PdfOperationValidation.validateOutputFilename(
+                requested,
+                ".zip",
+                120,
+                "Split"
+            );
             return FilenameSanitizer.sanitize(requested, "split.zip");
         }
         String pdfName = FilenameSanitizer.withSuffix(firstFilename, "_split");
         return pdfName.substring(0, pdfName.length() - 4) + ".zip";
     }
 
-    private void validateOutputFilename(String outputFilename) {
-        if (!outputFilename.toLowerCase(Locale.ROOT).endsWith(".zip")
-                || outputFilename.getBytes(StandardCharsets.UTF_8).length > 120) {
-            throw new OperationException(
-                "INVALID_OUTPUT_FILENAME",
-                "Split outputFilename must end with .zip and stay within 120 bytes",
-                Map.of("maxBytes", 120)
-            );
-        }
-    }
-
-    private boolean hasPdfStem(String filename) {
-        String lower = filename.toLowerCase(Locale.ROOT);
-        return lower.endsWith(".pdf")
-            && !filename.substring(0, filename.length() - 4).isBlank();
-    }
 }

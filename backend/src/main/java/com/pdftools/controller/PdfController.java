@@ -5,6 +5,7 @@ import com.pdftools.dto.PdfOperationResult;
 import com.pdftools.exception.PdfProcessingException;
 import com.pdftools.operations.LegacyOperationGuard;
 import com.pdftools.service.PdfService;
+import com.pdftools.service.LegacyRemoveService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,26 +26,31 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Arrays;
+import java.util.concurrent.Callable;
 
 @RestController
 @RequestMapping("/api/pdf")
 public class PdfController {
 
     private static final int MAX_SPLIT_GROUPS_BYTES = 65_536;
+    private static final int MAX_PAGE_EXPRESSION_BYTES = 4_096;
     private static final int MAX_ORIGINAL_FILENAME_BYTES = 1_024;
 
     private final PdfService pdfService;
     private final MultipartTextPartReader textPartReader;
     private final AsyncTaskExecutor taskExecutor;
     private final Duration splitTimeout;
+    private final LegacyRemoveService legacyRemoveService;
 
     public PdfController(
             PdfService pdfService,
+            LegacyRemoveService legacyRemoveService,
             MultipartTextPartReader textPartReader,
             @Qualifier("legacyPdfExecutor") AsyncTaskExecutor taskExecutor,
             @Value("${pdf.operations.split.legacy-timeout:10m}")
             Duration splitTimeout) {
         this.pdfService = pdfService;
+        this.legacyRemoveService = legacyRemoveService;
         this.textPartReader = textPartReader;
         this.taskExecutor = taskExecutor;
         this.splitTimeout = splitTimeout;
@@ -75,35 +81,16 @@ public class PdfController {
             false
         );
         LegacyOperationGuard guard = new LegacyOperationGuard();
-        WebAsyncTask<ResponseEntity<PdfOperationResult>> task = new WebAsyncTask<>(
-            splitTimeout.toMillis(),
-            taskExecutor,
-            () -> ResponseEntity.ok(
-                pdfService.splitPdf(file, groups, originalFilename, guard)
+        return legacyTask(
+            "Split",
+            guard,
+            () -> pdfService.splitPdf(
+                file,
+                groups,
+                originalFilename,
+                guard
             )
         );
-        task.onTimeout(() -> {
-            guard.cancel();
-            return ResponseEntity
-                .status(HttpStatus.REQUEST_TIMEOUT)
-                .body(new PdfOperationResult(
-                    false,
-                    "Split exceeded the legacy processing deadline",
-                    null
-                ));
-        });
-        task.onError(() -> {
-            guard.cancel();
-            return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new PdfOperationResult(
-                    false,
-                    "Split was interrupted before completion",
-                    null
-                ));
-        });
-        task.onCompletion(guard::complete);
-        return task;
     }
 
     @PostMapping("/extract")
@@ -120,16 +107,67 @@ public class PdfController {
     }
 
     @PostMapping("/remove")
-    public ResponseEntity<PdfOperationResult> removePages(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("pages") String pages,
-            @RequestParam(value = "originalFilename", required = false) String originalFilename) throws PdfProcessingException {
-        List<Integer> pageNumbers = Arrays.stream(pages.split(","))
-            .map(String::trim)
-            .map(Integer::parseInt)
-            .collect(Collectors.toList());
-        PdfOperationResult result = pdfService.removePages(file, pageNumbers, originalFilename);
-        return ResponseEntity.ok(result);
+    public WebAsyncTask<ResponseEntity<PdfOperationResult>> removePages(
+            HttpServletRequest request,
+            @RequestParam("file") MultipartFile file) {
+        String pages = textPartReader.read(
+            request,
+            "pages",
+            MAX_PAGE_EXPRESSION_BYTES,
+            true
+        );
+        String originalFilename = textPartReader.read(
+            request,
+            "originalFilename",
+            MAX_ORIGINAL_FILENAME_BYTES,
+            false
+        );
+        LegacyOperationGuard guard = new LegacyOperationGuard();
+        return legacyTask(
+            "Remove Pages",
+            guard,
+            () -> legacyRemoveService.removePages(
+                file,
+                pages,
+                originalFilename,
+                guard
+            )
+        );
+    }
+
+    private WebAsyncTask<ResponseEntity<PdfOperationResult>> legacyTask(
+            String operationName,
+            LegacyOperationGuard guard,
+            Callable<PdfOperationResult> operation) {
+        WebAsyncTask<ResponseEntity<PdfOperationResult>> task =
+            new WebAsyncTask<>(
+                splitTimeout.toMillis(),
+                taskExecutor,
+                () -> ResponseEntity.ok(operation.call())
+            );
+        task.onTimeout(() -> {
+            guard.cancel();
+            return ResponseEntity
+                .status(HttpStatus.REQUEST_TIMEOUT)
+                .body(new PdfOperationResult(
+                    false,
+                    operationName
+                        + " exceeded the legacy processing deadline",
+                    null
+                ));
+        });
+        task.onError(() -> {
+            guard.cancel();
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new PdfOperationResult(
+                    false,
+                    operationName + " was interrupted before completion",
+                    null
+                ));
+        });
+        task.onCompletion(guard::complete);
+        return task;
     }
 
     @PostMapping("/watermark")

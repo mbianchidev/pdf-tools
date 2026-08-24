@@ -69,6 +69,40 @@ public class PdfSplitEngine {
             Path workspace,
             IntConsumer progress,
             Runnable cancellationCheck) {
+        return process(
+            sourcePath,
+            workspace,
+            progress,
+            cancellationCheck,
+            pageCount -> planFactory.create(options, pageCount)
+        );
+    }
+
+    public Path copySelectedPages(
+            Path sourcePath,
+            Path workspace,
+            PageSelector selector,
+            IntConsumer progress,
+            Runnable cancellationCheck) {
+        SplitResult result = process(
+            sourcePath,
+            workspace,
+            progress,
+            cancellationCheck,
+            pageCount -> List.of(new SplitGroup(
+                1,
+                List.copyOf(selector.select(pageCount))
+            ))
+        );
+        return result.parts().getFirst().path();
+    }
+
+    private SplitResult process(
+            Path sourcePath,
+            Path workspace,
+            IntConsumer progress,
+            Runnable cancellationCheck,
+            java.util.function.IntFunction<List<SplitGroup>> planner) {
         requirePdfHeader(sourcePath);
         Path scratchDirectory = workspace.resolve(".pdfbox-scratch");
         try {
@@ -93,10 +127,7 @@ public class PdfSplitEngine {
                 source,
                 cancellationCheck
             );
-            List<SplitGroup> groups = planFactory.create(
-                options,
-                pageTree.pages().size()
-            );
+            List<SplitGroup> groups = planner.apply(pageTree.pages().size());
             int selectedPages = groups.stream()
                 .mapToInt(group -> group.pages().size())
                 .sum();
@@ -185,6 +216,7 @@ public class PdfSplitEngine {
                     progress.accept(lastProgress);
                 }
             }
+
             cancellationCheck.run();
             return new SplitResult(parts);
         } catch (InvalidPasswordException exception) {
@@ -219,6 +251,11 @@ public class PdfSplitEngine {
                 exception
             );
         }
+    }
+
+    @FunctionalInterface
+    public interface PageSelector {
+        List<Integer> select(int pageCount);
     }
 
     private void validateDocument(PDDocument source) {

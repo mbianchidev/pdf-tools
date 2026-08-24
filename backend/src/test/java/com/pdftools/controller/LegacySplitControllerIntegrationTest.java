@@ -3,6 +3,7 @@ package com.pdftools.controller;
 import com.pdftools.api.MultipartTextPartReader;
 import com.pdftools.exception.LegacyExceptionHandler;
 import com.pdftools.service.PdfService;
+import com.pdftools.service.LegacyRemoveService;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ class LegacySplitControllerIntegrationTest {
     void rejectsOversizedTextPartsBeforeStringBinding() throws Exception {
         MockMvc mockMvc = standaloneSetup(new PdfController(
             mock(PdfService.class),
+            mock(LegacyRemoveService.class),
             new MultipartTextPartReader(),
             mock(AsyncTaskExecutor.class),
             Duration.ofMinutes(10)

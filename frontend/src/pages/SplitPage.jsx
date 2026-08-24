@@ -16,6 +16,7 @@ import FileUpload from '../components/FileUpload';
 import ToastContainer from '../components/Toast';
 import { parsePageExpression } from '../features/editor/pageExpression';
 import JobProgress from '../features/jobs/JobProgress';
+import { startBrowserDownload } from '../features/jobs/startBrowserDownload';
 import { usePdfJob } from '../features/jobs/usePdfJob';
 import { getApiErrorMessage, jobService } from '../services/jobService';
 import './OperationPage.css';
@@ -61,13 +62,10 @@ const SplitPage = () => {
   const downloadOutput = useCallback(async (output) => {
     setDownloadingOutput(true);
     try {
-      const link = document.createElement('a');
-      link.href = jobService.getDownloadUrl(output);
-      link.download = output.filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      startBrowserDownload(
+        jobService.getDownloadUrl(output),
+        output.filename,
+      );
       setFailedOutput(null);
       addToast('PDF split download started!', 'success');
     } catch (error) {

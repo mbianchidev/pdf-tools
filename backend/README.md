@@ -20,7 +20,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Merge** - Combine multiple PDF files
 - **Split** - Split into individual pages or custom groups
 - **Extract** - Extract specific pages
-- **Remove** - Remove specific pages
+- **Remove** - Remove strict page ranges while retaining at least one page
 - **Watermark** - Add text watermarks with positioning
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
@@ -68,9 +68,10 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The `merge` and `split` operations are enabled. Their contracts and fidelity limits are
+The `merge`, `split`, and `remove` operations are enabled. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
-[`docs/operations/split.md`](../docs/operations/split.md).
+[`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
+in [`docs/operations/remove.md`](../docs/operations/remove.md).
 
 The following legacy endpoints remain during migration:
 

@@ -8,7 +8,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Merge PDFs** - Ordered asynchronous merge with validation, progress, and cancellation
 - **Split PDF** - Individual pages, page ranges, or fixed groups in one ZIP
 - **Extract Pages** - Extract specific pages (e.g., "1,3,5-7")
-- **Remove Pages** - Remove specific pages from a PDF
+- **Remove Pages** - Validated ranges, visual selection, progress, and cancellation
 - **Add Watermark** - Add text watermarks with positioning and rotation
 - **Add Text** - Add custom text with fonts, colors, and drag positioning
 - **Add Signature** - Type, draw, or upload signatures

@@ -1,0 +1,137 @@
+.remove-pages-field {
+  display: grid;
+  gap: 0.55rem;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.remove-pages-field textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 0.8rem 0.9rem;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.remove-pages-field textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(79 70 229 / 14%);
+  outline: none;
+}
+
+.remove-pages-field span {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.remove-pages-field span.is-error {
+  color: var(--color-error);
+}
+
+.remove-pages-help {
+  margin: 0.8rem 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+}
+
+.remove-pages-help code {
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+  padding: 0.08rem 0.3rem;
+}
+
+.remove-page-grid {
+  height: 100%;
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.remove-page-grid > .react-pdf__Document {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 1rem;
+}
+
+.remove-page-card {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 0.75rem;
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.remove-page-card:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.remove-page-card:focus-visible {
+  outline: 3px solid rgb(79 70 229 / 25%);
+  outline-offset: 2px;
+}
+
+.remove-page-card.is-selected {
+  border-color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 6%, var(--color-surface));
+}
+
+.remove-page-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.remove-page-card .react-pdf__Page {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: white;
+}
+
+.remove-page-card__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.remove-page-card__label strong {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.remove-page-card.is-selected .remove-page-card__label strong {
+  color: var(--color-error);
+}
+
+.remove-preview-limit {
+  grid-column: 1 / -1;
+  margin: 1rem 0 0;
+  color: var(--color-text-muted);
+  text-align: center;
+}

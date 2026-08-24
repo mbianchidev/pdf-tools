@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice(assignableTypes = PdfController.class)
 public class LegacyExceptionHandler {
@@ -88,6 +89,19 @@ public class LegacyExceptionHandler {
             .body(new PdfOperationResult(
                 false,
                 "Missing required parameter: " + exception.getParameterName(),
+                null
+            ));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<PdfOperationResult> handleMissingPart(
+            MissingServletRequestPartException exception) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(new PdfOperationResult(
+                false,
+                "Missing required multipart part: "
+                    + exception.getRequestPartName(),
                 null
             ));
     }

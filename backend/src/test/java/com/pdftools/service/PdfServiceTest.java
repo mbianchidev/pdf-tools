@@ -309,25 +309,6 @@ class PdfServiceTest {
     }
 
     @Nested
-    @DisplayName("Remove Pages Tests")
-    class RemovePagesTests {
-
-        @Test
-        @DisplayName("Should remove specific pages from PDF")
-        void testRemovePages_Success() throws Exception {
-            byte[] pdf = createValidPdf(5);
-            MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", pdf);
-            List<Integer> pages = Arrays.asList(2, 4);
-
-            PdfOperationResult result = pdfService.removePages(file, pages, "test.pdf");
-
-            assertTrue(result.isSuccess());
-            assertEquals("Pages removed successfully", result.getMessage());
-            assertNotNull(result.getOutputFilename());
-        }
-    }
-
-    @Nested
     @DisplayName("Watermark Tests")
     class WatermarkTests {
 

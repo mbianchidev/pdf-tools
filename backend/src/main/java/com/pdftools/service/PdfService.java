@@ -87,8 +87,9 @@ public class PdfService {
         this.legacyWorkspaceRegistry = new LegacyWorkspaceRegistry();
         SplitProperties splitProperties = new SplitProperties();
         this.splitProperties = splitProperties;
+        PageExpressionParser pageExpressionParser = new PageExpressionParser();
         this.splitEngine = new PdfSplitEngine(new SplitPlanFactory(
-            new PageExpressionParser(),
+            pageExpressionParser,
             splitProperties
         ), splitProperties);
         this.zipArtifactService = new ZipArtifactService();
@@ -430,18 +431,31 @@ public class PdfService {
     private void validateLegacySplitFile(
             MultipartFile file,
             String sourceFilename) throws PdfProcessingException {
+        validateLegacyPdfFile(file, sourceFilename, "Split");
+    }
+
+    private void validateLegacyPdfFile(
+            MultipartFile file,
+            String sourceFilename,
+            String operationName) throws PdfProcessingException {
         if (file == null || file.isEmpty()) {
-            throw new PdfProcessingException("Split requires one non-empty PDF");
+            throw new PdfProcessingException(
+                operationName + " requires one non-empty PDF"
+            );
         }
 
         String mediaType = file.getContentType() == null
             ? "application/octet-stream"
             : file.getContentType().toLowerCase(Locale.ROOT);
         if (!hasPdfStem(sourceFilename) || !PDF_MEDIA_TYPES.contains(mediaType)) {
-            throw new PdfProcessingException("Split input must be a PDF");
+            throw new PdfProcessingException(
+                operationName + " input must be a PDF"
+            );
         }
         if (file.getSize() > mergeProperties.getMaxTotalInputBytes()) {
-            throw new PdfProcessingException("Split input exceeds the total size limit");
+            throw new PdfProcessingException(
+                operationName + " input exceeds the total size limit"
+            );
         }
     }
 
@@ -465,29 +479,6 @@ public class PdfService {
             return new PdfOperationResult(true, "Pages extracted successfully", outputFile.getName());
         } catch (Exception e) {
             throw new PdfProcessingException("Failed to extract pages: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Remove specific pages from PDF
-     */
-    public PdfOperationResult removePages(MultipartFile file, List<Integer> pageNumbers, String originalFilename) 
-            throws PdfProcessingException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            // Sort in reverse order to remove from end to start
-            pageNumbers.sort((a, b) -> b - a);
-            
-            for (Integer pageNum : pageNumbers) {
-                if (pageNum > 0 && pageNum <= document.getNumberOfPages()) {
-                    document.removePage(pageNum - 1);
-                }
-            }
-
-            File outputFile = saveDocument(document, "removed", originalFilename);
-
-            return new PdfOperationResult(true, "Pages removed successfully", outputFile.getName());
-        } catch (Exception e) {
-            throw new PdfProcessingException("Failed to remove pages: " + e.getMessage(), e);
         }
     }
 
@@ -842,6 +833,7 @@ public class PdfService {
         }
         return dir;
     }
+
 
     private Path reserveLegacyOutput(String prefix, String suffix)
             throws IOException {

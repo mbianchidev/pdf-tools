@@ -27,7 +27,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Merge PDFs** - Disk-backed ordered merge with strict validation, limits, progress, and cancellation
 - **Split PDF** - Individual pages, explicit ranges, or fixed groups in one ZIP
 - **Extract Pages** - Extract specific pages from a PDF
-- **Remove Pages** - Remove specific pages from a PDF
+- **Remove Pages** - Strict ranges with duplicate, invalid, and all-page rejection
 - **Add Watermark** - Add text watermarks to PDF pages
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs

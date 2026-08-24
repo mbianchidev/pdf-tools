@@ -128,3 +128,9 @@ and fidelity details.
 `operation=split` accepts one PDF and supports `individual`, `ranges`, and `fixed`
 modes. It returns one ZIP artifact. See [Split PDF](operations/split.md) for options,
 limits, and fidelity details.
+
+## Remove Pages
+
+`operation=remove` accepts one PDF and requires `options.pages` as a shared page
+expression. It returns one PDF and rejects duplicate, invalid, or all-page removal.
+See [Remove Pages](operations/remove.md) for validation and fidelity details.
