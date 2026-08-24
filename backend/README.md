@@ -27,6 +27,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Page Numbers** - Number ranges with templates, fonts, and positions
 - **Protect** - AES-256 password encryption and explicit permissions
 - **Unlock** - Authenticated password removal with structure preservation
+- **PDF to JPG** - Bounded page rendering with DPI and quality controls
 - **Watermark** - Add text watermarks with positioning
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
@@ -74,7 +75,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, and `unlock` operations are enabled. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, and `pdf-to-jpg`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -84,6 +85,7 @@ Crop coordinates are documented in [`docs/operations/crop.md`](../docs/operation
 Page numbering is documented in [`docs/operations/page-numbers.md`](../docs/operations/page-numbers.md).
 Protection and sensitive option storage are documented in [`docs/operations/protect.md`](../docs/operations/protect.md).
 Password removal is documented in [`docs/operations/unlock.md`](../docs/operations/unlock.md).
+Raster conversion is documented in [`docs/operations/pdf-to-jpg.md`](../docs/operations/pdf-to-jpg.md).
 
 The following legacy endpoints remain during migration:
 
@@ -194,6 +196,11 @@ cors.allowed-origins=http://localhost:80,http://localhost:3000
 | `PDF_ENABLED_OPERATIONS` | completed stable operations | Comma-separated submission feature flags |
 | `PDF_OPTIONS_ENCRYPTION_KEY` | generated local key | Base64 32-byte shared key for sensitive job options |
 | `PDF_SECURITY_MAX_OUTPUT_BYTES` | `134217728` | Protect/Unlock output byte limit |
+| `PDF_TO_JPG_MAX_SELECTED_PAGES` | `500` | Maximum pages rendered per job |
+| `PDF_TO_JPG_MAX_DPI` | `300` | Maximum requested render resolution |
+| `PDF_TO_JPG_MAX_PIXELS_PER_PAGE` | `20000000` | Pre-allocation page pixel limit |
+| `PDF_TO_JPG_MAX_WORKER_HEAP_BYTES` | `268435456` | Isolated renderer heap cap |
+| `PDF_TO_JPG_WORKER_TIMEOUT` | `5m` | Isolated renderer wall-time cap |
 | `CORS_ALLOWED_ORIGINS` | local frontend origins | Allowed CORS origins |
 
 For a rolling deployment, first deploy new code to every worker while leaving new

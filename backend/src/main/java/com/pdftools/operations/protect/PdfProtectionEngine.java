@@ -3,6 +3,7 @@ package com.pdftools.operations.protect;
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OutputLimitExceededException;
+import com.pdftools.operations.shared.pdf.PdfInputValidator;
 import com.pdftools.operations.security.PdfSecurityFiles;
 import com.pdftools.operations.security.PdfSecurityProperties;
 import org.apache.pdfbox.Loader;
@@ -33,7 +34,7 @@ public class PdfProtectionEngine {
             ProtectPlanFactory.ProtectPlan plan,
             IntConsumer progress,
             Runnable cancellationCheck) {
-        PdfSecurityFiles.requirePdfHeader(source);
+        PdfInputValidator.requirePdfHeader(source);
         Path output = workspace.resolve("protected.pdf");
         RandomAccessStreamCache.StreamCacheCreateFunction scratchCache =
             PdfSecurityFiles.scratchCache(

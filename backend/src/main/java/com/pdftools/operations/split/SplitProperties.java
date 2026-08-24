@@ -1,9 +1,10 @@
 package com.pdftools.operations.split;
 
+import com.pdftools.operations.shared.pdf.PdfPageTreeLimits;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "pdf.operations.split")
-public class SplitProperties {
+public class SplitProperties implements PdfPageTreeLimits {
 
     private int maxPages = 1000;
     private int maxOutputs = 500;
@@ -121,5 +122,25 @@ public class SplitProperties {
 
     public void setMaxTotalResourceNodes(int maxTotalResourceNodes) {
         this.maxTotalResourceNodes = maxTotalResourceNodes;
+    }
+
+    @Override
+    public int maxPages() {
+        return maxPages;
+    }
+
+    @Override
+    public int maxPageTreeNodes() {
+        return maxResourceNodes;
+    }
+
+    @Override
+    public int maxPageTreeDepth() {
+        return maxResourceDepth;
+    }
+
+    @Override
+    public int maxContentStreamsPerPage() {
+        return maxContentStreamsPerPage;
     }
 }

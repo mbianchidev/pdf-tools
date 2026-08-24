@@ -1,0 +1,89 @@
+.pdf-jpg-controls {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.pdf-jpg-controls label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.pdf-jpg-controls input,
+.pdf-jpg-controls select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 0.7rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+
+.pdf-jpg-controls input:focus,
+.pdf-jpg-controls select:focus {
+  border-color: var(--iris);
+  outline: 3px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.pdf-jpg-controls label > span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.pdf-jpg-controls label > span.is-error {
+  color: var(--danger);
+}
+
+.pdf-jpg-preview {
+  display: grid;
+  min-height: 100%;
+  align-content: center;
+  justify-items: center;
+  gap: 1.2rem;
+  padding: 1.5rem;
+}
+
+.pdf-jpg-page {
+  position: relative;
+  overflow: hidden;
+  border: 3px solid transparent;
+  box-shadow: var(--shadow-lg);
+}
+
+.pdf-jpg-page.is-selected {
+  border-color: var(--iris);
+}
+
+.pdf-jpg-page > span {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  padding: 0.35rem 0.55rem;
+  color: white;
+  background: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 750;
+}
+
+.pdf-jpg-page.is-selected > span {
+  background: var(--iris);
+}
+
+.pdf-jpg-preview-meta {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  color: var(--line);
+}
+
+.pdf-jpg-preview-meta p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}

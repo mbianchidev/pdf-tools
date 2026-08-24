@@ -3,6 +3,7 @@ package com.pdftools.operations.split;
 import com.pdftools.operations.BoundedOutputStream;
 import com.pdftools.operations.CheckpointInputStream;
 import com.pdftools.operations.OperationException;
+import com.pdftools.operations.shared.pdf.PdfCosUtils;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSStream;

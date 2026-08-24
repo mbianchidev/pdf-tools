@@ -168,3 +168,9 @@ are AES-GCM encrypted before persistence. See [Protect PDF](operations/protect.m
 `operation=unlock` accepts one encrypted PDF and its current user or owner password.
 The password is AES-GCM encrypted before persistence, and the output is a full
 unencrypted rewrite. See [Unlock PDF](operations/unlock.md).
+
+## PDF to JPG
+
+`operation=pdf-to-jpg` accepts one unencrypted PDF, a page expression, DPI, and
+JPEG quality. It returns one deterministic ZIP with JPG entries in source-page
+order. See [PDF to JPG](operations/pdf-to-jpg.md).

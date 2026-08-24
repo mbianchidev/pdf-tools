@@ -34,6 +34,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Add Page Numbers** - Ranges, starts, templates, fonts, and visual positions
 - **Protect PDF** - AES-256 passwords and least-privilege user permissions
 - **Unlock PDF** - Authenticated password removal when the password is known
+- **PDF to JPG** - Page ranges with resolution and JPEG quality controls
 - **Add Watermark** - Add text watermarks to PDF pages
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs

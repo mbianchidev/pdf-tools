@@ -4,6 +4,8 @@ import com.pdftools.operations.BoundedOutputStream;
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OutputLimitExceededException;
+import com.pdftools.operations.shared.pdf.PdfCosUtils;
+import com.pdftools.operations.shared.pdf.PdfPageTreeReader;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;

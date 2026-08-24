@@ -60,6 +60,11 @@ Important settings:
 | `PDF_ENABLED_OPERATIONS` | stable operations | Comma-separated submission feature flags |
 | `PDF_MULTIPART_TEMP_DIR` | `/tmp/pdf-multipart` | Private multipart spill directory; must be dedicated to one backend instance |
 | `PDF_SECURITY_MAX_OUTPUT_BYTES` | `134217728` | Protect/Unlock output byte limit |
+| `PDF_TO_JPG_MAX_SELECTED_PAGES` | `500` | Maximum pages rendered per conversion |
+| `PDF_TO_JPG_MAX_DPI` | `300` | Maximum render resolution |
+| `PDF_TO_JPG_MAX_PIXELS_PER_PAGE` | `20000000` | Per-page render pixel limit |
+| `PDF_TO_JPG_MAX_WORKER_HEAP_BYTES` | `268435456` | Isolated renderer heap cap |
+| `PDF_TO_JPG_WORKER_TIMEOUT` | `5m` | Isolated renderer wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

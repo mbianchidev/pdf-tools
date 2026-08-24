@@ -22,6 +22,7 @@ import {
   Layers3,
   Crop as CropIcon,
   ListOrdered,
+  Images,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -36,6 +37,7 @@ const CropPage = lazy(() => import('./pages/CropPage'));
 const PageNumbersPage = lazy(() => import('./pages/PageNumbersPage'));
 const ProtectPage = lazy(() => import('./pages/ProtectPage'));
 const UnlockPage = lazy(() => import('./pages/UnlockPage'));
+const PdfToJpgPage = lazy(() => import('./pages/PdfToJpgPage'));
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
@@ -113,6 +115,13 @@ const operations = [
     group: 'Secure',
     title: 'Unlock PDF',
     description: 'Remove encryption with a known password',
+  },
+  {
+    id: 'pdf-to-jpg',
+    icon: Images,
+    group: 'Convert',
+    title: 'PDF to JPG',
+    description: 'Render page ranges with resolution and quality controls',
   },
   {
     id: 'watermark',
@@ -399,6 +408,7 @@ function App() {
         <Route path="/page-numbers" element={<PageNumbersPage />} />
         <Route path="/protect" element={<ProtectPage />} />
         <Route path="/unlock" element={<UnlockPage />} />
+        <Route path="/pdf-to-jpg" element={<PdfToJpgPage />} />
         <Route path="/watermark" element={<WatermarkPage />} />
         <Route path="/add-text" element={<AddTextPage />} />
         <Route path="/signature" element={<SignaturePage />} />

@@ -1,5 +1,6 @@
 package com.pdftools.operations.split;
 
+import com.pdftools.operations.shared.pdf.PdfCosUtils;
 import com.pdftools.operations.OperationException;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;

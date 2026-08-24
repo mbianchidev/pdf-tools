@@ -1,4 +1,4 @@
-package com.pdftools.operations.split;
+package com.pdftools.operations.shared.pdf;
 
 import com.pdftools.operations.OperationException;
 import org.apache.pdfbox.cos.COSArray;
@@ -17,17 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-final class PdfPageTreeReader {
+public final class PdfPageTreeReader {
 
     private static final int CANCELLATION_INTERVAL = 25;
 
-    private final SplitProperties properties;
+    private final PdfPageTreeLimits limits;
 
-    PdfPageTreeReader(SplitProperties properties) {
-        this.properties = properties;
+    public PdfPageTreeReader(PdfPageTreeLimits limits) {
+        this.limits = limits;
     }
 
-    Result read(PDDocument source, Runnable cancellationCheck) {
+    public Result read(
+            PDDocument source,
+            Runnable cancellationCheck) {
         COSDictionary root = source.getDocumentCatalog()
             .getCOSObject()
             .getCOSDictionary(COSName.PAGES);
@@ -36,6 +38,7 @@ final class PdfPageTreeReader {
         }
 
         List<PDPage> pages = new ArrayList<>();
+        List<COSDictionary> treeNodes = new ArrayList<>();
         Set<COSDictionary> visited =
             Collections.newSetFromMap(new IdentityHashMap<>());
         ArrayDeque<PageTreeEntry> pending = new ArrayDeque<>();
@@ -75,6 +78,7 @@ final class PdfPageTreeReader {
                     "The PDF page tree contains an invalid node type"
                 );
             }
+            treeNodes.add(node);
             COSBase kidsValue = PdfCosUtils.dereference(
                 node.getItem(COSName.KIDS)
             );
@@ -83,7 +87,7 @@ final class PdfPageTreeReader {
                     "The PDF page tree node does not contain a valid Kids array"
                 );
             }
-            if ((long) nodes + kids.size() > properties.getMaxResourceNodes()) {
+            if ((long) nodes + kids.size() > limits.maxPageTreeNodes()) {
                 throw pageTreeComplexity();
             }
             for (int index = kids.size() - 1; index >= 0; index--) {
@@ -101,6 +105,7 @@ final class PdfPageTreeReader {
             }
         }
 
+        normalizePageCounts(treeNodes);
         validatePageContents(pages, cancellationCheck);
         cancellationCheck.run();
         return new Result(
@@ -110,20 +115,62 @@ final class PdfPageTreeReader {
     }
 
     private void addPage(List<PDPage> pages, COSDictionary node) {
-        if (pages.size() >= properties.getMaxPages()) {
+        if (pages.size() >= limits.maxPages()) {
             throw new OperationException(
                 "PDF_PAGE_LIMIT_EXCEEDED",
-                "The PDF exceeds the split page limit",
-                Map.of("maxPages", properties.getMaxPages())
+                "The PDF exceeds the configured page limit",
+                Map.of("maxPages", limits.maxPages())
             );
         }
         pages.add(new PDPage(node));
     }
 
     private void enforceTreeComplexity(int nodes, int depth) {
-        if (nodes > properties.getMaxResourceNodes()
-                || depth > properties.getMaxResourceDepth()) {
+        if (nodes > limits.maxPageTreeNodes()
+                || depth > limits.maxPageTreeDepth()) {
             throw pageTreeComplexity();
+        }
+    }
+
+    private void normalizePageCounts(List<COSDictionary> treeNodes) {
+        Map<COSDictionary, Integer> descendantCounts =
+            new IdentityHashMap<>();
+        for (int nodeIndex = treeNodes.size() - 1;
+                nodeIndex >= 0;
+                nodeIndex--) {
+            COSDictionary node = treeNodes.get(nodeIndex);
+            COSArray kids = (COSArray) PdfCosUtils.dereference(
+                node.getItem(COSName.KIDS)
+            );
+            long count = 0;
+            for (int index = 0; index < kids.size(); index++) {
+                COSDictionary child = (COSDictionary) PdfCosUtils.dereference(
+                    kids.get(index)
+                );
+                COSBase childType = PdfCosUtils.dereference(
+                    child.getItem(COSName.TYPE)
+                );
+                if (COSName.PAGE.equals(childType)) {
+                    count++;
+                } else {
+                    Integer childCount = descendantCounts.get(child);
+                    if (childCount == null) {
+                        throw invalidPageTree(
+                            "The PDF page tree cannot be counted safely"
+                        );
+                    }
+                    count += childCount;
+                }
+                if (count > limits.maxPages()) {
+                    throw new OperationException(
+                        "PDF_PAGE_LIMIT_EXCEEDED",
+                        "The PDF exceeds the configured page limit",
+                        Map.of("maxPages", limits.maxPages())
+                    );
+                }
+            }
+            node.setInt(COSName.COUNT, (int) count);
+            descendantCounts.put(node, (int) count);
         }
     }
 
@@ -157,14 +204,14 @@ final class PdfPageTreeReader {
                     "A page contains an invalid Contents entry"
                 );
             }
-            if (streams.size() > properties.getMaxContentStreamsPerPage()) {
+            if (streams.size() > limits.maxContentStreamsPerPage()) {
                 throw new OperationException(
                     "PDF_CONTENT_STREAM_LIMIT_EXCEEDED",
                     "A page contains too many content streams",
                     Map.of(
                         "page", pageIndex + 1,
                         "maxContentStreamsPerPage",
-                        properties.getMaxContentStreamsPerPage()
+                        limits.maxContentStreamsPerPage()
                     )
                 );
             }
@@ -207,7 +254,10 @@ final class PdfPageTreeReader {
         return Collections.unmodifiableSet(references);
     }
 
-    record Result(List<PDPage> pages, Set<COSBase> pageLocalReferences) {
+    public record Result(
+        List<PDPage> pages,
+        Set<COSBase> pageLocalReferences
+    ) {
     }
 
     private record PageTreeEntry(

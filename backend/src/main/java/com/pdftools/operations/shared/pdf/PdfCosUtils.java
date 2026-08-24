@@ -1,4 +1,4 @@
-package com.pdftools.operations.split;
+package com.pdftools.operations.shared.pdf;
 
 import com.pdftools.operations.OperationException;
 import org.apache.pdfbox.cos.COSBase;
@@ -12,14 +12,14 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
-final class PdfCosUtils {
+public final class PdfCosUtils {
 
     private static final int MAX_INDIRECT_REFERENCE_DEPTH = 64;
 
     private PdfCosUtils() {
     }
 
-    static COSBase dereference(COSBase value) {
+    public static COSBase dereference(COSBase value) {
         COSBase resolved = value;
         Set<COSObject> seen =
             Collections.newSetFromMap(new IdentityHashMap<>());
@@ -42,20 +42,20 @@ final class PdfCosUtils {
         return resolved;
     }
 
-    static List<COSName> sortedNames(Set<COSName> names) {
+    public static List<COSName> sortedNames(Set<COSName> names) {
         return names.stream()
             .sorted(Comparator.comparing(COSName::getName))
             .toList();
     }
 
-    static OperationException unsupportedTransparencyGroup() {
+    public static OperationException unsupportedTransparencyGroup() {
         return new OperationException(
             "UNSUPPORTED_TRANSPARENCY_GROUP",
             "PDF transparency group metadata is not supported"
         );
     }
 
-    static PDRectangle copyRectangle(PDRectangle source) {
+    public static PDRectangle copyRectangle(PDRectangle source) {
         if (source == null) {
             return null;
         }

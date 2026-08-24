@@ -112,6 +112,7 @@ pdf-tools/
 - **Page number implementation**: `backend/src/main/java/com/pdftools/operations/pagenumbers/`
 - **Protect implementation**: `backend/src/main/java/com/pdftools/operations/protect/`
 - **Unlock implementation**: `backend/src/main/java/com/pdftools/operations/unlock/`
+- **PDF-to-JPG implementation**: `backend/src/main/java/com/pdftools/operations/pdfjpg/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`
@@ -284,3 +285,4 @@ node test-script.js
 - `PDF_OPTIONS_ENCRYPTION_KEY`: Base64 32-byte key for sensitive job options
 - `PDF_SECURITY_MAX_OUTPUT_BYTES`: Protect/Unlock output byte limit
 - `PDF_ENABLED_OPERATIONS`: Comma-separated submission feature flags
+- `PDF_TO_JPG_MAX_PIXELS_PER_PAGE`: Per-page raster allocation limit
