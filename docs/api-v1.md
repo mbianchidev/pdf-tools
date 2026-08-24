@@ -151,3 +151,8 @@ each item carries a relative rotation. See [Organize PDF](operations/organize.md
 
 `operation=crop` accepts one PDF and either one normalized `crop` plus optional
 `pages`, or non-overlapping `crops[]` instructions. See [Crop PDF](operations/crop.md).
+
+## Add Page Numbers
+
+`operation=page-numbers` accepts one PDF with page ranges, numbering start, template,
+font, size, position, and margin options. See [Add Page Numbers](operations/page-numbers.md).

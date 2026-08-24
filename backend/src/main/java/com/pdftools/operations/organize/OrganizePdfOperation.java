@@ -61,7 +61,7 @@ public class OrganizePdfOperation implements PdfOperation {
                     .map(OrganizePlanFactory.OrganizedPage::sourcePage)
                     .toList();
             },
-            (page, sourcePageNumber, outputPosition) -> {
+            (document, page, sourcePageNumber, outputPosition) -> {
                 int rotation = plan.get()
                     .pages()
                     .get(outputPosition - 1)

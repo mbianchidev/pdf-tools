@@ -109,6 +109,7 @@ pdf-tools/
 - **Rotate implementation**: `backend/src/main/java/com/pdftools/operations/rotate/`
 - **Organize implementation**: `backend/src/main/java/com/pdftools/operations/organize/`
 - **Crop implementation**: `backend/src/main/java/com/pdftools/operations/crop/`
+- **Page number implementation**: `backend/src/main/java/com/pdftools/operations/pagenumbers/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`

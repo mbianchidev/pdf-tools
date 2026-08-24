@@ -75,7 +75,7 @@ public class PdfSplitEngine {
             progress,
             cancellationCheck,
             pageCount -> planFactory.create(options, pageCount),
-            (page, sourcePageNumber, outputPosition) -> {
+            (document, page, sourcePageNumber, outputPosition) -> {
             }
         );
     }
@@ -90,7 +90,7 @@ public class PdfSplitEngine {
             sourcePath,
             workspace,
             selector,
-            (page, sourcePageNumber, outputPosition) -> {
+            (document, page, sourcePageNumber, outputPosition) -> {
             },
             progress,
             cancellationCheck
@@ -217,6 +217,7 @@ public class PdfSplitEngine {
                             resources
                         );
                         transformer.transform(
+                            destination,
                             copiedPage,
                             pageNumber,
                             ++outputPosition
@@ -290,6 +291,7 @@ public class PdfSplitEngine {
     @FunctionalInterface
     public interface PageTransformer {
         void transform(
+            PDDocument document,
             PDPage page,
             int sourcePageNumber,
             int outputPosition

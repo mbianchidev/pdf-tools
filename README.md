@@ -31,6 +31,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Rotate PDF** - Whole-document or independent per-page rotation
 - **Organize PDF** - Reorder, rotate, duplicate, and delete pages visually
 - **Crop PDF** - Shared or per-page normalized crop boxes with visual preview
+- **Add Page Numbers** - Ranges, starts, templates, fonts, and visual positions
 - **Add Watermark** - Add text watermarks to PDF pages
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs

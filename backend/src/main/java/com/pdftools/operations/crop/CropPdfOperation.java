@@ -70,7 +70,7 @@ public class CropPdfOperation implements PdfOperation {
                 }
                 return List.copyOf(pages);
             },
-            (page, sourcePageNumber, outputPosition) -> {
+            (document, page, sourcePageNumber, outputPosition) -> {
                 NormalizedRectangle crop = plan.get().cropFor(
                     sourcePageNumber
                 );

@@ -62,7 +62,7 @@ public class RotatePdfOperation implements PdfOperation {
                 }
                 return List.copyOf(allPages);
             },
-            (page, sourcePageNumber, outputPosition) -> {
+            (document, page, sourcePageNumber, outputPosition) -> {
                 int rotation = plan.get().rotationFor(sourcePageNumber);
                 if (rotation != 0) {
                     page.setRotation(Math.floorMod(
