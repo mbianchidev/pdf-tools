@@ -20,7 +20,10 @@ public interface JobRepository extends JpaRepository<JobEntity, UUID> {
         Collection<JobStatus> statuses
     );
 
-    List<JobEntity> findTop20ByStatusOrderByCreatedAtAsc(JobStatus status);
+    List<JobEntity> findTop20ByStatusAndOperationInOrderByCreatedAtAsc(
+        JobStatus status,
+        Collection<String> operations
+    );
 
     List<JobEntity> findAllByStatusAndUpdatedAtBefore(JobStatus status, Instant updatedBefore);
 

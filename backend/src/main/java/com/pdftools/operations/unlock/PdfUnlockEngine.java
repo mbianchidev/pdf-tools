@@ -1,4 +1,4 @@
-package com.pdftools.operations.protect;
+package com.pdftools.operations.unlock;
 
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
@@ -9,9 +9,7 @@ import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.io.RandomAccessReadBufferedFile;
 import org.apache.pdfbox.io.RandomAccessStreamCache;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
-import org.apache.pdfbox.pdmodel.encryption.StandardProtectionPolicy;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -19,40 +17,44 @@ import java.nio.file.Path;
 import java.util.function.IntConsumer;
 
 @Component
-public class PdfProtectionEngine {
+public class PdfUnlockEngine {
 
     private final PdfSecurityProperties properties;
 
-    public PdfProtectionEngine(PdfSecurityProperties properties) {
+    public PdfUnlockEngine(PdfSecurityProperties properties) {
         this.properties = properties;
     }
 
-    public Path protect(
+    public Path unlock(
             Path source,
             Path workspace,
-            ProtectPlanFactory.ProtectPlan plan,
+            UnlockPlanFactory.UnlockPlan plan,
             IntConsumer progress,
             Runnable cancellationCheck) {
         PdfSecurityFiles.requirePdfHeader(source);
-        Path output = workspace.resolve("protected.pdf");
+        Path output = workspace.resolve("unlocked.pdf");
         RandomAccessStreamCache.StreamCacheCreateFunction scratchCache =
             PdfSecurityFiles.scratchCache(
                 workspace,
-                "PROTECT_SCRATCH_FAILED",
-                "The protection scratch directory could not be created"
+                "UNLOCK_SCRATCH_FAILED",
+                "The unlock scratch directory could not be created"
             );
         try (RandomAccessReadBufferedFile randomAccess =
                  new RandomAccessReadBufferedFile(source);
-             PDDocument document = Loader.loadPDF(
+             PDDocument document = load(
                  randomAccess,
+                 plan.password(),
                  scratchCache
              )) {
             cancellationCheck.run();
-            if (document.isEncrypted()) {
-                throw encryptedPdf();
+            if (!document.isEncrypted()) {
+                throw new OperationException(
+                    "PDF_NOT_ENCRYPTED",
+                    "The input PDF is not password protected"
+                );
             }
             progress.accept(25);
-            document.protect(policy(plan));
+            document.setAllSecurityToBeRemoved(true);
             progress.accept(60);
             PdfSecurityFiles.save(
                 document,
@@ -64,58 +66,47 @@ public class PdfProtectionEngine {
             progress.accept(90);
             return output;
         } catch (InvalidPasswordException exception) {
-            throw cleanup(output, encryptedPdf());
+            throw cleanup(output, new OperationException(
+                "INVALID_PASSWORD",
+                "The password did not unlock this PDF"
+            ));
         } catch (OutputLimitExceededException exception) {
             throw cleanup(output, new OperationException(
-                "PROTECTED_OUTPUT_SIZE_LIMIT_EXCEEDED",
-                "Protected PDF exceeds the configured output limit"
+                "UNLOCKED_OUTPUT_SIZE_LIMIT_EXCEEDED",
+                "Unlocked PDF exceeds the configured output limit"
             ));
         } catch (OperationException | OperationCancelledException exception) {
             throw cleanup(output, exception);
         } catch (IOException exception) {
             throw cleanup(output, new OperationException(
                 "INVALID_PDF",
-                "The input is not a readable PDF",
+                "The input is not a readable password-protected PDF",
                 exception
             ));
         }
     }
 
-    private StandardProtectionPolicy policy(
-            ProtectPlanFactory.ProtectPlan plan) {
-        AccessPermission permission = new AccessPermission();
-        permission.setCanPrint(!plan.print().equals("none"));
-        permission.setCanPrintFaithful(plan.print().equals("high"));
-        permission.setCanExtractContent(plan.copy());
-        permission.setCanModify(plan.modify());
-        permission.setCanModifyAnnotations(plan.annotate());
-        permission.setCanFillInForm(plan.fillForms());
-        permission.setCanExtractForAccessibility(plan.accessibility());
-        permission.setCanAssembleDocument(plan.assemble());
-        StandardProtectionPolicy policy = new StandardProtectionPolicy(
-            plan.ownerPassword(),
-            plan.userPassword(),
-            permission
-        );
-        policy.setEncryptionKeyLength(256);
-        policy.setPreferAES(true);
-        return policy;
-    }
-
-    private OperationException encryptedPdf() {
-        return new OperationException(
-            "ENCRYPTED_PDF",
-            "Unlock the PDF before protecting it again"
-        );
+    private PDDocument load(
+            RandomAccessReadBufferedFile randomAccess,
+            String password,
+            RandomAccessStreamCache.StreamCacheCreateFunction scratchCache)
+            throws IOException {
+        try {
+            return Loader.loadPDF(randomAccess, password, scratchCache);
+        } catch (IllegalArgumentException exception) {
+            throw new OperationException(
+                "INVALID_PASSWORD",
+                "The password contains characters unsupported by this PDF"
+            );
+        }
     }
 
     private <T extends RuntimeException> T cleanup(Path output, T failure) {
         return PdfSecurityFiles.cleanup(
             output,
             failure,
-            "PROTECT_CLEANUP_FAILED",
-            "Partial protected output could not be removed"
+            "UNLOCK_CLEANUP_FAILED",
+            "Partial unlocked output could not be removed"
         );
     }
-
 }

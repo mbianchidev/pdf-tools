@@ -26,6 +26,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Crop** - Apply normalized shared or per-page crop boxes
 - **Page Numbers** - Number ranges with templates, fonts, and positions
 - **Protect** - AES-256 password encryption and explicit permissions
+- **Unlock** - Authenticated password removal with structure preservation
 - **Watermark** - Add text watermarks with positioning
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
@@ -73,7 +74,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, and `protect` operations are enabled. Their contracts and fidelity limits are
+The `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, and `unlock` operations are enabled. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -82,6 +83,7 @@ Organize plans are documented in [`docs/operations/organize.md`](../docs/operati
 Crop coordinates are documented in [`docs/operations/crop.md`](../docs/operations/crop.md).
 Page numbering is documented in [`docs/operations/page-numbers.md`](../docs/operations/page-numbers.md).
 Protection and sensitive option storage are documented in [`docs/operations/protect.md`](../docs/operations/protect.md).
+Password removal is documented in [`docs/operations/unlock.md`](../docs/operations/unlock.md).
 
 The following legacy endpoints remain during migration:
 
@@ -189,8 +191,15 @@ cors.allowed-origins=http://localhost:80,http://localhost:3000
 | `PDF_STORAGE_TYPE` | `local` | `local` or `s3` artifact storage |
 | `PDF_STORAGE_LOCAL_ROOT` | `/tmp/pdf-storage/jobs` | Local artifact root |
 | `PDF_JOB_WORK_ROOT` | `/tmp/pdf-work` | Isolated worker root |
+| `PDF_ENABLED_OPERATIONS` | completed stable operations | Comma-separated submission feature flags |
 | `PDF_OPTIONS_ENCRYPTION_KEY` | generated local key | Base64 32-byte shared key for sensitive job options |
+| `PDF_SECURITY_MAX_OUTPUT_BYTES` | `134217728` | Protect/Unlock output byte limit |
 | `CORS_ALLOWED_ORIGINS` | local frontend origins | Allowed CORS origins |
+
+For a rolling deployment, first deploy new code to every worker while leaving new
+operation keys out of `PDF_ENABLED_OPERATIONS`. Enable a new key only after every
+worker can execute it. Dispatchers ignore queued operations not registered in their
+local binary.
 
 ## Docker
 

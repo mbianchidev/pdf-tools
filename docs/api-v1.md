@@ -162,3 +162,9 @@ font, size, position, and margin options. See [Add Page Numbers](operations/page
 `operation=protect` accepts one unencrypted PDF, separate user/owner passwords, and
 print/copy/modify/annotation/form/accessibility/assembly permissions. Sensitive options
 are AES-GCM encrypted before persistence. See [Protect PDF](operations/protect.md).
+
+## Unlock PDF
+
+`operation=unlock` accepts one encrypted PDF and its current user or owner password.
+The password is AES-GCM encrypted before persistence, and the output is a full
+unencrypted rewrite. See [Unlock PDF](operations/unlock.md).

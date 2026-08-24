@@ -1,11 +1,11 @@
-.protect-fields,
-.protect-permissions {
+.security-fields,
+.security-permissions {
   display: grid;
   gap: 0.7rem;
 }
 
-.protect-fields label,
-.protect-permissions > label:not(.permission-check) {
+.security-fields label,
+.security-permissions > label:not(.permission-check) {
   display: grid;
   gap: 0.35rem;
   color: var(--ink);
@@ -13,8 +13,8 @@
   font-weight: 700;
 }
 
-.protect-fields input,
-.protect-permissions select {
+.security-fields input,
+.security-permissions select {
   width: 100%;
   min-height: 42px;
   border: 1px solid var(--line);
@@ -25,25 +25,25 @@
   padding: 0 0.7rem;
 }
 
-.protect-fields input:focus,
-.protect-permissions select:focus {
+.security-fields input:focus,
+.security-permissions select:focus {
   border-color: var(--iris);
   outline: 3px solid var(--sun);
   outline-offset: 2px;
 }
 
-.protect-help,
-.protect-error {
+.security-help,
+.security-error {
   margin: 0;
   font-size: var(--text-xs);
   line-height: 1.5;
 }
 
-.protect-help {
+.security-help {
   color: var(--muted);
 }
 
-.protect-error {
+.security-error {
   color: var(--danger);
 }
 
@@ -62,7 +62,7 @@
   accent-color: var(--iris);
 }
 
-.protect-preview {
+.security-preview {
   display: grid;
   min-height: 100%;
   place-items: center;
@@ -71,7 +71,7 @@
   padding: 2rem;
 }
 
-.protect-document {
+.security-document {
   display: grid;
   width: min(360px, 100%);
   min-height: 430px;
@@ -84,11 +84,11 @@
   text-align: center;
 }
 
-.protect-document > svg {
+.security-document > svg {
   color: var(--iris);
 }
 
-.protect-document strong {
+.security-document strong {
   max-width: 80%;
   overflow: hidden;
   font-family: var(--font-display);
@@ -97,11 +97,11 @@
   white-space: nowrap;
 }
 
-.protect-document > span {
+.security-document > span {
   color: var(--muted);
 }
 
-.protect-document__status {
+.security-document__status {
   display: inline-flex;
   min-height: 38px;
   align-items: center;
@@ -114,7 +114,7 @@
   font-weight: 750;
 }
 
-.protect-policy {
+.security-policy {
   display: grid;
   width: min(520px, 100%);
   grid-template-columns: 1fr 1fr;
@@ -123,7 +123,7 @@
   border: 1px solid rgb(255 255 255 / 12%);
 }
 
-.protect-policy p {
+.security-policy p {
   margin: 0;
   padding: 0.8rem;
   color: var(--line-strong);
@@ -133,12 +133,12 @@
 }
 
 @media (max-width: 560px) {
-  .protect-document {
+  .security-document {
     min-height: 320px;
     box-shadow: 10px 10px 0 var(--iris);
   }
 
-  .protect-policy {
+  .security-policy {
     grid-template-columns: 1fr;
   }
 }

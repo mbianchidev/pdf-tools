@@ -2,6 +2,7 @@ package com.pdftools.jobs;
 
 import com.pdftools.jobs.persistence.JobEntity;
 import com.pdftools.jobs.persistence.JobRepository;
+import com.pdftools.operations.OperationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,16 +23,19 @@ public class JobDispatcher {
     private final JobRepository jobRepository;
     private final JobExecutionService executionService;
     private final TaskExecutor taskExecutor;
+    private final OperationRegistry operationRegistry;
     private final Set<UUID> inFlight = ConcurrentHashMap.newKeySet();
     private final String workerId = UUID.randomUUID().toString();
 
     public JobDispatcher(
             JobRepository jobRepository,
             JobExecutionService executionService,
-            @Qualifier("pdfJobExecutor") TaskExecutor taskExecutor) {
+            @Qualifier("pdfJobExecutor") TaskExecutor taskExecutor,
+            OperationRegistry operationRegistry) {
         this.jobRepository = jobRepository;
         this.executionService = executionService;
         this.taskExecutor = taskExecutor;
+        this.operationRegistry = operationRegistry;
     }
 
     @Scheduled(
@@ -44,7 +48,14 @@ public class JobDispatcher {
 
     @Scheduled(fixedDelayString = "${pdf.jobs.dispatch-interval:1s}")
     public void dispatchPending() {
-        jobRepository.findTop20ByStatusOrderByCreatedAtAsc(JobStatus.PENDING)
+        Set<String> supportedOperations = operationRegistry.keys();
+        if (supportedOperations.isEmpty()) {
+            return;
+        }
+        jobRepository.findTop20ByStatusAndOperationInOrderByCreatedAtAsc(
+                JobStatus.PENDING,
+                supportedOperations
+            )
             .stream()
             .map(JobEntity::getId)
             .forEach(this::dispatch);

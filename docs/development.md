@@ -57,9 +57,15 @@ Important settings:
 | `PDF_STORAGE_TYPE` | `local` | `local` or `s3` |
 | `PDF_STORAGE_LOCAL_ROOT` | `/tmp/pdf-storage/jobs` | Local object root |
 | `PDF_JOB_WORK_ROOT` | `/tmp/pdf-work` | Ephemeral worker directories |
+| `PDF_ENABLED_OPERATIONS` | stable operations | Comma-separated submission feature flags |
 | `PDF_MULTIPART_TEMP_DIR` | `/tmp/pdf-multipart` | Private multipart spill directory; must be dedicated to one backend instance |
+| `PDF_SECURITY_MAX_OUTPUT_BYTES` | `134217728` | Protect/Unlock output byte limit |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
+
+Roll out a new operation in two phases across multiple replicas: deploy the binary
+everywhere with its key disabled, then add the key to `PDF_ENABLED_OPERATIONS`.
+Workers only dispatch operation keys registered in their local binary.
 
 ## Local frontend
 

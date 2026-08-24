@@ -21,7 +21,7 @@ import { startBrowserDownload } from '../features/jobs/startBrowserDownload';
 import { usePdfJob } from '../features/jobs/usePdfJob';
 import { getApiErrorMessage, jobService } from '../services/jobService';
 import './OperationPage.css';
-import './ProtectPage.css';
+import './SecurityPage.css';
 
 const DEFAULT_PERMISSIONS = {
   print: 'none',
@@ -216,7 +216,7 @@ const ProtectPage = () => {
 
           {file && (
             <>
-              <div className="sidebar-section protect-fields">
+              <div className="sidebar-section security-fields">
                 <h3 className="sidebar-title">Passwords</h3>
                 {[
                   ['Open password', userPassword, setUserPassword],
@@ -243,13 +243,13 @@ const ProtectPage = () => {
                     />
                   </label>
                 ))}
-                <p className={passwordError ? 'protect-error' : 'protect-help'}>
+                <p className={passwordError ? 'security-error' : 'security-help'}>
                   {passwordError
                     || 'Passwords are encrypted before job metadata is stored.'}
                 </p>
               </div>
 
-              <div className="sidebar-section protect-permissions">
+              <div className="sidebar-section security-permissions">
                 <h3 className="sidebar-title">User permissions</h3>
                 <label>
                   Printing
@@ -324,19 +324,19 @@ const ProtectPage = () => {
 
         <main className="operation-preview">
           {file ? (
-            <div className="protect-preview">
-              <div className="protect-document">
+            <div className="security-preview">
+              <div className="security-document">
                 <FileKey2 size={48} aria-hidden="true" />
                 <strong>{file.name}</strong>
                 <span>AES-256 encrypted PDF</span>
-                <div className="protect-document__status">
+                <div className="security-document__status">
                   <ShieldCheck size={18} aria-hidden="true" />
                   {userPassword && ownerPassword
                     ? 'Both passwords set'
                     : 'Set both passwords'}
                 </div>
               </div>
-              <section className="protect-policy">
+              <section className="security-policy">
                 <p>Open password required</p>
                 <p>Separate owner controls</p>
                 <p>

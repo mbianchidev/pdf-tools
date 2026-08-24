@@ -17,6 +17,7 @@ import {
   FileText,
   FileType,
   LockKeyhole,
+  LockOpen,
   RotateCw,
   Layers3,
   Crop as CropIcon,
@@ -34,6 +35,7 @@ const OrganizePage = lazy(() => import('./pages/OrganizePage'));
 const CropPage = lazy(() => import('./pages/CropPage'));
 const PageNumbersPage = lazy(() => import('./pages/PageNumbersPage'));
 const ProtectPage = lazy(() => import('./pages/ProtectPage'));
+const UnlockPage = lazy(() => import('./pages/UnlockPage'));
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
@@ -104,6 +106,13 @@ const operations = [
     group: 'Secure',
     title: 'Protect PDF',
     description: 'Encrypt with passwords and explicit permissions',
+  },
+  {
+    id: 'unlock',
+    icon: LockOpen,
+    group: 'Secure',
+    title: 'Unlock PDF',
+    description: 'Remove encryption with a known password',
   },
   {
     id: 'watermark',
@@ -389,6 +398,7 @@ function App() {
         <Route path="/crop" element={<CropPage />} />
         <Route path="/page-numbers" element={<PageNumbersPage />} />
         <Route path="/protect" element={<ProtectPage />} />
+        <Route path="/unlock" element={<UnlockPage />} />
         <Route path="/watermark" element={<WatermarkPage />} />
         <Route path="/add-text" element={<AddTextPage />} />
         <Route path="/signature" element={<SignaturePage />} />

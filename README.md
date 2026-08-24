@@ -33,6 +33,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Crop PDF** - Shared or per-page normalized crop boxes with visual preview
 - **Add Page Numbers** - Ranges, starts, templates, fonts, and visual positions
 - **Protect PDF** - AES-256 passwords and least-privilege user permissions
+- **Unlock PDF** - Authenticated password removal when the password is known
 - **Add Watermark** - Add text watermarks to PDF pages
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs

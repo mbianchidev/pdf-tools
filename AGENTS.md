@@ -111,6 +111,7 @@ pdf-tools/
 - **Crop implementation**: `backend/src/main/java/com/pdftools/operations/crop/`
 - **Page number implementation**: `backend/src/main/java/com/pdftools/operations/pagenumbers/`
 - **Protect implementation**: `backend/src/main/java/com/pdftools/operations/protect/`
+- **Unlock implementation**: `backend/src/main/java/com/pdftools/operations/unlock/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`
@@ -281,3 +282,5 @@ node test-script.js
 - `PDF_UPLOAD_DIR`: Temp file storage path
 - `CORS_ALLOWED_ORIGINS`: Allowed CORS origins
 - `PDF_OPTIONS_ENCRYPTION_KEY`: Base64 32-byte key for sensitive job options
+- `PDF_SECURITY_MAX_OUTPUT_BYTES`: Protect/Unlock output byte limit
+- `PDF_ENABLED_OPERATIONS`: Comma-separated submission feature flags

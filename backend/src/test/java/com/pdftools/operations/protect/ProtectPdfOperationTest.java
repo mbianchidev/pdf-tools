@@ -5,7 +5,7 @@ import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
 import com.pdftools.operations.OperationOutput;
 import com.pdftools.operations.OperationSubmission;
-import com.pdftools.operations.split.SplitProperties;
+import com.pdftools.operations.security.PdfSecurityProperties;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -34,7 +34,7 @@ class ProtectPdfOperationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ProtectPdfOperation operation = new ProtectPdfOperation(
-        new PdfProtectionEngine(new SplitProperties()),
+        new PdfProtectionEngine(new PdfSecurityProperties()),
         new ProtectPlanFactory()
     );
 
