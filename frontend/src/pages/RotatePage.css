@@ -1,0 +1,111 @@
+.rotate-all-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rotate-all-actions button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 750;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.rotate-all-actions button:hover:not(:disabled) {
+  border-color: var(--iris);
+  color: var(--iris);
+  transform: translateY(-2px);
+}
+
+.rotate-all-actions button:focus-visible,
+.rotate-summary button:focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.rotate-summary {
+  display: grid;
+  margin-top: 1rem;
+  align-items: center;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.rotate-summary strong {
+  color: var(--iris);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+.rotate-summary button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 0;
+  background: transparent;
+  color: var(--iris);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+.rotate-summary button:disabled,
+.rotate-all-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.rotate-help {
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+}
+
+.rotate-organizer {
+  height: calc(100% - 45px);
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.rotate-organizer .page-organizer {
+  display: grid;
+  margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 1rem;
+}
+
+.rotate-organizer .page-organizer > li {
+  min-width: 0;
+  border: 1px solid rgb(255 255 255 / 12%);
+  background: var(--ink-soft);
+}
+
+.rotate-organizer .page-organizer-preview {
+  color: var(--line-strong);
+  cursor: default;
+}
+
+.rotate-organizer .page-organizer-actions {
+  justify-content: flex-end;
+}
+
+.rotate-organizer .page-organizer-actions button {
+  color: var(--iris-dark);
+  background: var(--iris-soft);
+}

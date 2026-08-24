@@ -134,3 +134,9 @@ limits, and fidelity details.
 `operation=remove` accepts one PDF and requires `options.pages` as a shared page
 expression. It returns one PDF and rejects duplicate, invalid, or all-page removal.
 See [Remove Pages](operations/remove.md) for validation and fidelity details.
+
+## Rotate PDF
+
+`operation=rotate` accepts one PDF with either a shared `rotation` plus optional
+`pages`, or non-overlapping `rotations[]` instructions for independent page angles.
+It returns one PDF. See [Rotate PDF](operations/rotate.md).

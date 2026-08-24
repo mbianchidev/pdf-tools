@@ -17,6 +17,7 @@ import {
   FileText,
   FileType,
   LockKeyhole,
+  RotateCw,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -25,6 +26,7 @@ const MergePage = lazy(() => import('./pages/MergePage'));
 const SplitPage = lazy(() => import('./pages/SplitPage'));
 const ExtractPage = lazy(() => import('./pages/ExtractPage'));
 const RemovePage = lazy(() => import('./pages/RemovePage'));
+const RotatePage = lazy(() => import('./pages/RotatePage'));
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
@@ -60,6 +62,13 @@ const operations = [
     group: 'Organize',
     title: 'Remove Pages',
     description: 'Remove specific pages from a PDF',
+  },
+  {
+    id: 'rotate',
+    icon: RotateCw,
+    group: 'Organize',
+    title: 'Rotate PDF',
+    description: 'Rotate all pages or adjust pages individually',
   },
   {
     id: 'watermark',
@@ -340,6 +349,7 @@ function App() {
         <Route path="/split" element={<SplitPage />} />
         <Route path="/extract" element={<ExtractPage />} />
         <Route path="/remove" element={<RemovePage />} />
+        <Route path="/rotate" element={<RotatePage />} />
         <Route path="/watermark" element={<WatermarkPage />} />
         <Route path="/add-text" element={<AddTextPage />} />
         <Route path="/signature" element={<SignaturePage />} />

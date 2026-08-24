@@ -21,6 +21,7 @@ const PageThumbnailOrganizer = ({
   allowDuplicate = true,
   allowDelete = true,
   allowRotate = true,
+  allowMove = true,
 }) => {
   const [dragIndex, setDragIndex] = useState(null);
 
@@ -69,10 +70,10 @@ const PageThumbnailOrganizer = ({
           <li
             key={page.id}
             className={page.id === selectedPageId ? 'selected' : ''}
-            draggable
-            onDragStart={() => setDragIndex(index)}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={() => handleDrop(index)}
+            draggable={allowMove}
+            onDragStart={() => allowMove && setDragIndex(index)}
+            onDragOver={(event) => allowMove && event.preventDefault()}
+            onDrop={() => allowMove && handleDrop(index)}
           >
             <button
               type="button"
@@ -80,7 +81,7 @@ const PageThumbnailOrganizer = ({
               onClick={() => onSelectPage?.(page.id)}
               aria-label={`Select page ${index + 1}`}
             >
-              <GripVertical size={16} aria-hidden="true" />
+              {allowMove && <GripVertical size={16} aria-hidden="true" />}
               <Page
                 pageNumber={page.sourcePage}
                 rotate={pageRenderRotation(page)}
@@ -91,22 +92,28 @@ const PageThumbnailOrganizer = ({
               <span>Page {index + 1}</span>
             </button>
             <div className="page-organizer-actions">
-              <button
-                type="button"
-                onClick={() => index > 0 && update(movePage(pages, index, index - 1))}
-                disabled={index === 0}
-                aria-label={`Move page ${index + 1} left`}
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                onClick={() => index < pages.length - 1 && update(movePage(pages, index, index + 1))}
-                disabled={index === pages.length - 1}
-                aria-label={`Move page ${index + 1} right`}
-              >
-                →
-              </button>
+              {allowMove && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => index > 0
+                      && update(movePage(pages, index, index - 1))}
+                    disabled={index === 0}
+                    aria-label={`Move page ${index + 1} left`}
+                  >
+                    ←
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => index < pages.length - 1
+                      && update(movePage(pages, index, index + 1))}
+                    disabled={index === pages.length - 1}
+                    aria-label={`Move page ${index + 1} right`}
+                  >
+                    →
+                  </button>
+                </>
+              )}
               {allowRotate && (
                 <button
                   type="button"

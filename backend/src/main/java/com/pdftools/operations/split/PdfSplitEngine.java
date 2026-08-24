@@ -74,7 +74,9 @@ public class PdfSplitEngine {
             workspace,
             progress,
             cancellationCheck,
-            pageCount -> planFactory.create(options, pageCount)
+            pageCount -> planFactory.create(options, pageCount),
+            (page, sourcePageNumber) -> {
+            }
         );
     }
 
@@ -82,6 +84,24 @@ public class PdfSplitEngine {
             Path sourcePath,
             Path workspace,
             PageSelector selector,
+            IntConsumer progress,
+            Runnable cancellationCheck) {
+        return copySelectedPages(
+            sourcePath,
+            workspace,
+            selector,
+            (page, sourcePageNumber) -> {
+            },
+            progress,
+            cancellationCheck
+        );
+    }
+
+    public Path copySelectedPages(
+            Path sourcePath,
+            Path workspace,
+            PageSelector selector,
+            PageTransformer transformer,
             IntConsumer progress,
             Runnable cancellationCheck) {
         SplitResult result = process(
@@ -92,7 +112,8 @@ public class PdfSplitEngine {
             pageCount -> List.of(new SplitGroup(
                 1,
                 List.copyOf(selector.select(pageCount))
-            ))
+            )),
+            transformer
         );
         return result.parts().getFirst().path();
     }
@@ -102,7 +123,8 @@ public class PdfSplitEngine {
             Path workspace,
             IntConsumer progress,
             Runnable cancellationCheck,
-            java.util.function.IntFunction<List<SplitGroup>> planner) {
+            java.util.function.IntFunction<List<SplitGroup>> planner,
+            PageTransformer transformer) {
         requirePdfHeader(sourcePath);
         Path scratchDirectory = workspace.resolve(".pdfbox-scratch");
         try {
@@ -188,11 +210,13 @@ public class PdfSplitEngine {
                             decodedBudget,
                             cancellationCheck
                         ).stream();
-                        destination.addPage(pageLocalCopy(
+                        PDPage copiedPage = pageLocalCopy(
                             sourcePage,
                             content,
                             resources
-                        ));
+                        );
+                        transformer.transform(copiedPage, pageNumber);
+                        destination.addPage(copiedPage);
                         processedPages++;
                     }
                     setDeterministicId(destination, sourceHash, group);
@@ -256,6 +280,11 @@ public class PdfSplitEngine {
     @FunctionalInterface
     public interface PageSelector {
         List<Integer> select(int pageCount);
+    }
+
+    @FunctionalInterface
+    public interface PageTransformer {
+        void transform(PDPage page, int sourcePageNumber);
     }
 
     private void validateDocument(PDDocument source) {
