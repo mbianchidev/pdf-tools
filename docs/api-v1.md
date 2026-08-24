@@ -186,3 +186,9 @@ See [JPG to PDF](operations/jpg-to-pdf.md).
 `operation=watermark` accepts one PDF for text mode or a PDF followed by one PNG/JPEG
 for image mode. Page expressions, normalized position, rotation, opacity, and
 mode-specific styling are supported. See [Watermark PDF](operations/watermark.md).
+
+## Edit PDF
+
+`operation=edit` accepts one PDF followed by up to 10 PNG/JPEG assets and an
+ordered `elements[]` plan. Text, image, rectangle, ellipse, line, highlight, and
+note elements can be applied in one job. See [Edit PDF](operations/edit.md).

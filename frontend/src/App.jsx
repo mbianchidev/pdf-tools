@@ -24,6 +24,7 @@ import {
   ListOrdered,
   Images,
   FileImage,
+  PencilRuler,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -40,6 +41,7 @@ const ProtectPage = lazy(() => import('./pages/ProtectPage'));
 const UnlockPage = lazy(() => import('./pages/UnlockPage'));
 const PdfToJpgPage = lazy(() => import('./pages/PdfToJpgPage'));
 const JpgToPdfPage = lazy(() => import('./pages/JpgToPdfPage'));
+const EditPage = lazy(() => import('./pages/EditPage'));
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
@@ -138,6 +140,13 @@ const operations = [
     group: 'Mark up',
     title: 'Watermark PDF',
     description: 'Style text or image watermarks on selected pages',
+  },
+  {
+    id: 'edit',
+    icon: PencilRuler,
+    group: 'Mark up',
+    title: 'Edit PDF',
+    description: 'Add text, images, shapes, highlights, and notes',
   },
   {
     id: 'add-text',
@@ -420,6 +429,7 @@ function App() {
         <Route path="/pdf-to-jpg" element={<PdfToJpgPage />} />
         <Route path="/jpg-to-pdf" element={<JpgToPdfPage />} />
         <Route path="/watermark" element={<WatermarkPage />} />
+        <Route path="/edit" element={<EditPage />} />
         <Route path="/add-text" element={<AddTextPage />} />
         <Route path="/signature" element={<SignaturePage />} />
         <Route path="/redact" element={<RedactPage />} />

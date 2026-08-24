@@ -115,6 +115,7 @@ pdf-tools/
 - **PDF-to-JPG implementation**: `backend/src/main/java/com/pdftools/operations/pdfjpg/`
 - **JPG-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/jpgpdf/`
 - **Watermark implementation**: `backend/src/main/java/com/pdftools/operations/watermark/`
+- **Edit implementation**: `backend/src/main/java/com/pdftools/operations/edit/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`
@@ -292,3 +293,6 @@ node test-script.js
 - `WATERMARK_MAX_IMAGE_PIXELS`: Watermark image pixel limit
 - `WATERMARK_MAX_IMAGE_BYTES`: Watermark image byte limit
 - `WATERMARK_MAX_IMAGE_DIMENSION`: Watermark image side limit
+- `EDIT_MAX_ELEMENTS`: Maximum elements in one unified edit plan
+- `EDIT_MAX_IMAGE_BYTES`: Per-edit-image byte limit
+- `EDIT_MAX_TOTAL_DECODED_IMAGE_BYTES`: Decoded edit-image budget

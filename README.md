@@ -37,6 +37,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **PDF to JPG** - Page ranges with resolution and JPEG quality controls
 - **JPG to PDF** - Ordered images with paper, orientation, and margin controls
 - **Watermark PDF** - Text/image modes, real opacity, styling, and page ranges
+- **Edit PDF** - Text, images, vector shapes, highlights, and notes
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs
 - **Redact Content** - Redact sensitive information with black boxes

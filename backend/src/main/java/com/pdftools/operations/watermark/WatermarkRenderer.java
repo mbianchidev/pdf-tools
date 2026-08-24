@@ -1,6 +1,7 @@
 package com.pdftools.operations.watermark;
 
 import com.pdftools.operations.OperationException;
+import com.pdftools.operations.shared.coordinates.VisualPageSpace;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -24,13 +25,14 @@ public class WatermarkRenderer {
             WatermarkPlanFactory.WatermarkPlan plan,
             PDType1Font font) {
         try {
-            Geometry geometry = geometry(page, plan);
-            float fontSize = plan.fontSize() / geometry.userUnit();
+            VisualPageSpace space = VisualPageSpace.from(page);
+            float fontSize = plan.fontSize() / space.userUnit();
             float textWidth = font.getStringWidth(plan.text())
                 / 1000f
                 * fontSize;
-            AffineTransform textTransform = elementTransform(
-                geometry,
+            AffineTransform textTransform = space.centeredTransform(
+                plan.x(),
+                plan.y(),
                 plan.rotation()
             );
             textTransform.translate(
@@ -38,7 +40,7 @@ public class WatermarkRenderer {
                 -fontSize * 0.35
             );
             try (PDPageContentStream content = content(document, page)) {
-                prepareGraphics(content, geometry, plan.opacity());
+                prepareGraphics(content, space, plan.opacity());
                 WatermarkPlanFactory.RgbColor color = plan.color();
                 content.setNonStrokingColor(new Color(
                     color.red(),
@@ -64,11 +66,11 @@ public class WatermarkRenderer {
             WatermarkImagePreparer.PreparedImage prepared,
             PDImageXObject image) {
         try {
-            Geometry geometry = geometry(page, plan);
-            float maxWidth = geometry.visualWidth()
+            VisualPageSpace space = VisualPageSpace.from(page);
+            float maxWidth = space.width()
                 * plan.imageWidthPercent()
                 / 100f;
-            float maxHeight = geometry.visualHeight() * 0.9f;
+            float maxHeight = space.height() * 0.9f;
             float scale = Math.min(
                 maxWidth / prepared.displayWidth(),
                 maxHeight / prepared.displayHeight()
@@ -76,9 +78,10 @@ public class WatermarkRenderer {
             float width = prepared.displayWidth() * scale;
             float height = prepared.displayHeight() * scale;
             try (PDPageContentStream content = content(document, page)) {
-                prepareGraphics(content, geometry, plan.opacity());
-                content.transform(new Matrix(elementTransform(
-                    geometry,
+                prepareGraphics(content, space, plan.opacity());
+                content.transform(new Matrix(space.centeredTransform(
+                    plan.x(),
+                    plan.y(),
                     plan.rotation()
                 )));
                 content.drawImage(
@@ -111,80 +114,14 @@ public class WatermarkRenderer {
 
     private void prepareGraphics(
             PDPageContentStream content,
-            Geometry geometry,
+            VisualPageSpace space,
             float opacity) throws IOException {
         content.saveGraphicsState();
         PDExtendedGraphicsState state = new PDExtendedGraphicsState();
         state.setNonStrokingAlphaConstant(opacity);
         state.setStrokingAlphaConstant(opacity);
         content.setGraphicsStateParameters(state);
-        content.transform(geometry.pageTransform());
-    }
-
-    private Geometry geometry(
-            PDPage page,
-            WatermarkPlanFactory.WatermarkPlan plan) {
-        float userUnit = page.getUserUnit();
-        if (!Float.isFinite(userUnit) || userUnit <= 0) {
-            throw new OperationException(
-                "INVALID_PAGE_USER_UNIT",
-                "Page UserUnit must be a positive finite number"
-            );
-        }
-        PDRectangle box = page.getCropBox();
-        int rotation = Math.floorMod(page.getRotation(), 360);
-        if (rotation % 90 != 0) {
-            throw new OperationException(
-                "UNSUPPORTED_PAGE_ROTATION",
-                "Page rotation must be a multiple of 90 degrees"
-            );
-        }
-        float visualWidth = rotation % 180 == 0
-            ? box.getWidth()
-            : box.getHeight();
-        float visualHeight = rotation % 180 == 0
-            ? box.getHeight()
-            : box.getWidth();
-        return new Geometry(
-            visualWidth,
-            visualHeight,
-            plan.x() * visualWidth,
-            (1 - plan.y()) * visualHeight,
-            userUnit,
-            pageTransform(box, rotation)
-        );
-    }
-
-    private Matrix pageTransform(PDRectangle box, int rotation) {
-        float x = box.getLowerLeftX();
-        float y = box.getLowerLeftY();
-        float width = box.getWidth();
-        float height = box.getHeight();
-        return switch (rotation) {
-            case 0 -> new Matrix(1, 0, 0, 1, x, y);
-            case 90 -> new Matrix(0, 1, -1, 0, x + width, y);
-            case 180 -> new Matrix(
-                -1,
-                0,
-                0,
-                -1,
-                x + width,
-                y + height
-            );
-            case 270 -> new Matrix(0, -1, 1, 0, x, y + height);
-            default -> throw new IllegalStateException(
-                "Unsupported page rotation"
-            );
-        };
-    }
-
-    private AffineTransform elementTransform(
-            Geometry geometry,
-            float clockwiseRotation) {
-        AffineTransform transform = new AffineTransform();
-        transform.translate(geometry.centerX(), geometry.centerY());
-        transform.rotate(Math.toRadians(-clockwiseRotation));
-        return transform;
+        content.transform(space.pageTransform());
     }
 
     private OperationException renderFailure(Exception exception) {
@@ -195,13 +132,4 @@ public class WatermarkRenderer {
         );
     }
 
-    private record Geometry(
-        float visualWidth,
-        float visualHeight,
-        float centerX,
-        float centerY,
-        float userUnit,
-        Matrix pageTransform
-    ) {
-    }
 }

@@ -73,6 +73,10 @@ Important settings:
 | `WATERMARK_MAX_IMAGE_PIXELS` | `4000000` | Watermark image pixel limit |
 | `WATERMARK_MAX_IMAGE_BYTES` | `10485760` | Watermark image byte limit |
 | `WATERMARK_MAX_IMAGE_DIMENSION` | `4096` | Watermark image side limit |
+| `EDIT_MAX_ELEMENTS` | `500` | Maximum elements in one edit plan |
+| `EDIT_MAX_IMAGES` | `10` | Maximum uploaded edit images |
+| `EDIT_MAX_IMAGE_BYTES` | `10485760` | Per-edit-image byte limit |
+| `EDIT_MAX_TOTAL_DECODED_IMAGE_BYTES` | `67108864` | Aggregate decoded edit-image budget |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

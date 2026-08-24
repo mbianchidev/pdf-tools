@@ -30,6 +30,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **PDF to JPG** - Bounded page rendering with DPI and quality controls
 - **JPG to PDF** - Ordered raw JPEG embedding with paper controls
 - **Watermark** - Styled text/image overlays on selected pages
+- **Edit** - Unified text, image, shape, highlight, and note plans
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
 - **Redact** - Add redaction boxes
@@ -76,7 +77,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, and `watermark`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, and `edit`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -89,6 +90,7 @@ Password removal is documented in [`docs/operations/unlock.md`](../docs/operatio
 Raster conversion is documented in [`docs/operations/pdf-to-jpg.md`](../docs/operations/pdf-to-jpg.md).
 Image assembly is documented in [`docs/operations/jpg-to-pdf.md`](../docs/operations/jpg-to-pdf.md).
 Watermark styling is documented in [`docs/operations/watermark.md`](../docs/operations/watermark.md).
+Unified editing is documented in [`docs/operations/edit.md`](../docs/operations/edit.md).
 
 The following legacy endpoints remain during migration:
 
@@ -210,6 +212,8 @@ cors.allowed-origins=http://localhost:80,http://localhost:3000
 | `JPG_TO_PDF_VALIDATION_WORKER_HEAP_BYTES` | `134217728` | JPEG validator heap cap |
 | `JPG_TO_PDF_VALIDATION_WORKER_TIMEOUT` | `2m` | JPEG validator wall-time cap |
 | `WATERMARK_MAX_IMAGE_PIXELS` | `4000000` | Watermark image pixel limit |
+| `EDIT_MAX_ELEMENTS` | `500` | Maximum elements in one edit plan |
+| `EDIT_MAX_IMAGES` | `10` | Maximum uploaded edit images |
 | `CORS_ALLOWED_ORIGINS` | local frontend origins | Allowed CORS origins |
 
 For a rolling deployment, first deploy new code to every worker while leaving new

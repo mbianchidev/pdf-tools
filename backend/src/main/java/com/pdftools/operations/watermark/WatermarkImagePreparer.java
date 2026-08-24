@@ -19,6 +19,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.FileImageInputStream;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -112,10 +113,14 @@ public class WatermarkImagePreparer {
                     throw invalidImage();
                 }
                 cancellationCheck.run();
-                return PreparedImage.png(image);
+                return PreparedImage.png(
+                    image,
+                    decodedBytes(image)
+                );
             } finally {
                 reader.dispose();
             }
+
         } catch (OperationException exception) {
             throw exception;
         } catch (IOException | RuntimeException exception) {
@@ -125,6 +130,21 @@ public class WatermarkImagePreparer {
                 exception
             );
         }
+    }
+
+    private long decodedBytes(BufferedImage image) {
+        DataBuffer buffer = image.getRaster().getDataBuffer();
+        long bytesPerElement = Math.max(
+            DataBuffer.getDataTypeSize(buffer.getDataType()) / 8,
+            1
+        );
+        return Math.multiplyExact(
+            Math.multiplyExact(
+                (long) buffer.getSize(),
+                buffer.getNumBanks()
+            ),
+            bytesPerElement
+        );
     }
 
     private void enforceDimensions(int width, int height) {
@@ -159,24 +179,43 @@ public class WatermarkImagePreparer {
 
     public static final class PreparedImage implements AutoCloseable {
 
-        private final BufferedImage png;
+        private BufferedImage png;
+        private final long decodedBytes;
+        private final int displayWidth;
+        private final int displayHeight;
         private final JpegValidationService.ValidationArtifacts artifacts;
         private final JpegInspector.JpegInfo jpegInfo;
         private final JpegPdfImageFactory jpegImageFactory;
 
         private PreparedImage(
                 BufferedImage png,
+                long decodedBytes,
+                int displayWidth,
+                int displayHeight,
                 JpegValidationService.ValidationArtifacts artifacts,
                 JpegInspector.JpegInfo jpegInfo,
                 JpegPdfImageFactory jpegImageFactory) {
             this.png = png;
+            this.decodedBytes = decodedBytes;
+            this.displayWidth = displayWidth;
+            this.displayHeight = displayHeight;
             this.artifacts = artifacts;
             this.jpegInfo = jpegInfo;
             this.jpegImageFactory = jpegImageFactory;
         }
 
-        static PreparedImage png(BufferedImage image) {
-            return new PreparedImage(image, null, null, null);
+        static PreparedImage png(
+                BufferedImage image,
+                long decodedBytes) {
+            return new PreparedImage(
+                image,
+                decodedBytes,
+                image.getWidth(),
+                image.getHeight(),
+                null,
+                null,
+                null
+            );
         }
 
         static PreparedImage jpeg(
@@ -185,6 +224,9 @@ public class WatermarkImagePreparer {
                 JpegPdfImageFactory imageFactory) {
             return new PreparedImage(
                 null,
+                0,
+                info.displayWidth(),
+                info.displayHeight(),
                 artifacts,
                 info,
                 imageFactory
@@ -192,15 +234,15 @@ public class WatermarkImagePreparer {
         }
 
         public int displayWidth() {
-            return jpegInfo == null
-                ? png.getWidth()
-                : jpegInfo.displayWidth();
+            return displayWidth;
         }
 
         public int displayHeight() {
-            return jpegInfo == null
-                ? png.getHeight()
-                : jpegInfo.displayHeight();
+            return displayHeight;
+        }
+
+        public long decodedBytes() {
+            return decodedBytes;
         }
 
         public PDImageXObject create(
@@ -215,7 +257,19 @@ public class WatermarkImagePreparer {
                     cancellationCheck
                 );
             }
-            return LosslessFactory.createFromImage(document, png);
+            BufferedImage source = png;
+            if (source == null) {
+                throw new IllegalStateException(
+                    "PNG watermark image was already embedded"
+                );
+            }
+            PDImageXObject image = LosslessFactory.createFromImage(
+                document,
+                source
+            );
+            source.flush();
+            png = null;
+            return image;
         }
 
         public Matrix matrix(
@@ -239,6 +293,7 @@ public class WatermarkImagePreparer {
         public void close() {
             if (png != null) {
                 png.flush();
+                png = null;
             }
             if (artifacts != null) {
                 artifacts.close();

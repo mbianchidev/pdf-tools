@@ -18,6 +18,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **PDF to JPG** - Select page ranges, DPI, and JPEG quality
 - **JPG to PDF** - Reorder images and configure PDF paper layout
 - **Watermark PDF** - Text/image modes, styling, opacity, and page selection
+- **Edit PDF** - Place text, images, shapes, highlights, and notes
 - **Add Text** - Add custom text with fonts, colors, and drag positioning
 - **Add Signature** - Type, draw, or upload signatures
 - **Redact Content** - Draw-to-select redaction areas
