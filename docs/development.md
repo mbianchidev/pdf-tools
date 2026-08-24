@@ -70,6 +70,9 @@ Important settings:
 | `JPG_TO_PDF_MAX_OUTPUT_BYTES` | `134217728` | Generated PDF byte limit |
 | `JPG_TO_PDF_VALIDATION_WORKER_HEAP_BYTES` | `134217728` | JPEG validator heap cap |
 | `JPG_TO_PDF_VALIDATION_WORKER_TIMEOUT` | `2m` | JPEG validator wall-time cap |
+| `WATERMARK_MAX_IMAGE_PIXELS` | `4000000` | Watermark image pixel limit |
+| `WATERMARK_MAX_IMAGE_BYTES` | `10485760` | Watermark image byte limit |
+| `WATERMARK_MAX_IMAGE_DIMENSION` | `4096` | Watermark image side limit |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

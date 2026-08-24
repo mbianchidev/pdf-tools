@@ -2,8 +2,6 @@ package com.pdftools.operations.jpgpdf;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.time.Duration;
-
 @ConfigurationProperties(prefix = "pdf.operations.jpg-to-pdf")
 public class JpgToPdfProperties {
 
@@ -15,10 +13,6 @@ public class JpgToPdfProperties {
     private long maxOutputBytes = 128L * 1024L * 1024L;
     private int fitImageDpi = 96;
     private float maxFitPagePoints = 1440;
-    private long maxProgressiveCoefficientBytes =
-        64L * 1024L * 1024L;
-    private long validationWorkerHeapBytes = 128L * 1024L * 1024L;
-    private Duration validationWorkerTimeout = Duration.ofMinutes(2);
 
     public int getMaxImages() {
         return maxImages;
@@ -84,31 +78,4 @@ public class JpgToPdfProperties {
         this.maxFitPagePoints = maxFitPagePoints;
     }
 
-    public long getMaxProgressiveCoefficientBytes() {
-        return maxProgressiveCoefficientBytes;
-    }
-
-    public void setMaxProgressiveCoefficientBytes(
-            long maxProgressiveCoefficientBytes) {
-        this.maxProgressiveCoefficientBytes =
-            maxProgressiveCoefficientBytes;
-    }
-
-    public long getValidationWorkerHeapBytes() {
-        return validationWorkerHeapBytes;
-    }
-
-    public void setValidationWorkerHeapBytes(
-            long validationWorkerHeapBytes) {
-        this.validationWorkerHeapBytes = validationWorkerHeapBytes;
-    }
-
-    public Duration getValidationWorkerTimeout() {
-        return validationWorkerTimeout;
-    }
-
-    public void setValidationWorkerTimeout(
-            Duration validationWorkerTimeout) {
-        this.validationWorkerTimeout = validationWorkerTimeout;
-    }
 }

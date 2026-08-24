@@ -114,6 +114,7 @@ pdf-tools/
 - **Unlock implementation**: `backend/src/main/java/com/pdftools/operations/unlock/`
 - **PDF-to-JPG implementation**: `backend/src/main/java/com/pdftools/operations/pdfjpg/`
 - **JPG-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/jpgpdf/`
+- **Watermark implementation**: `backend/src/main/java/com/pdftools/operations/watermark/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`
@@ -288,3 +289,6 @@ node test-script.js
 - `PDF_ENABLED_OPERATIONS`: Comma-separated submission feature flags
 - `PDF_TO_JPG_MAX_PIXELS_PER_PAGE`: Per-page raster allocation limit
 - `JPG_TO_PDF_MAX_PIXELS_PER_IMAGE`: JPEG input pixel limit
+- `WATERMARK_MAX_IMAGE_PIXELS`: Watermark image pixel limit
+- `WATERMARK_MAX_IMAGE_BYTES`: Watermark image byte limit
+- `WATERMARK_MAX_IMAGE_DIMENSION`: Watermark image side limit

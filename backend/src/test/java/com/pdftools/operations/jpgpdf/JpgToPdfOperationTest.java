@@ -6,6 +6,10 @@ import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
 import com.pdftools.operations.OperationOutput;
 import com.pdftools.operations.OperationSubmission;
+import com.pdftools.operations.shared.image.JpegInspector;
+import com.pdftools.operations.shared.image.JpegPdfImageFactory;
+import com.pdftools.operations.shared.image.JpegValidationProperties;
+import com.pdftools.operations.shared.image.JpegValidationService;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -42,10 +46,14 @@ class JpgToPdfOperationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final JpgToPdfProperties properties = new JpgToPdfProperties();
+    private final JpegValidationProperties validationProperties =
+        new JpegValidationProperties();
     private final JpgToPdfOperation operation = new JpgToPdfOperation(
         new JpgToPdfEngine(
             properties,
-            new JpegValidationService(properties)
+            new JpegValidationService(validationProperties),
+            validationProperties,
+            new JpegPdfImageFactory()
         ),
         new JpgToPdfPlanFactory(properties),
         properties
@@ -414,7 +422,7 @@ class JpgToPdfOperationTest {
     @Test
     void rejectsProgressiveImagesBeyondCoefficientBudget()
             throws Exception {
-        properties.setMaxProgressiveCoefficientBytes(1);
+        validationProperties.setMaxProgressiveCoefficientBytes(1);
 
         assertCode(
             "JPEG_PROGRESSIVE_MEMORY_LIMIT_EXCEEDED",
@@ -427,7 +435,7 @@ class JpgToPdfOperationTest {
     @Test
     void terminatesIsolatedValidationAtConfiguredTimeout()
             throws Exception {
-        properties.setValidationWorkerTimeout(Duration.ofMillis(1));
+        validationProperties.setWorkerTimeout(Duration.ofMillis(1));
 
         assertCode(
             "JPEG_VALIDATION_TIMEOUT",

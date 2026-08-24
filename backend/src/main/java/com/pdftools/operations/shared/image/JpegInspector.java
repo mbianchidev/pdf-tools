@@ -1,4 +1,4 @@
-package com.pdftools.operations.jpgpdf;
+package com.pdftools.operations.shared.image;
 
 import com.pdftools.operations.CheckpointInputStream;
 import com.pdftools.operations.OperationCancelledException;
@@ -25,11 +25,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-final class JpegInspector {
+public final class JpegInspector {
 
     private static final int MAX_MARKERS = 100_000;
 
-    JpegInfo inspect(Path source, Runnable cancellationCheck) {
+    public JpegInfo inspect(
+            Path source,
+            Runnable cancellationCheck) {
         try (InputStream file = Files.newInputStream(source);
              InputStream checked = new CheckpointInputStream(
                  file,
@@ -157,7 +159,7 @@ final class JpegInspector {
         }
     }
 
-    void writeValidationCopy(
+    public void writeValidationCopy(
             Path source,
             Path validationCopy,
             JpegInfo expected,
@@ -181,7 +183,7 @@ final class JpegInspector {
         }
     }
 
-    void validateDecodableCopy(
+    public void validateDecodableCopy(
             Path validationCopy,
             JpegInfo expected) {
         try (FileImageInputStream input =
@@ -591,7 +593,7 @@ final class JpegInspector {
         );
     }
 
-    record JpegInfo(
+    public record JpegInfo(
         int width,
         int height,
         int orientation,
@@ -600,15 +602,15 @@ final class JpegInspector {
         boolean progressive
     ) {
 
-        boolean adobe() {
+        public boolean adobe() {
             return adobeTransform >= 0;
         }
 
-        int displayWidth() {
+        public int displayWidth() {
             return orientation >= 5 ? height : width;
         }
 
-        int displayHeight() {
+        public int displayHeight() {
             return orientation >= 5 ? width : height;
         }
     }

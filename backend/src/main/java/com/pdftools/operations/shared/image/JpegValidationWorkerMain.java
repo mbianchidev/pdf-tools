@@ -1,4 +1,4 @@
-package com.pdftools.operations.jpgpdf;
+package com.pdftools.operations.shared.image;
 
 import com.pdftools.operations.OperationException;
 

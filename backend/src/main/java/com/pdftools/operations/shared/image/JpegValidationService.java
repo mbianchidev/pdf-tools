@@ -1,4 +1,4 @@
-package com.pdftools.operations.jpgpdf;
+package com.pdftools.operations.shared.image;
 
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
@@ -28,10 +28,11 @@ public class JpegValidationService {
     private static final long MIN_WORKER_HEAP_BYTES = 32L * 1024L * 1024L;
     private static final Duration MAX_WORKER_TIMEOUT = Duration.ofHours(1);
 
-    private final JpgToPdfProperties properties;
+    private final JpegValidationProperties properties;
     private final JpegInspector inspector = new JpegInspector();
 
-    public JpegValidationService(JpgToPdfProperties properties) {
+    public JpegValidationService(
+            JpegValidationProperties properties) {
         this.properties = properties;
     }
 
@@ -144,7 +145,7 @@ public class JpegValidationService {
             "java"
         ).toString());
         command.add(
-            "-Xmx" + properties.getValidationWorkerHeapBytes()
+            "-Xmx" + properties.getWorkerHeapBytes()
         );
         command.add("-XX:+ExitOnOutOfMemoryError");
         command.add("-Djava.awt.headless=true");
@@ -171,7 +172,7 @@ public class JpegValidationService {
             Process worker,
             Runnable cancellationCheck) {
         long timeoutNanos =
-            properties.getValidationWorkerTimeout().toNanos();
+            properties.getWorkerTimeout().toNanos();
         long started = System.nanoTime();
         try {
             while (!worker.waitFor(100, TimeUnit.MILLISECONDS)) {
@@ -295,8 +296,8 @@ public class JpegValidationService {
     }
 
     private void validateLimits() {
-        long heap = properties.getValidationWorkerHeapBytes();
-        Duration timeout = properties.getValidationWorkerTimeout();
+        long heap = properties.getWorkerHeapBytes();
+        Duration timeout = properties.getWorkerTimeout();
         if (heap < MIN_WORKER_HEAP_BYTES
                 || timeout == null
                 || timeout.isZero()

@@ -180,3 +180,9 @@ order. See [PDF to JPG](operations/pdf-to-jpg.md).
 `operation=jpg-to-pdf` accepts ordered JPEG multipart inputs plus page size,
 orientation, and margin controls. It returns one PDF preserving multipart order.
 See [JPG to PDF](operations/jpg-to-pdf.md).
+
+## Watermark PDF
+
+`operation=watermark` accepts one PDF for text mode or a PDF followed by one PNG/JPEG
+for image mode. Page expressions, normalized position, rotation, opacity, and
+mode-specific styling are supported. See [Watermark PDF](operations/watermark.md).

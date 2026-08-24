@@ -1,14 +1,18 @@
 package com.pdftools.operations.jpgpdf;
 
 import com.pdftools.operations.BoundedOutputStream;
-import com.pdftools.operations.CheckpointInputStream;
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
 import com.pdftools.operations.OutputLimitExceededException;
+import com.pdftools.operations.shared.image.JpegInspector;
+import com.pdftools.operations.shared.image.JpegImageTransform;
+import com.pdftools.operations.shared.image.JpegPdfImageFactory;
+import com.pdftools.operations.shared.image.JpegResourceGuard;
+import com.pdftools.operations.shared.image.JpegValidationInput;
+import com.pdftools.operations.shared.image.JpegValidationProperties;
+import com.pdftools.operations.shared.image.JpegValidationService;
 import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSInteger;
-import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.io.RandomAccessStreamCache;
 import org.apache.pdfbox.io.ScratchFile;
@@ -17,17 +21,12 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
-import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceCMYK;
-import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
-import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
 import org.apache.pdfbox.util.Matrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,12 +52,18 @@ public class JpgToPdfEngine {
     private final JpgToPdfProperties properties;
     private final JpegInspector inspector = new JpegInspector();
     private final JpegValidationService validationService;
+    private final JpegValidationProperties validationProperties;
+    private final JpegPdfImageFactory imageFactory;
 
     public JpgToPdfEngine(
             JpgToPdfProperties properties,
-            JpegValidationService validationService) {
+            JpegValidationService validationService,
+            JpegValidationProperties validationProperties,
+            JpegPdfImageFactory imageFactory) {
         this.properties = properties;
         this.validationService = validationService;
+        this.validationProperties = validationProperties;
+        this.imageFactory = imageFactory;
     }
 
     public Path create(
@@ -164,43 +169,20 @@ public class JpgToPdfEngine {
                 throw imageLimit();
             }
             if (info.width() < 1
-                    || info.height() < 1
-                    || info.width() > properties.getMaxImageDimension()
-                    || info.height() > properties.getMaxImageDimension()
-                    || pixels > properties.getMaxPixelsPerImage()
                     || totalPixels > properties.getMaxTotalPixels()) {
                 throw imageLimit();
             }
-            enforceProgressiveMemoryLimit(info);
+            JpegResourceGuard.enforce(
+                info,
+                properties.getMaxImageDimension(),
+                properties.getMaxPixelsPerImage(),
+                validationProperties.getMaxProgressiveCoefficientBytes(),
+                this::imageLimit,
+                this::progressiveMemoryLimit
+            );
             result.add(info);
         }
         return List.copyOf(result);
-    }
-
-    private void enforceProgressiveMemoryLimit(
-            JpegInspector.JpegInfo info) {
-        if (!info.progressive()) {
-            return;
-        }
-        try {
-            long blocksWide = Math.addExact(
-                (long) info.width(),
-                7
-            ) / 8;
-            long blocksHigh = Math.addExact(
-                (long) info.height(),
-                7
-            ) / 8;
-            long bytes = Math.multiplyExact(
-                Math.multiplyExact(blocksWide, blocksHigh),
-                128L * info.components()
-            );
-            if (bytes > properties.getMaxProgressiveCoefficientBytes()) {
-                throw progressiveMemoryLimit();
-            }
-        } catch (ArithmeticException exception) {
-            throw progressiveMemoryLimit();
-        }
     }
 
     private OperationException progressiveMemoryLimit() {
@@ -222,44 +204,22 @@ public class JpgToPdfEngine {
             layout.pageHeight()
         ));
         document.addPage(page);
-        try (InputStream fileInput = Files.newInputStream(imagePath);
-             InputStream checked = new CheckpointInputStream(
-                 fileInput,
-                 cancellationCheck
-             );
-             PDPageContentStream content =
+        try (PDPageContentStream content =
                  new PDPageContentStream(document, page)) {
-            PDImageXObject image = new PDImageXObject(
+            PDImageXObject image = imageFactory.create(
                 document,
-                checked,
-                COSName.DCT_DECODE,
-                info.width(),
-                info.height(),
-                8,
-                colorSpace(info.components())
+                imagePath,
+                info,
+                cancellationCheck
             );
-            if (info.components() == 4 && info.adobe()) {
-                COSArray decode = new COSArray();
-                for (int index = 0; index < 4; index++) {
-                    decode.add(COSInteger.ONE);
-                    decode.add(COSInteger.ZERO);
-                }
-                image.setDecode(decode);
-            }
-            content.drawImage(image, imageMatrix(info, layout));
+            content.drawImage(image, JpegImageTransform.matrix(
+                info,
+                layout.x(),
+                layout.y(),
+                layout.drawWidth(),
+                layout.drawHeight()
+            ));
         }
-    }
-
-    private PDColorSpace colorSpace(int components) {
-        return switch (components) {
-            case 1 -> PDDeviceGray.INSTANCE;
-            case 3 -> PDDeviceRGB.INSTANCE;
-            case 4 -> PDDeviceCMYK.INSTANCE;
-            default -> throw new OperationException(
-                "INVALID_JPEG",
-                "JPEG color components are not supported"
-            );
-        };
     }
 
     private void setDeterministicDocumentId(
@@ -350,60 +310,6 @@ public class JpgToPdfEngine {
             default -> throw new IllegalArgumentException(
                 "Unexpected standard page size: " + pageSize
             );
-        };
-    }
-
-    private Matrix imageMatrix(
-            JpegInspector.JpegInfo info,
-            PageLayout layout) {
-        float x = layout.x();
-        float y = layout.y();
-        float width = layout.drawWidth();
-        float height = layout.drawHeight();
-        return switch (info.orientation()) {
-            case 2 -> new Matrix(-width, 0, 0, height, x + width, y);
-            case 3 -> new Matrix(
-                -width,
-                0,
-                0,
-                -height,
-                x + width,
-                y + height
-            );
-            case 4 -> new Matrix(
-                width,
-                0,
-                0,
-                -height,
-                x,
-                y + height
-            );
-            case 5 -> new Matrix(
-                0,
-                -height,
-                -width,
-                0,
-                x + width,
-                y + height
-            );
-            case 6 -> new Matrix(
-                0,
-                -height,
-                width,
-                0,
-                x,
-                y + height
-            );
-            case 7 -> new Matrix(0, height, width, 0, x, y);
-            case 8 -> new Matrix(
-                0,
-                height,
-                -width,
-                0,
-                x + width,
-                y
-            );
-            default -> new Matrix(width, 0, 0, height, x, y);
         };
     }
 

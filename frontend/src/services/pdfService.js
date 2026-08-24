@@ -87,18 +87,6 @@ export const pdfService = {
     return performOperationAndDownload('/remove', formData, file.name);
   },
 
-  // Add watermark with positioning
-  addWatermark: async (file, text, x = null, y = null, rotation = 45, opacity = 0.3) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('text', text);
-    if (x !== null) formData.append('x', x);
-    if (y !== null) formData.append('y', y);
-    formData.append('rotation', rotation);
-    formData.append('opacity', opacity);
-    return performOperationAndDownload('/watermark', formData, file.name);
-  },
-
   // Add text to PDF with font customization
   addText: async (file, text, x, y, page, fontSize = 12, fontName = 'HELVETICA', fontColor = '#000000') => {
     const formData = new FormData();

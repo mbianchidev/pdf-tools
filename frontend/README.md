@@ -17,7 +17,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Unlock PDF** - Remove password encryption with a known credential
 - **PDF to JPG** - Select page ranges, DPI, and JPEG quality
 - **JPG to PDF** - Reorder images and configure PDF paper layout
-- **Add Watermark** - Add text watermarks with positioning and rotation
+- **Watermark PDF** - Text/image modes, styling, opacity, and page selection
 - **Add Text** - Add custom text with fonts, colors, and drag positioning
 - **Add Signature** - Type, draw, or upload signatures
 - **Redact Content** - Draw-to-select redaction areas

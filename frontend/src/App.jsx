@@ -136,8 +136,8 @@ const operations = [
     id: 'watermark',
     icon: Droplet,
     group: 'Mark up',
-    title: 'Add Watermark',
-    description: 'Add a text watermark to all pages',
+    title: 'Watermark PDF',
+    description: 'Style text or image watermarks on selected pages',
   },
   {
     id: 'add-text',

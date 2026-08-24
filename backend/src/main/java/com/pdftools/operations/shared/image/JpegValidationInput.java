@@ -1,8 +1,8 @@
-package com.pdftools.operations.jpgpdf;
+package com.pdftools.operations.shared.image;
 
 import java.nio.file.Path;
 
-record JpegValidationInput(
+public record JpegValidationInput(
     Path source,
     JpegInspector.JpegInfo info
 ) {
