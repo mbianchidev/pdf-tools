@@ -53,7 +53,7 @@ export const pdfService = {
     }
     formData.append('originalFilename', file.name);
     
-    // Split returns multiple files as comma-separated filenames
+    // Legacy split returns one ZIP artifact.
     const operationResponse = await api.post('/split', formData);
     const result = operationResponse.data;
     
@@ -61,19 +61,14 @@ export const pdfService = {
       throw new Error(result.message || 'Operation failed');
     }
     
-    // The outputFilename contains comma-separated filenames
-    const filenames = result.outputFilename.split(',');
-    
-    if (filenames.length > 1) {
-      // Return info for multiple files
-      return { filenames, message: result.message };
-    } else {
-      // Single file - download and return blob
-      const downloadResponse = await api.get(`/download/${filenames[0]}`, {
-        responseType: 'blob',
-      });
-      return { blob: downloadResponse.data, filenames };
-    }
+    const downloadResponse = await api.get(`/download/${result.outputFilename}`, {
+      responseType: 'blob',
+    });
+    return {
+      blob: downloadResponse.data,
+      filenames: [result.outputFilename],
+      message: result.message,
+    };
   },
 
   // Extract specific pages

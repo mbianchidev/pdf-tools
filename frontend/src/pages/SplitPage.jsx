@@ -1,144 +1,260 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { ArrowLeft, Download, Scissors } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Scissors, ArrowLeft, Download, Plus, X, GripVertical } from 'lucide-react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import FileUpload from '../components/FileUpload';
+import '../lib/pdfWorker';
 import Button from '../components/Button';
+import FileUpload from '../components/FileUpload';
 import ToastContainer from '../components/Toast';
-import { pdfService, downloadBlob } from '../services/pdfService';
+import { parsePageExpression } from '../features/editor/pageExpression';
+import JobProgress from '../features/jobs/JobProgress';
+import { usePdfJob } from '../features/jobs/usePdfJob';
+import { getApiErrorMessage, jobService } from '../services/jobService';
 import './OperationPage.css';
+import './SplitPage.css';
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+const MAX_OUTPUTS = 500;
+const MAX_FIXED_GROUP_SIZE = 500;
+const PREVIEW_PAGE_LIMIT = 100;
 
 const SplitPage = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [fileUrl, setFileUrl] = useState(null);
   const [numPages, setNumPages] = useState(null);
-  const [pageGroups, setPageGroups] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState('individual');
+  const [rangeText, setRangeText] = useState('');
+  const [fixedGroupSize, setFixedGroupSize] = useState(2);
   const [toasts, setToasts] = useState([]);
-  const [splitMode, setSplitMode] = useState('individual'); // 'individual' or 'custom'
+  const [failedOutput, setFailedOutput] = useState(null);
+  const [downloadingOutput, setDownloadingOutput] = useState(false);
+  const urlRef = useRef(null);
+  const handledJobRef = useRef(null);
+  const {
+    job,
+    running,
+    connectionError,
+    start,
+    cancel,
+    reset,
+  } = usePdfJob();
 
-  const addToast = (message, type = 'success', duration = 5000) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
-  };
+  const addToast = useCallback((message, type = 'success', duration = 5000) => {
+    setToasts((current) => [
+      ...current,
+      { id: Date.now(), message, type, duration },
+    ]);
+  }, []);
 
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
+  const removeToast = useCallback((id) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
 
-  const handleFilesChange = useCallback((files) => {
-    const newFile = files[0] || null;
-    setFile(newFile);
-    setPageGroups([]);
-    setNumPages(null);
-    if (newFile) {
-      setFileUrl(URL.createObjectURL(newFile));
-    } else {
-      setFileUrl(null);
+  const downloadOutput = useCallback(async (output) => {
+    setDownloadingOutput(true);
+    try {
+      const link = document.createElement('a');
+      link.href = jobService.getDownloadUrl(output);
+      link.download = output.filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setFailedOutput(null);
+      addToast('PDF split download started!', 'success');
+    } catch (error) {
+      console.error('Split download error:', error);
+      setFailedOutput(output);
+      addToast(getApiErrorMessage(error, 'Failed to download split ZIP'), 'error');
+    } finally {
+      setDownloadingOutput(false);
+    }
+  }, [addToast]);
+
+  useEffect(() => () => {
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
     }
   }, []);
 
-  // Cleanup URL on unmount
   useEffect(() => {
-    return () => {
-      if (fileUrl) URL.revokeObjectURL(fileUrl);
-    };
-  }, [fileUrl]);
-
-  const onDocumentLoadSuccess = ({ numPages: pages }) => {
-    setNumPages(pages);
-    // Initialize with one group containing all pages
-    if (pages > 0) {
-      setPageGroups([{ id: 1, pages: Array.from({ length: pages }, (_, i) => i + 1) }]);
+    if (!job || !['COMPLETED', 'FAILED', 'CANCELLED'].includes(job.status)) {
+      return undefined;
     }
-  };
-
-  const addGroup = () => {
-    const newId = pageGroups.length > 0 ? Math.max(...pageGroups.map(g => g.id)) + 1 : 1;
-    setPageGroups([...pageGroups, { id: newId, pages: [] }]);
-  };
-
-  const removeGroup = (groupId) => {
-    if (pageGroups.length > 1) {
-      setPageGroups(pageGroups.filter(g => g.id !== groupId));
+    const resultKey = `${job.id}:${job.status}`;
+    if (handledJobRef.current === resultKey) {
+      return undefined;
     }
-  };
+    handledJobRef.current = resultKey;
+    let active = true;
 
-  const togglePageInGroup = (groupId, pageNum) => {
-    setPageGroups(pageGroups.map(group => {
-      if (group.id === groupId) {
-        const hasPage = group.pages.includes(pageNum);
-        if (hasPage) {
-          return { ...group, pages: group.pages.filter(p => p !== pageNum) };
-        } else {
-          // Remove from other groups first
-          return { ...group, pages: [...group.pages, pageNum].sort((a, b) => a - b) };
-        }
-      } else {
-        // Remove page from other groups when adding to this one
-        return { ...group, pages: group.pages.filter(p => p !== pageNum) };
+    const handleResult = async () => {
+      await Promise.resolve();
+      if (!active) return;
+      if (job.status === 'FAILED') {
+        addToast(job.errorMessage || 'Failed to split PDF', 'error');
+        return;
       }
-    }));
+      if (job.status === 'CANCELLED') {
+        addToast('PDF split cancelled', 'error');
+        return;
+      }
+      const output = job.outputs[0];
+      if (!output) {
+        addToast('The split job completed without a ZIP output.', 'error');
+        return;
+      }
+      await downloadOutput(output);
+    };
+    handleResult();
+    return () => {
+      active = false;
+    };
+  }, [addToast, downloadOutput, job]);
+
+  const rangePlan = useMemo(() => {
+    if (mode !== 'ranges' || !numPages) {
+      return { groups: [], error: null };
+    }
+    const expressions = rangeText
+      .split('\n')
+      .map((expression) => expression.trim())
+      .filter(Boolean);
+    if (expressions.length === 0) {
+      return { groups: [], error: 'Enter one page range per line.' };
+    }
+    if (expressions.length > MAX_OUTPUTS) {
+      return { groups: [], error: `Use at most ${MAX_OUTPUTS} ranges.` };
+    }
+
+    try {
+      const assigned = new Set();
+      const groups = expressions.map((expression, index) => {
+        const pages = parsePageExpression(expression, numPages, {
+          duplicatePolicy: 'reject',
+        });
+        pages.forEach((page) => {
+          if (assigned.has(page)) {
+            throw new Error(`Page ${page} appears in more than one range.`);
+          }
+          assigned.add(page);
+        });
+        return { position: index + 1, expression, pages };
+      });
+      return { groups, error: null };
+    } catch (error) {
+      return {
+        groups: [],
+        error: error.message || 'The split ranges are invalid.',
+      };
+    }
+  }, [mode, numPages, rangeText]);
+
+  const handleFilesChange = useCallback((files) => {
+    if (running) return;
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+    reset();
+    handledJobRef.current = null;
+    setFailedOutput(null);
+    setNumPages(null);
+    const nextFile = files[0] || null;
+    setFile(nextFile);
+    if (nextFile) {
+      const url = URL.createObjectURL(nextFile);
+      urlRef.current = url;
+      setFileUrl(url);
+    } else {
+      setFileUrl(null);
+    }
+  }, [reset, running]);
+
+  const changeMode = (nextMode) => {
+    if (running) return;
+    reset();
+    handledJobRef.current = null;
+    setFailedOutput(null);
+    setMode(nextMode);
+  };
+
+  const buildOptions = () => {
+    if (mode === 'fixed') {
+      return { mode, fixedGroupSize: Number(fixedGroupSize) };
+    }
+    if (mode === 'ranges') {
+      return {
+        mode,
+        ranges: rangeText
+          .split('\n')
+          .map((expression) => expression.trim())
+          .filter(Boolean),
+      };
+    }
+    return { mode };
+  };
+
+  const validate = () => {
+    if (!file) return 'Upload one PDF to split.';
+    if (!numPages) return 'Wait for the PDF preview to finish loading.';
+    if (mode === 'individual' && numPages > MAX_OUTPUTS) {
+      return `Individual mode supports at most ${MAX_OUTPUTS} pages.`;
+    }
+    if (mode === 'ranges' && rangePlan.error) return rangePlan.error;
+    if (
+      mode === 'fixed'
+      && (!Number.isInteger(Number(fixedGroupSize))
+        || Number(fixedGroupSize) < 1
+        || Number(fixedGroupSize) > MAX_FIXED_GROUP_SIZE)
+    ) {
+      return `Group size must be between 1 and ${MAX_FIXED_GROUP_SIZE}.`;
+    }
+    return null;
   };
 
   const handleSplit = async () => {
-    if (!file) {
-      addToast('Please upload a PDF file', 'error');
+    const error = validate();
+    if (error) {
+      addToast(error, 'error');
       return;
     }
-
-    setLoading(true);
+    handledJobRef.current = null;
+    setFailedOutput(null);
     try {
-      let groups = null;
-      if (splitMode === 'custom') {
-        // Build groups string: "1,2,3;4,5" means pages 1-3 in one PDF, 4-5 in another
-        const validGroups = pageGroups.filter(g => g.pages.length > 0);
-        if (validGroups.length === 0) {
-          addToast('Please assign pages to at least one group', 'error');
-          setLoading(false);
-          return;
-        }
-        groups = validGroups.map(g => g.pages.join(',')).join(';');
-      }
-
-      const result = await pdfService.split(file, groups);
-      
-      // For split, we might get multiple files
-      if (result.filenames && result.filenames.length > 1) {
-        // Download all files
-        for (let i = 0; i < result.filenames.length; i++) {
-          const blob = await pdfService.download(result.filenames[i]);
-          const baseName = file.name.replace(/\.[pP][dD][fF]$/, '');
-          downloadBlob(blob, `${baseName}_split_part${i + 1}.pdf`);
-        }
-        addToast(`PDF split into ${result.filenames.length} documents!`, 'success');
-      } else {
-        // Single file result
-        const baseName = file.name.replace(/\.[pP][dD][fF]$/, '');
-        downloadBlob(result.blob, `${baseName}_split.pdf`);
-        addToast('PDF split successfully!', 'success');
-      }
-    } catch (error) {
-      console.error('Split error:', error);
-      addToast(
-        error.response?.data?.message || error.message || 'Failed to split PDF',
-        'error'
-      );
-    } finally {
-      setLoading(false);
+      await start('split', [file], buildOptions());
+    } catch (startError) {
+      console.error('Split error:', startError);
+      addToast(getApiErrorMessage(startError, 'Failed to split PDF'), 'error');
     }
   };
 
-  const getUnassignedPages = () => {
-    const assignedPages = new Set(pageGroups.flatMap(g => g.pages));
-    return Array.from({ length: numPages || 0 }, (_, i) => i + 1).filter(p => !assignedPages.has(p));
+  const handleCancel = async () => {
+    try {
+      await cancel();
+    } catch (error) {
+      console.error('Split cancellation error:', error);
+      addToast(getApiErrorMessage(error, 'Failed to cancel split'), 'error');
+    }
   };
+
+  const groupForPage = (pageNumber) => {
+    if (mode === 'individual') return pageNumber;
+    if (mode === 'fixed') {
+      return Math.floor((pageNumber - 1) / Number(fixedGroupSize || 1)) + 1;
+    }
+    return rangePlan.groups.find((group) => group.pages.includes(pageNumber))?.position;
+  };
+
+  const previewPages = Math.min(numPages || 0, PREVIEW_PAGE_LIMIT);
 
   return (
     <div className="operation-page">
@@ -154,7 +270,8 @@ const SplitPage = () => {
           <h1>Split PDF</h1>
         </div>
         <p className="operation-description">
-          Split a PDF into multiple documents. Choose individual pages or create custom groups.
+          Split into individual pages, explicit ranges, or fixed-size groups.
+          Download every result in one ZIP.
         </p>
       </header>
 
@@ -169,89 +286,93 @@ const SplitPage = () => {
             />
           </div>
 
-          {file && numPages && (
+          {file && (
             <>
               <div className="sidebar-section">
-                <h3 className="sidebar-title">Split Mode</h3>
-                <div className="split-mode-toggle">
-                  <button
-                    className={`mode-btn ${splitMode === 'individual' ? 'active' : ''}`}
-                    onClick={() => setSplitMode('individual')}
-                  >
-                    Individual Pages
-                  </button>
-                  <button
-                    className={`mode-btn ${splitMode === 'custom' ? 'active' : ''}`}
-                    onClick={() => setSplitMode('custom')}
-                  >
-                    Custom Groups
-                  </button>
+                <h3 className="sidebar-title">Split mode</h3>
+                <div className="split-mode-toggle split-mode-toggle--three">
+                  {[
+                    ['individual', 'Pages'],
+                    ['ranges', 'Ranges'],
+                    ['fixed', 'Fixed'],
+                  ].map(([value, label]) => (
+                    <button
+                      type="button"
+                      className={`mode-btn ${mode === value ? 'active' : ''}`}
+                      onClick={() => changeMode(value)}
+                      disabled={running}
+                      key={value}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <p className="mode-description">
-                  {splitMode === 'individual' 
-                    ? `Split into ${numPages} separate PDFs (one per page)` 
-                    : 'Create custom groups of pages'}
-                </p>
+
+                {mode === 'individual' && (
+                  <p className="mode-description">
+                    Create one PDF per page, up to {MAX_OUTPUTS} outputs.
+                  </p>
+                )}
+                {mode === 'ranges' && (
+                  <label className="split-ranges-field">
+                    One page expression per output
+                    <textarea
+                      value={rangeText}
+                      onChange={(event) => setRangeText(event.target.value)}
+                      placeholder={'1-3\n4,6\n7-'}
+                      rows={5}
+                      disabled={running}
+                    />
+                    <span className={rangePlan.error ? 'is-error' : ''}>
+                      {rangePlan.error
+                        || `${rangePlan.groups.length} output document(s)`}
+                    </span>
+                  </label>
+                )}
+                {mode === 'fixed' && (
+                  <label className="split-fixed-field">
+                    Pages per output
+                    <input
+                      type="number"
+                      min="1"
+                      max={Math.min(MAX_FIXED_GROUP_SIZE, numPages || MAX_FIXED_GROUP_SIZE)}
+                      value={fixedGroupSize}
+                      onChange={(event) => setFixedGroupSize(event.target.value)}
+                      disabled={running}
+                    />
+                  </label>
+                )}
               </div>
 
-              {splitMode === 'custom' && (
-                <div className="sidebar-section">
-                  <h3 className="sidebar-title">
-                    Page Groups
-                    <button className="add-group-btn" onClick={addGroup} title="Add Group">
-                      <Plus size={16} />
-                    </button>
-                  </h3>
-                  
-                  {pageGroups.map((group, index) => (
-                    <div key={group.id} className="page-group">
-                      <div className="group-header">
-                        <span className="group-label">Document {index + 1}</span>
-                        {pageGroups.length > 1 && (
-                          <button
-                            className="remove-group-btn"
-                            onClick={() => removeGroup(group.id)}
-                            title="Remove Group"
-                          >
-                            <X size={14} />
-                          </button>
-                        )}
-                      </div>
-                      <div className="group-pages">
-                        {group.pages.length > 0 ? (
-                          group.pages.map(p => (
-                            <span key={p} className="page-badge" onClick={() => togglePageInGroup(group.id, p)}>
-                              {p} <X size={10} />
-                            </span>
-                          ))
-                        ) : (
-                          <span className="no-pages">Click pages below to add</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  {getUnassignedPages().length > 0 && (
-                    <div className="unassigned-pages">
-                      <span className="unassigned-label">Unassigned: </span>
-                      {getUnassignedPages().map(p => (
-                        <span key={p} className="unassigned-page">{p}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
               <div className="sidebar-actions">
+                {job && (
+                  <JobProgress
+                    job={job}
+                    connectionError={connectionError}
+                    onCancel={handleCancel}
+                  />
+                )}
+                {failedOutput && (
+                  <Button
+                    onClick={() => downloadOutput(failedOutput)}
+                    loading={downloadingOutput}
+                    disabled={downloadingOutput}
+                    variant="outline"
+                    icon={<Download size={20} />}
+                    fullWidth
+                  >
+                    {downloadingOutput ? 'Downloading...' : 'Retry download'}
+                  </Button>
+                )}
                 <Button
                   onClick={handleSplit}
-                  loading={loading}
-                  disabled={loading}
+                  loading={running}
+                  disabled={running}
                   icon={<Download size={20} />}
                   fullWidth
                   size="lg"
                 >
-                  {loading ? 'Splitting...' : 'Split & Download'}
+                  {running ? 'Splitting...' : 'Split & Download ZIP'}
                 </Button>
               </div>
             </>
@@ -262,46 +383,36 @@ const SplitPage = () => {
           {file ? (
             <>
               <div className="preview-header">
-                <h3>Preview: {file.name} {numPages && `(${numPages} pages)`}</h3>
+                <h3>
+                  Preview: {file.name} {numPages && `(${numPages} pages)`}
+                </h3>
+                <span className="preview-hint">Output groups are numbered below</span>
               </div>
               <div className="split-page-grid">
                 <Document
                   file={fileUrl}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  loading={<div className="loading">Loading PDF...</div>}
+                  onLoadSuccess={({ numPages: loadedPages }) => setNumPages(loadedPages)}
+                  loading={<div className="loading-placeholder">Loading PDF...</div>}
+                  error={<div className="loading-placeholder">Failed to load PDF.</div>}
                 >
-                  {numPages && Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => {
-                    const groupIndex = pageGroups.findIndex(g => g.pages.includes(pageNum));
-                    const groupColor = groupIndex >= 0 ? `hsl(${(groupIndex * 60) % 360}, 70%, 50%)` : 'transparent';
-                    
+                  {Array.from(
+                    { length: previewPages },
+                    (_, index) => index + 1,
+                  ).map((pageNumber) => {
+                    const group = groupForPage(pageNumber);
                     return (
-                      <div
-                        key={pageNum}
-                        className={`split-page-item ${splitMode === 'custom' ? 'selectable' : ''}`}
-                        style={{ borderColor: splitMode === 'custom' ? groupColor : undefined }}
-                        onClick={() => {
-                          if (splitMode === 'custom' && pageGroups.length > 0) {
-                            // Add to first group that doesn't have this page, or toggle in current group
-                            const currentGroup = pageGroups.find(g => g.pages.includes(pageNum));
-                            if (currentGroup) {
-                              togglePageInGroup(currentGroup.id, pageNum);
-                            } else {
-                              togglePageInGroup(pageGroups[pageGroups.length - 1].id, pageNum);
-                            }
-                          }
-                        }}
-                      >
+                      <div className="split-page-item" key={pageNumber}>
                         <Page
-                          pageNumber={pageNum}
+                          pageNumber={pageNumber}
                           width={150}
                           renderTextLayer={false}
                           renderAnnotationLayer={false}
                         />
                         <div className="page-number">
-                          Page {pageNum}
-                          {splitMode === 'custom' && groupIndex >= 0 && (
-                            <span className="group-indicator" style={{ backgroundColor: groupColor }}>
-                              Doc {groupIndex + 1}
+                          Page {pageNumber}
+                          {group && (
+                            <span className="group-indicator">
+                              Output {group}
                             </span>
                           )}
                         </div>
@@ -309,13 +420,18 @@ const SplitPage = () => {
                     );
                   })}
                 </Document>
+                {numPages > PREVIEW_PAGE_LIMIT && (
+                  <p className="split-preview-limit">
+                    Showing the first {PREVIEW_PAGE_LIMIT} of {numPages} pages.
+                  </p>
+                )}
               </div>
             </>
           ) : (
             <div className="preview-empty">
               <Scissors size={64} />
               <h3>Upload a PDF to preview</h3>
-              <p>Split into individual pages or create custom groups</p>
+              <p>Choose how pages should be grouped before downloading the ZIP.</p>
             </div>
           )}
         </main>

@@ -48,6 +48,8 @@ export const jobService = {
     });
     return response.data;
   },
+
+  getDownloadUrl: (output) => resolveApiUrl(output.downloadUrl),
 };
 
 export const getApiErrorMessage = (error, fallback) => (

@@ -11,6 +11,7 @@ import com.pdftools.jobs.persistence.JobOutputEntity;
 import com.pdftools.jobs.persistence.JobOutputRepository;
 import com.pdftools.jobs.persistence.JobRepository;
 import com.pdftools.operations.OperationCancelledException;
+import com.pdftools.operations.CheckpointInputStream;
 import com.pdftools.operations.OperationContext;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
@@ -37,11 +38,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class JobExecutionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JobExecutionService.class);
+    private static final long CANCELLATION_REFRESH_NANOS =
+        TimeUnit.MILLISECONDS.toNanos(250);
 
     private final JobRepository jobRepository;
     private final JobInputRepository inputRepository;
@@ -88,7 +92,12 @@ public class JobExecutionService {
 
             Files.createDirectories(properties.getWorkRoot());
             workspace = Files.createTempDirectory(properties.getWorkRoot(), jobId + "-");
-            List<OperationInput> inputs = materializeInputs(jobId, workerId, workspace);
+            CancellationProbe cancellation = new CancellationProbe(jobId, workerId);
+            List<OperationInput> inputs = materializeInputs(
+                jobId,
+                workspace,
+                cancellation
+            );
             JobEntity job = requireJob(jobId);
             JsonNode options = objectMapper.readTree(job.getOptionsJson());
             PdfOperation operation = operationRegistry.find(job.getOperation())
@@ -103,7 +112,7 @@ public class JobExecutionService {
                 inputs,
                 workspace,
                 progress -> updateProgress(jobId, workerId, progress),
-                () -> isCancellationRequested(jobId, workerId)
+                cancellation::isRequested
             );
             context.checkCancelled();
             List<OperationOutput> outputs = operation.execute(context);
@@ -114,7 +123,13 @@ public class JobExecutionService {
                     "The PDF operation completed without producing an output"
                 );
             }
-            persistOutputs(jobId, workerId, workspace, outputs);
+            persistOutputs(
+                jobId,
+                workerId,
+                workspace,
+                outputs,
+                cancellation
+            );
         } catch (OperationCancelledException exception) {
             cancel(jobId, workerId);
         } catch (OperationException exception) {
@@ -154,20 +169,22 @@ public class JobExecutionService {
 
     private List<OperationInput> materializeInputs(
             UUID jobId,
-            String workerId,
-            Path workspace) throws IOException {
+            Path workspace,
+            CancellationProbe cancellation) throws IOException {
         List<OperationInput> inputs = new ArrayList<>();
         for (JobInputEntity input : inputRepository.findAllByJobIdOrderByPosition(jobId)) {
-            if (isCancellationRequested(jobId, workerId)) {
-                throw new OperationCancelledException();
-            }
+            cancellation.check();
             Path target = workspace.resolve(String.format(
                 Locale.ROOT,
                 "input-%04d.bin",
                 input.getPosition()
             ));
             try (StoredResource resource = storageService.get(input.getStorageKey())) {
-                Files.copy(resource.inputStream(), target);
+                try (CheckpointInputStream checkpointInput = new CheckpointInputStream(
+                        resource.inputStream(),
+                        cancellation::check)) {
+                    Files.copy(checkpointInput, target);
+                }
             }
             inputs.add(new OperationInput(
                 input.getPosition(),
@@ -185,7 +202,8 @@ public class JobExecutionService {
             UUID jobId,
             String workerId,
             Path workspace,
-            List<OperationOutput> outputs) throws IOException {
+            List<OperationOutput> outputs,
+            CancellationProbe cancellation) throws IOException {
         List<StoredOutput> storedOutputs = new ArrayList<>();
         List<String> storedKeys = new ArrayList<>();
 
@@ -210,7 +228,11 @@ public class JobExecutionService {
                 );
 
                 storedKeys.add(storageKey);
-                try (InputStream input = Files.newInputStream(outputPath)) {
+                try (InputStream fileInput = Files.newInputStream(outputPath);
+                     CheckpointInputStream input = new CheckpointInputStream(
+                         fileInput,
+                         cancellation::check
+                     )) {
                     StoredObject stored = storageService.put(
                         storageKey,
                         input,
@@ -304,8 +326,40 @@ public class JobExecutionService {
                     job.cancel(now, now.plus(properties.getRetention()));
                     jobRepository.save(job);
                 }
+
             });
         });
+    }
+
+    private final class CancellationProbe {
+        private final UUID jobId;
+        private final String workerId;
+        private long nextRefreshNanos;
+        private boolean cancelled;
+
+        private CancellationProbe(UUID jobId, String workerId) {
+            this.jobId = jobId;
+            this.workerId = workerId;
+        }
+
+        private boolean isRequested() {
+            if (cancelled) {
+                return true;
+            }
+            long now = System.nanoTime();
+            if (now < nextRefreshNanos) {
+                return false;
+            }
+            cancelled = isCancellationRequested(jobId, workerId);
+            nextRefreshNanos = now + CANCELLATION_REFRESH_NANOS;
+            return cancelled;
+        }
+
+        private void check() {
+            if (isRequested()) {
+                throw new OperationCancelledException();
+            }
+        }
     }
 
     private void fail(UUID jobId, String workerId, String code, String message) {

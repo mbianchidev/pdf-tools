@@ -1,6 +1,7 @@
 package com.pdftools.storage;
 
 import com.pdftools.config.StorageProperties;
+import com.pdftools.operations.OperationCancelledException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -61,6 +62,9 @@ public class S3StorageService implements StorageService {
                 RequestBody.fromInputStream(digestInput, contentLength)
             );
         } catch (SdkException exception) {
+            if (hasCancellationCause(exception)) {
+                throw new OperationCancelledException();
+            }
             throw new IOException("Failed to store S3 object " + key, exception);
         }
 
@@ -130,5 +134,16 @@ public class S3StorageService implements StorageService {
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256 is unavailable", exception);
         }
+    }
+
+    private boolean hasCancellationCause(Throwable exception) {
+        Throwable current = exception;
+        while (current != null) {
+            if (current instanceof OperationCancelledException) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

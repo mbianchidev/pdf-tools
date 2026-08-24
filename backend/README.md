@@ -68,8 +68,9 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The `merge` operation is enabled. Its request contract and fidelity limits are
-documented in [`docs/operations/merge.md`](../docs/operations/merge.md).
+The `merge` and `split` operations are enabled. Their contracts and fidelity limits are
+documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
+[`docs/operations/split.md`](../docs/operations/split.md).
 
 The following legacy endpoints remain during migration:
 

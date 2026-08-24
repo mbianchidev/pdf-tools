@@ -1,7 +1,7 @@
 package com.pdftools.jobs;
 
 import com.pdftools.config.JobProperties;
-import com.pdftools.operations.merge.LegacyMergeWorkspaceRegistry;
+import com.pdftools.operations.LegacyWorkspaceRegistry;
 import com.pdftools.jobs.persistence.JobRepository;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -34,7 +34,7 @@ public class JobRecoveryService {
     private final JobDispatcher dispatcher;
     private final JobProperties properties;
     private final TransactionTemplate transactionTemplate;
-    private final LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry;
+    private final LegacyWorkspaceRegistry legacyWorkspaceRegistry;
 
     public JobRecoveryService(
             JobRepository jobRepository,
@@ -43,7 +43,7 @@ public class JobRecoveryService {
             JobDispatcher dispatcher,
             JobProperties properties,
             TransactionTemplate transactionTemplate,
-            LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry) {
+            LegacyWorkspaceRegistry legacyWorkspaceRegistry) {
         this.jobRepository = jobRepository;
         this.jobMapper = jobMapper;
         this.eventService = eventService;
@@ -149,7 +149,7 @@ public class JobRecoveryService {
     }
 
     private boolean isStaleLegacyWorkspace(Path workspace) {
-        if (!workspace.getFileName().toString().startsWith(".legacy-merge-")) {
+        if (!workspace.getFileName().toString().startsWith(".legacy-")) {
             return false;
         }
         if (hasActiveLegacyLock(workspace)) {

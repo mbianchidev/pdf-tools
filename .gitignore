@@ -86,6 +86,7 @@ coverage/
 .nyc_output/
 test-results/
 playwright-report/
+.impeccable/hook.cache.json
 
 # Build artifacts
 *.jar

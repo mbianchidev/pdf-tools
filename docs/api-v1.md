@@ -122,3 +122,9 @@ An expression may expand to at most 100,000 page selections.
 `operation=merge` accepts 2-20 ordered PDF inputs and an optional
 `options.outputFilename`. See [Merge PDF](operations/merge.md) for validation, resource,
 and fidelity details.
+
+## Split PDF
+
+`operation=split` accepts one PDF and supports `individual`, `ranges`, and `fixed`
+modes. It returns one ZIP artifact. See [Split PDF](operations/split.md) for options,
+limits, and fidelity details.

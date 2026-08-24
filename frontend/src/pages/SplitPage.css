@@ -1,0 +1,79 @@
+.split-mode-toggle--three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.split-ranges-field,
+.split-fixed-field {
+  display: grid;
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  gap: 8px;
+}
+
+.split-ranges-field textarea,
+.split-fixed-field input {
+  width: 100%;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+}
+
+.split-ranges-field textarea {
+  min-height: 118px;
+  padding: 10px 11px;
+  resize: vertical;
+  font-family: ui-monospace, monospace;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.split-fixed-field input {
+  min-height: 42px;
+  padding: 0 11px;
+}
+
+.split-ranges-field > span {
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.split-ranges-field > span.is-error {
+  color: var(--danger);
+}
+
+.split-page-grid {
+  display: block;
+}
+
+.split-page-grid .react-pdf__Document {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.split-page-item {
+  border-color: rgb(255 255 255 / 13%);
+}
+
+.split-page-item .page-number {
+  color: var(--line);
+  background: var(--ink);
+}
+
+.group-indicator {
+  color: white;
+  background: var(--iris);
+}
+
+.split-preview-limit {
+  width: 100%;
+  margin: 8px 0 0;
+  color: #aaa5bd;
+  font-size: var(--text-xs);
+  text-align: center;
+}

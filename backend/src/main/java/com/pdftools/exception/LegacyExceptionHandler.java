@@ -1,11 +1,13 @@
 package com.pdftools.exception;
 
+import com.pdftools.api.MultipartTextPartException;
 import com.pdftools.controller.PdfController;
 import com.pdftools.dto.PdfOperationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -48,6 +50,32 @@ public class LegacyExceptionHandler {
             .body(new PdfOperationResult(
                 false,
                 "Error processing file upload. Please upload valid PDF files.",
+                null
+            ));
+    }
+
+    @ExceptionHandler(MultipartTextPartException.class)
+    public ResponseEntity<PdfOperationResult> handleMultipartTextPartException(
+            MultipartTextPartException exception) {
+        logger.warn(
+            "Invalid legacy multipart field {}: {}",
+            exception.getPartName(),
+            exception.getMessage()
+        );
+        return ResponseEntity
+            .status(exception.getStatus())
+            .body(new PdfOperationResult(false, exception.getMessage(), null));
+    }
+
+    @ExceptionHandler(TaskRejectedException.class)
+    public ResponseEntity<PdfOperationResult> handleTaskRejectedException(
+            TaskRejectedException exception) {
+        logger.warn("Legacy PDF worker queue is full: {}", exception.getMessage());
+        return ResponseEntity
+            .status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(new PdfOperationResult(
+                false,
+                "The PDF worker queue is full. Try again shortly.",
                 null
             ));
     }

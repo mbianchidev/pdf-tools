@@ -28,11 +28,30 @@ public class JobExecutorConfig {
             @Value("${pdf.download.executor-core-size:4}") int coreSize,
             @Value("${pdf.download.executor-max-size:16}") int maxSize,
             @Value("${pdf.download.executor-queue-capacity:100}") int queueCapacity) {
+        return executor(coreSize, maxSize, queueCapacity, "pdf-download-");
+    }
+
+    @Bean("legacyPdfExecutor")
+    public AsyncTaskExecutor legacyPdfExecutor(
+            @Value("${pdf.operations.split.legacy-executor-core-size:1}")
+            int coreSize,
+            @Value("${pdf.operations.split.legacy-executor-max-size:2}")
+            int maxSize,
+            @Value("${pdf.operations.split.legacy-executor-queue-capacity:4}")
+            int queueCapacity) {
+        return executor(coreSize, maxSize, queueCapacity, "pdf-legacy-");
+    }
+
+    private AsyncTaskExecutor executor(
+            int coreSize,
+            int maxSize,
+            int queueCapacity,
+            String threadPrefix) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(coreSize);
         executor.setMaxPoolSize(maxSize);
         executor.setQueueCapacity(queueCapacity);
-        executor.setThreadNamePrefix("pdf-download-");
+        executor.setThreadNamePrefix(threadPrefix);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(10);
         executor.initialize();

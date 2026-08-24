@@ -12,6 +12,8 @@ import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class ZipArtifactServiceTest {
 
@@ -41,6 +43,7 @@ class ZipArtifactServiceTest {
             for (var entry = zip.getNextEntry(); entry != null; entry = zip.getNextEntry()) {
                 entries.add(entry.getName());
             }
+
         }
 
         assertEquals(2, entries.stream().distinct().count());
@@ -48,5 +51,33 @@ class ZipArtifactServiceTest {
         assertTrue(entries.stream().allMatch(name ->
             name.getBytes(StandardCharsets.UTF_8).length <= 120
         ));
+    }
+
+    @Test
+    void checksCancellationDuringChunkedZipWrites() throws Exception {
+        Path source = temporaryDirectory.resolve("large.pdf");
+        Files.write(source, new byte[256 * 1024]);
+        Path zipPath = temporaryDirectory.resolve("cancelled.zip");
+        java.util.concurrent.atomic.AtomicInteger checks =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+        assertThrows(
+            OperationCancelledException.class,
+            () -> new ZipArtifactService().create(
+                List.of(new OperationOutput(source, "large.pdf", "application/pdf")),
+                zipPath,
+                "cancelled.zip",
+                1024 * 1024,
+                () -> {
+                    if (checks.incrementAndGet() > 2) {
+                        throw new OperationCancelledException();
+                    }
+                },
+                true
+            )
+        );
+
+        assertFalse(Files.exists(zipPath));
+        assertTrue(Files.exists(source));
     }
 }

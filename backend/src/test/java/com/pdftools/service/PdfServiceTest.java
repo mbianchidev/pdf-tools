@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.ZipFile;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -93,7 +94,9 @@ class PdfServiceTest {
             assertTrue(result.isSuccess());
             assertEquals("PDFs merged successfully", result.getMessage());
             assertNotNull(result.getOutputFilename());
-            assertTrue(result.getOutputFilename().contains("merged"));
+            assertTrue(result.getOutputFilename().matches(
+                "merged_[0-9a-f-]{36}\\.pdf"
+            ));
         }
 
         @Test
@@ -141,8 +144,15 @@ class PdfServiceTest {
             assertTrue(result.isSuccess());
             assertTrue(result.getMessage().contains("3 documents"));
             assertNotNull(result.getOutputFilename());
-            String[] filenames = result.getOutputFilename().split(",");
-            assertEquals(3, filenames.length);
+            assertTrue(result.getOutputFilename().matches(
+                "split_[0-9a-f-]{36}\\.zip"
+            ));
+            try (ZipFile archive = new ZipFile(
+                    tempDir.resolve(result.getOutputFilename()).toFile())) {
+                assertEquals(3, archive.size());
+                assertNotNull(archive.getEntry("test_page_0001.pdf"));
+                assertNotNull(archive.getEntry("test_page_0003.pdf"));
+            }
         }
 
         @Test
@@ -165,12 +175,105 @@ class PdfServiceTest {
             PdfOperationResult result = pdfService.splitPdf(file, null, "../../etc/malicious.pdf");
 
             assertTrue(result.isSuccess());
-            String[] filenames = result.getOutputFilename().split(",");
-            for (String filename : filenames) {
-                assertFalse(filename.contains("/"));
-                assertFalse(filename.contains("\\"));
-                assertTrue(filename.startsWith("malicious_"));
+            assertFalse(result.getOutputFilename().contains("/"));
+            assertFalse(result.getOutputFilename().contains("\\"));
+            assertTrue(result.getOutputFilename().startsWith("split_"));
+            assertTrue(result.getOutputFilename().endsWith(".zip"));
+        }
+
+        @Test
+        @DisplayName("Should split custom ranges into one ZIP")
+        void testSplitPdf_CustomRanges() throws Exception {
+            byte[] pdf = createValidPdf(5);
+            MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.pdf",
+                "application/pdf",
+                pdf
+            );
+
+            PdfOperationResult result = pdfService.splitPdf(
+                file,
+                "1-2;4,5",
+                "test.pdf"
+            );
+
+            try (ZipFile archive = new ZipFile(
+                    tempDir.resolve(result.getOutputFilename()).toFile())) {
+                assertEquals(2, archive.size());
+                assertNotNull(archive.getEntry("test_part_0001.pdf"));
+                assertNotNull(archive.getEntry("test_part_0002.pdf"));
             }
+        }
+
+        @Test
+        @DisplayName("Should honor the explicit original filename")
+        void testSplitPdf_ExplicitOriginalFilename() throws Exception {
+            MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "blob",
+                "application/pdf",
+                createValidPdf(2)
+            );
+
+            PdfOperationResult result = pdfService.splitPdf(
+                file,
+                null,
+                "report.pdf"
+            );
+
+            try (ZipFile archive = new ZipFile(
+                    tempDir.resolve(result.getOutputFilename()).toFile())) {
+                assertNotNull(archive.getEntry("report_page_0001.pdf"));
+                assertNotNull(archive.getEntry("report_page_0002.pdf"));
+            }
+        }
+
+        @Test
+        @DisplayName("Should reject oversized legacy range controls")
+        void testSplitPdf_OversizedRangeControls() throws Exception {
+            MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.pdf",
+                "application/pdf",
+                createValidPdf(2)
+            );
+
+            PdfProcessingException tooLong = assertThrows(
+                PdfProcessingException.class,
+                () -> pdfService.splitPdf(
+                    file,
+                    "1".repeat(65_537),
+                    "test.pdf"
+                )
+            );
+            assertTrue(tooLong.getMessage().contains("64 KiB"));
+
+            PdfProcessingException tooMany = assertThrows(
+                PdfProcessingException.class,
+                () -> pdfService.splitPdf(
+                    file,
+                    "1;".repeat(500) + "1",
+                    "test.pdf"
+                )
+            );
+            assertTrue(tooMany.getMessage().contains("500 output limit"));
+        }
+
+        @Test
+        @DisplayName("Should reject empty legacy range groups")
+        void testSplitPdf_EmptyRangeGroup() throws Exception {
+            MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.pdf",
+                "application/pdf",
+                createValidPdf(2)
+            );
+
+            assertThrows(
+                PdfProcessingException.class,
+                () -> pdfService.splitPdf(file, "1;", "test.pdf")
+            );
         }
     }
 
@@ -666,6 +769,18 @@ class PdfServiceTest {
             Files.write(testFile, new byte[]{1, 2, 3, 4});
 
             byte[] result = pdfService.downloadFile("document.docx");
+
+            assertNotNull(result);
+            assertTrue(result.length > 0);
+        }
+
+        @Test
+        @DisplayName("Should allow valid .zip files")
+        void testDownloadFile_ValidZipFilename() throws Exception {
+            Path testFile = tempDir.resolve("document.zip");
+            Files.write(testFile, new byte[]{1, 2, 3, 4});
+
+            byte[] result = pdfService.downloadFile("document.zip");
 
             assertNotNull(result);
             assertTrue(result.length > 0);

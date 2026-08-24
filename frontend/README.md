@@ -6,7 +6,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 
 ### PDF Operations
 - **Merge PDFs** - Ordered asynchronous merge with validation, progress, and cancellation
-- **Split PDF** - Split a PDF into individual pages or custom groups
+- **Split PDF** - Individual pages, page ranges, or fixed groups in one ZIP
 - **Extract Pages** - Extract specific pages (e.g., "1,3,5-7")
 - **Remove Pages** - Remove specific pages from a PDF
 - **Add Watermark** - Add text watermarks with positioning and rotation

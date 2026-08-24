@@ -1,14 +1,14 @@
 package com.pdftools.jobs.api;
 
 import com.pdftools.api.ApiException;
+import com.pdftools.api.MultipartTextPartException;
+import com.pdftools.api.MultipartTextPartReader;
 import com.pdftools.jobs.JobEventService;
 import com.pdftools.jobs.JobService;
 import com.pdftools.jobs.persistence.JobOutputEntity;
 import com.pdftools.storage.StorageService;
 import com.pdftools.storage.StoredResource;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.Part;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,10 +26,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.net.URI;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -44,14 +40,17 @@ public class JobController {
     private final JobService jobService;
     private final JobEventService eventService;
     private final StorageService storageService;
+    private final MultipartTextPartReader textPartReader;
 
     public JobController(
             JobService jobService,
             JobEventService eventService,
-            StorageService storageService) {
+            StorageService storageService,
+            MultipartTextPartReader textPartReader) {
         this.jobService = jobService;
         this.eventService = eventService;
         this.storageService = storageService;
+        this.textPartReader = textPartReader;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -121,59 +120,21 @@ public class JobController {
             String name,
             int maxBytes,
             boolean required) {
-        Part part;
         try {
-            part = request.getPart(name);
-        } catch (IOException | ServletException exception) {
+            return textPartReader.read(request, name, maxBytes, required);
+        } catch (MultipartTextPartException exception) {
+            String code = switch (exception.getReason()) {
+                case MISSING -> "MISSING_MULTIPART_PART";
+                case TOO_LARGE -> name.equals("operation")
+                    ? "OPERATION_TOO_LARGE"
+                    : "OPTIONS_TOO_LARGE";
+                case INVALID_UTF8 -> "INVALID_MULTIPART_TEXT";
+                case UNREADABLE -> "INVALID_MULTIPART_REQUEST";
+            };
             throw new ApiException(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_MULTIPART_REQUEST",
-                "The multipart upload could not be processed"
-            );
-        }
-        if (part == null) {
-            if (required) {
-                throw new ApiException(
-                    HttpStatus.BAD_REQUEST,
-                    "MISSING_MULTIPART_PART",
-                    "Missing required multipart field: " + name
-                );
-            }
-            return null;
-        }
-        if (part.getSize() > maxBytes) {
-            throw new ApiException(
-                HttpStatus.PAYLOAD_TOO_LARGE,
-                name.equals("operation") ? "OPERATION_TOO_LARGE" : "OPTIONS_TOO_LARGE",
-                "Multipart field " + name + " exceeds its size limit"
-            );
-        }
-
-        try (InputStream input = part.getInputStream()) {
-            byte[] bytes = input.readNBytes(maxBytes + 1);
-            if (bytes.length > maxBytes) {
-                throw new ApiException(
-                    HttpStatus.PAYLOAD_TOO_LARGE,
-                    name.equals("operation") ? "OPERATION_TOO_LARGE" : "OPTIONS_TOO_LARGE",
-                    "Multipart field " + name + " exceeds its size limit"
-                );
-            }
-            return StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT)
-                .decode(ByteBuffer.wrap(bytes))
-                .toString();
-        } catch (CharacterCodingException exception) {
-            throw new ApiException(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_MULTIPART_TEXT",
-                "Multipart field " + name + " must contain valid UTF-8"
-            );
-        } catch (IOException exception) {
-            throw new ApiException(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_MULTIPART_REQUEST",
-                "Multipart field " + name + " could not be read"
+                exception.getStatus(),
+                code,
+                exception.getMessage()
             );
         }
     }

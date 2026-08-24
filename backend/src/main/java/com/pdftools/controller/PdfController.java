@@ -1,16 +1,27 @@
 package com.pdftools.controller;
 
+import com.pdftools.api.MultipartTextPartReader;
 import com.pdftools.dto.PdfOperationResult;
 import com.pdftools.exception.PdfProcessingException;
+import com.pdftools.operations.LegacyOperationGuard;
 import com.pdftools.service.PdfService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.context.request.async.WebAsyncTask;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Arrays;
@@ -19,8 +30,25 @@ import java.util.Arrays;
 @RequestMapping("/api/pdf")
 public class PdfController {
 
-    @Autowired
-    private PdfService pdfService;
+    private static final int MAX_SPLIT_GROUPS_BYTES = 65_536;
+    private static final int MAX_ORIGINAL_FILENAME_BYTES = 1_024;
+
+    private final PdfService pdfService;
+    private final MultipartTextPartReader textPartReader;
+    private final AsyncTaskExecutor taskExecutor;
+    private final Duration splitTimeout;
+
+    public PdfController(
+            PdfService pdfService,
+            MultipartTextPartReader textPartReader,
+            @Qualifier("legacyPdfExecutor") AsyncTaskExecutor taskExecutor,
+            @Value("${pdf.operations.split.legacy-timeout:10m}")
+            Duration splitTimeout) {
+        this.pdfService = pdfService;
+        this.textPartReader = textPartReader;
+        this.taskExecutor = taskExecutor;
+        this.splitTimeout = splitTimeout;
+    }
 
     @PostMapping("/merge")
     public ResponseEntity<PdfOperationResult> mergePdfs(
@@ -31,12 +59,51 @@ public class PdfController {
     }
 
     @PostMapping("/split")
-    public ResponseEntity<PdfOperationResult> splitPdf(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "groups", required = false) String groups,
-            @RequestParam(value = "originalFilename", required = false) String originalFilename) throws PdfProcessingException {
-        PdfOperationResult result = pdfService.splitPdf(file, groups, originalFilename);
-        return ResponseEntity.ok(result);
+    public WebAsyncTask<ResponseEntity<PdfOperationResult>> splitPdf(
+            HttpServletRequest request,
+            @RequestParam("file") MultipartFile file) throws PdfProcessingException {
+        String groups = textPartReader.read(
+            request,
+            "groups",
+            MAX_SPLIT_GROUPS_BYTES,
+            false
+        );
+        String originalFilename = textPartReader.read(
+            request,
+            "originalFilename",
+            MAX_ORIGINAL_FILENAME_BYTES,
+            false
+        );
+        LegacyOperationGuard guard = new LegacyOperationGuard();
+        WebAsyncTask<ResponseEntity<PdfOperationResult>> task = new WebAsyncTask<>(
+            splitTimeout.toMillis(),
+            taskExecutor,
+            () -> ResponseEntity.ok(
+                pdfService.splitPdf(file, groups, originalFilename, guard)
+            )
+        );
+        task.onTimeout(() -> {
+            guard.cancel();
+            return ResponseEntity
+                .status(HttpStatus.REQUEST_TIMEOUT)
+                .body(new PdfOperationResult(
+                    false,
+                    "Split exceeded the legacy processing deadline",
+                    null
+                ));
+        });
+        task.onError(() -> {
+            guard.cancel();
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new PdfOperationResult(
+                    false,
+                    "Split was interrupted before completion",
+                    null
+                ));
+        });
+        task.onCompletion(guard::complete);
+        return task;
     }
 
     @PostMapping("/extract")
@@ -151,15 +218,24 @@ public class PdfController {
     }
 
     @GetMapping("/download/{filename}")
-    public ResponseEntity<byte[]> downloadFile(@PathVariable String filename) 
+    public ResponseEntity<StreamingResponseBody> downloadFile(@PathVariable String filename)
             throws PdfProcessingException {
-        byte[] fileContent = pdfService.downloadFile(filename);
-        
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", filename);
-        
-        return new ResponseEntity<>(fileContent, headers, HttpStatus.OK);
+        headers.setContentType(MediaType.parseMediaType(
+            pdfService.getDownloadMediaType(filename)
+        ));
+        headers.setContentLength(pdfService.getDownloadFileSize(filename));
+        headers.setContentDisposition(ContentDisposition.attachment()
+            .filename(filename, StandardCharsets.UTF_8)
+            .build());
+        StreamingResponseBody body = output -> {
+            try {
+                pdfService.streamDownloadFile(filename, output);
+            } catch (PdfProcessingException exception) {
+                throw new IOException("Failed to stream legacy download", exception);
+            }
+        };
+        return new ResponseEntity<>(body, headers, HttpStatus.OK);
     }
 
     @GetMapping("/health")

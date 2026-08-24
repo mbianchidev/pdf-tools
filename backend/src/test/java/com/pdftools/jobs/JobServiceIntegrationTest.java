@@ -9,7 +9,7 @@ import com.pdftools.jobs.persistence.JobRepository;
 import com.pdftools.operations.OperationContext;
 import com.pdftools.operations.OperationOutput;
 import com.pdftools.operations.PdfOperation;
-import com.pdftools.operations.merge.LegacyMergeWorkspaceRegistry;
+import com.pdftools.operations.LegacyWorkspaceRegistry;
 import com.pdftools.storage.StorageService;
 import com.pdftools.storage.StoredResource;
 import org.junit.jupiter.api.Test;
@@ -66,7 +66,7 @@ class JobServiceIntegrationTest {
     private JobProperties jobProperties;
 
     @Autowired
-    private LegacyMergeWorkspaceRegistry legacyWorkspaceRegistry;
+    private LegacyWorkspaceRegistry legacyWorkspaceRegistry;
 
     @Test
     void persistsRunsAndStreamsAJobOutput() throws Exception {
