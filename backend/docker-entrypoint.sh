@@ -25,6 +25,7 @@ if [ "$legacy_root" = "$volume_root/legacy" ] && [ "$jobs_root" = "$volume_root/
 fi
 
 chown -R pdftools:pdftools "$legacy_root" "$jobs_root" "$work_root" "$multipart_root"
+chmod 0700 "$multipart_root"
 
 case "${1:-}" in
     ""|-*)

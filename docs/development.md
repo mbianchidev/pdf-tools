@@ -57,7 +57,7 @@ Important settings:
 | `PDF_STORAGE_TYPE` | `local` | `local` or `s3` |
 | `PDF_STORAGE_LOCAL_ROOT` | `/tmp/pdf-storage/jobs` | Local object root |
 | `PDF_JOB_WORK_ROOT` | `/tmp/pdf-work` | Ephemeral worker directories |
-| `PDF_MULTIPART_TEMP_DIR` | `/tmp/pdf-multipart` | Multipart spill directory |
+| `PDF_MULTIPART_TEMP_DIR` | `/tmp/pdf-multipart` | Private multipart spill directory; must be dedicated to one backend instance |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

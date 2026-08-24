@@ -58,6 +58,7 @@ public class JobService {
     private final JobDispatcher dispatcher;
     private final JobEventService eventService;
     private final TransactionTemplate transactionTemplate;
+    private final OptionsProtector optionsProtector;
 
     public JobService(
             JobRepository jobRepository,
@@ -70,7 +71,8 @@ public class JobService {
             ObjectMapper objectMapper,
             JobDispatcher dispatcher,
             JobEventService eventService,
-            TransactionTemplate transactionTemplate) {
+            TransactionTemplate transactionTemplate,
+            OptionsProtector optionsProtector) {
         this.jobRepository = jobRepository;
         this.inputRepository = inputRepository;
         this.outputRepository = outputRepository;
@@ -82,6 +84,7 @@ public class JobService {
         this.dispatcher = dispatcher;
         this.eventService = eventService;
         this.transactionTemplate = transactionTemplate;
+        this.optionsProtector = optionsProtector;
     }
 
     public JobResponse create(String operation, String options, List<MultipartFile> files) {
@@ -106,10 +109,13 @@ public class JobService {
         }
 
         Instant now = Instant.now();
+        String storedOptions = pdfOperation.hasSensitiveOptions()
+            ? optionsProtector.protect(optionNode.toString())
+            : optionNode.toString();
         JobEntity job = transactionTemplate.execute(status -> jobRepository.saveAndFlush(
             JobEntity.uploading(
                 normalizedOperation,
-                optionNode.toString(),
+                storedOptions,
                 now,
                 now.plus(properties.getRetention())
             )

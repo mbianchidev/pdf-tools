@@ -9,5 +9,9 @@ public interface PdfOperation {
     default void validateSubmission(OperationSubmission submission) {
     }
 
+    default boolean hasSensitiveOptions() {
+        return false;
+    }
+
     List<OperationOutput> execute(OperationContext context);
 }

@@ -38,6 +38,7 @@ services:
       - PDF_STORAGE_S3_SECRET_KEY=${PDF_STORAGE_S3_SECRET_KEY:-}
       - PDF_STORAGE_S3_PATH_STYLE_ACCESS=${PDF_STORAGE_S3_PATH_STYLE_ACCESS:-true}
       - PDF_STORAGE_S3_CREATE_BUCKET=${PDF_STORAGE_S3_CREATE_BUCKET:-false}
+      - PDF_OPTIONS_ENCRYPTION_KEY=${PDF_OPTIONS_ENCRYPTION_KEY:-}
       - CORS_ALLOWED_ORIGINS=http://localhost:80,http://localhost:3000
     volumes:
       - pdf-storage:/tmp/pdf-storage

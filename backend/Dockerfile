@@ -16,6 +16,7 @@ COPY --from=build /app/target/*.jar app.jar
 COPY docker-entrypoint.sh /usr/local/bin/pdf-tools-entrypoint
 RUN mkdir -p /tmp/pdf-storage /tmp/pdf-work /tmp/pdf-multipart \
     && chown -R pdftools:pdftools /app /tmp/pdf-storage /tmp/pdf-work /tmp/pdf-multipart \
+    && chmod 0700 /tmp/pdf-multipart \
     && chmod 0755 /usr/local/bin/pdf-tools-entrypoint
 EXPOSE 8080
 ENTRYPOINT ["pdf-tools-entrypoint"]

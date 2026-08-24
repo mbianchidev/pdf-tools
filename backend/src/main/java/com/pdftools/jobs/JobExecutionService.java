@@ -57,6 +57,7 @@ public class JobExecutionService {
     private final JobProperties properties;
     private final ObjectMapper objectMapper;
     private final TransactionTemplate transactionTemplate;
+    private final OptionsProtector optionsProtector;
 
     public JobExecutionService(
             JobRepository jobRepository,
@@ -68,7 +69,8 @@ public class JobExecutionService {
             StorageService storageService,
             JobProperties properties,
             ObjectMapper objectMapper,
-            TransactionTemplate transactionTemplate) {
+            TransactionTemplate transactionTemplate,
+            OptionsProtector optionsProtector) {
         this.jobRepository = jobRepository;
         this.inputRepository = inputRepository;
         this.outputRepository = outputRepository;
@@ -79,6 +81,7 @@ public class JobExecutionService {
         this.properties = properties;
         this.objectMapper = objectMapper;
         this.transactionTemplate = transactionTemplate;
+        this.optionsProtector = optionsProtector;
     }
 
     public void execute(UUID jobId, String workerId) {
@@ -99,7 +102,9 @@ public class JobExecutionService {
                 cancellation
             );
             JobEntity job = requireJob(jobId);
-            JsonNode options = objectMapper.readTree(job.getOptionsJson());
+            JsonNode options = objectMapper.readTree(
+                optionsProtector.unprotect(job.getOptionsJson())
+            );
             PdfOperation operation = operationRegistry.find(job.getOperation())
                 .orElseThrow(() -> new OperationException(
                     "OPERATION_NOT_REGISTERED",

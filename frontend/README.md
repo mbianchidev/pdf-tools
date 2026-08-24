@@ -13,6 +13,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Organize PDF** - Visual reorder, rotate, duplicate, and delete controls
 - **Crop PDF** - Shared or page-specific percentage margins with exact overlay
 - **Add Page Numbers** - Range, template, font, and position preview controls
+- **Protect PDF** - Separate passwords and explicit permission controls
 - **Add Watermark** - Add text watermarks with positioning and rotation
 - **Add Text** - Add custom text with fonts, colors, and drag positioning
 - **Add Signature** - Type, draw, or upload signatures

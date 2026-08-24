@@ -156,3 +156,9 @@ each item carries a relative rotation. See [Organize PDF](operations/organize.md
 
 `operation=page-numbers` accepts one PDF with page ranges, numbering start, template,
 font, size, position, and margin options. See [Add Page Numbers](operations/page-numbers.md).
+
+## Protect PDF
+
+`operation=protect` accepts one unencrypted PDF, separate user/owner passwords, and
+print/copy/modify/annotation/form/accessibility/assembly permissions. Sensitive options
+are AES-GCM encrypted before persistence. See [Protect PDF](operations/protect.md).

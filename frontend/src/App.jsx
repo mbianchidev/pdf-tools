@@ -33,6 +33,7 @@ const RotatePage = lazy(() => import('./pages/RotatePage'));
 const OrganizePage = lazy(() => import('./pages/OrganizePage'));
 const CropPage = lazy(() => import('./pages/CropPage'));
 const PageNumbersPage = lazy(() => import('./pages/PageNumbersPage'));
+const ProtectPage = lazy(() => import('./pages/ProtectPage'));
 const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
@@ -98,6 +99,13 @@ const operations = [
     description: 'Number ranges with templates, fonts, and positions',
   },
   {
+    id: 'protect',
+    icon: LockKeyhole,
+    group: 'Secure',
+    title: 'Protect PDF',
+    description: 'Encrypt with passwords and explicit permissions',
+  },
+  {
     id: 'watermark',
     icon: Droplet,
     group: 'Mark up',
@@ -141,7 +149,7 @@ const operations = [
   },
 ];
 
-const toolGroups = ['Organize', 'Mark up', 'Convert'];
+const toolGroups = ['Organize', 'Mark up', 'Secure', 'Convert'];
 const INSTALL_COMMAND = `git clone https://github.com/mbianchidev/pdf-tools.git
 cd pdf-tools
 docker compose up --build`;
@@ -380,6 +388,7 @@ function App() {
         <Route path="/organize" element={<OrganizePage />} />
         <Route path="/crop" element={<CropPage />} />
         <Route path="/page-numbers" element={<PageNumbersPage />} />
+        <Route path="/protect" element={<ProtectPage />} />
         <Route path="/watermark" element={<WatermarkPage />} />
         <Route path="/add-text" element={<AddTextPage />} />
         <Route path="/signature" element={<SignaturePage />} />
