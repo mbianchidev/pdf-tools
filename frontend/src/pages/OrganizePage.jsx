@@ -5,26 +5,31 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ArrowLeft, Download, RotateCw, Undo2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  Layers3,
+  RotateCw,
+  Undo2,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import FileUpload from '../components/FileUpload';
 import ToastContainer from '../components/Toast';
+import PageThumbnailOrganizer from '../features/editor/PageThumbnailOrganizer';
+import '../features/editor/PageOrganizerWorkbench.css';
 import JobProgress from '../features/jobs/JobProgress';
 import { startBrowserDownload } from '../features/jobs/startBrowserDownload';
 import { usePdfJob } from '../features/jobs/usePdfJob';
-import PageThumbnailOrganizer from '../features/editor/PageThumbnailOrganizer';
-import '../features/editor/PageOrganizerWorkbench.css';
 import { getApiErrorMessage, jobService } from '../services/jobService';
 import './OperationPage.css';
-import './RotatePage.css';
+import './OrganizePage.css';
 
-const ROTATIONS = [90, 180, 270];
-
-const RotatePage = () => {
+const OrganizePage = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [pages, setPages] = useState([]);
+  const [initialPages, setInitialPages] = useState([]);
   const [selectedPageId, setSelectedPageId] = useState(null);
   const [toasts, setToasts] = useState([]);
   const handledJobRef = useRef(null);
@@ -48,19 +53,14 @@ const RotatePage = () => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
-  const instructions = useMemo(() => ROTATIONS.flatMap((rotation) => {
-    const selected = pages
-      .filter((page) => page.rotation === rotation)
-      .map((page) => page.sourcePage);
-    return selected.length
-      ? [{ pages: selected.join(','), rotation }]
-      : [];
-  }), [pages]);
-
-  const rotatedPageCount = useMemo(
-    () => pages.filter((page) => page.rotation !== 0).length,
-    [pages],
-  );
+  const stats = useMemo(() => {
+    const uniqueSources = new Set(pages.map((page) => page.sourcePage));
+    return {
+      deleted: Math.max(initialPages.length - uniqueSources.size, 0),
+      duplicated: Math.max(pages.length - uniqueSources.size, 0),
+      rotated: pages.filter((page) => page.rotation !== 0).length,
+    };
+  }, [initialPages.length, pages]);
 
   const downloadOutput = useCallback((output) => {
     try {
@@ -68,11 +68,11 @@ const RotatePage = () => {
         jobService.getDownloadUrl(output),
         output.filename,
       );
-      addToast('Rotated PDF download started!', 'success');
+      addToast('Organized PDF download started!', 'success');
     } catch (error) {
-      console.error('Rotate PDF download error:', error);
+      console.error('Organize PDF download error:', error);
       addToast(
-        getApiErrorMessage(error, 'Failed to download rotated PDF'),
+        getApiErrorMessage(error, 'Failed to download organized PDF'),
         'error',
       );
     }
@@ -92,16 +92,16 @@ const RotatePage = () => {
       await Promise.resolve();
       if (!active) return;
       if (job.status === 'FAILED') {
-        addToast(job.errorMessage || 'Failed to rotate PDF', 'error');
+        addToast(job.errorMessage || 'Failed to organize PDF', 'error');
         return;
       }
       if (job.status === 'CANCELLED') {
-        addToast('PDF rotation cancelled', 'error');
+        addToast('PDF organization cancelled', 'error');
         return;
       }
       const output = job.outputs[0];
       if (!output) {
-        addToast('The rotation job completed without an output.', 'error');
+        addToast('The organize job completed without an output.', 'error');
         return;
       }
       downloadOutput(output);
@@ -116,39 +116,44 @@ const RotatePage = () => {
     if (running) return;
     setFile(files[0] || null);
     setPages([]);
+    setInitialPages([]);
     setSelectedPageId(null);
     handledJobRef.current = null;
     reset();
   }, [reset, running]);
 
-  const rotateAll = (degrees) => {
-    if (running || pages.length === 0) return;
-    setPages((current) => current.map((page) => ({
-      ...page,
-      rotation: (page.rotation + degrees) % 360,
-    })));
+  const handlePagesChange = useCallback((nextPages) => {
+    setPages(nextPages);
+    setInitialPages((current) => (
+      current.length === 0
+        ? nextPages.map((page) => ({ ...page }))
+        : current
+    ));
+  }, []);
+
+  const resetPlan = () => {
+    if (running || initialPages.length === 0) return;
+    const restored = initialPages.map((page) => ({ ...page }));
+    setPages(restored);
+    setSelectedPageId(restored[0]?.id ?? null);
   };
 
-  const resetRotations = () => {
-    if (!running) {
-      setPages((current) => current.map((page) => ({
-        ...page,
-        rotation: 0,
-      })));
-    }
-  };
-
-  const handleRotate = async () => {
-    if (!file || instructions.length === 0) {
-      addToast('Rotate at least one page before starting.', 'error');
+  const handleOrganize = async () => {
+    if (!file || pages.length === 0) {
+      addToast('Upload a PDF with at least one page.', 'error');
       return;
     }
     try {
-      await start('rotate', [file], { rotations: instructions });
+      await start('organize', [file], {
+        pages: pages.map((page) => ({
+          page: page.sourcePage,
+          rotation: page.rotation,
+        })),
+      });
     } catch (error) {
-      console.error('Rotate PDF job error:', error);
+      console.error('Organize PDF job error:', error);
       addToast(
-        getApiErrorMessage(error, 'Failed to start PDF rotation'),
+        getApiErrorMessage(error, 'Failed to start PDF organization'),
         'error',
       );
     }
@@ -158,7 +163,7 @@ const RotatePage = () => {
     try {
       await cancel();
     } catch (error) {
-      console.error('Rotate PDF cancellation error:', error);
+      console.error('Organize PDF cancellation error:', error);
       addToast(getApiErrorMessage(error, 'Failed to cancel job'), 'error');
     }
   };
@@ -172,11 +177,11 @@ const RotatePage = () => {
           <span>Back</span>
         </button>
         <div className="operation-title">
-          <RotateCw size={28} />
-          <h1>Rotate PDF</h1>
+          <Layers3 size={28} />
+          <h1>Organize PDF</h1>
         </div>
         <p className="operation-description">
-          Rotate every page together or adjust individual pages before export.
+          Reorder, rotate, duplicate, and delete pages in one visual workflow.
         </p>
       </header>
 
@@ -195,36 +200,25 @@ const RotatePage = () => {
           {file && pages.length > 0 && (
             <>
               <div className="sidebar-section">
-                <h3 className="sidebar-title">Rotate all pages</h3>
-                <div className="rotate-all-actions">
-                  {ROTATIONS.map((rotation) => (
-                    <button
-                      type="button"
-                      key={rotation}
-                      onClick={() => rotateAll(rotation)}
-                      disabled={running}
-                      aria-label={`Rotate all pages ${rotation} degrees`}
-                    >
-                      <RotateCw size={17} aria-hidden="true" />
-                      {rotation}°
-                    </button>
-                  ))}
+                <h3 className="sidebar-title">Output plan</h3>
+                <div className="organize-stats">
+                  <span><strong>{pages.length}</strong> output pages</span>
+                  <span><strong>{stats.rotated}</strong> rotated</span>
+                  <span><strong>{stats.duplicated}</strong> duplicated</span>
+                  <span><strong>{stats.deleted}</strong> deleted</span>
                 </div>
-                <div className="rotate-summary">
-                  <strong>{rotatedPageCount}</strong>
-                  <span>of {pages.length} pages changed</span>
-                  <button
-                    type="button"
-                    onClick={resetRotations}
-                    disabled={running || rotatedPageCount === 0}
-                  >
-                    <Undo2 size={15} aria-hidden="true" />
-                    Reset
-                  </button>
-                </div>
-                <p className="rotate-help">
-                  Use the rotate control on any page card for an independent
-                  adjustment.
+                <button
+                  type="button"
+                  className="organize-reset"
+                  onClick={resetPlan}
+                  disabled={running}
+                >
+                  <Undo2 size={16} aria-hidden="true" />
+                  Reset original order
+                </button>
+                <p className="organize-help">
+                  Drag cards or use arrow controls. Each card also exposes
+                  rotate, duplicate, and delete actions.
                 </p>
               </div>
 
@@ -247,14 +241,14 @@ const RotatePage = () => {
                   </Button>
                 )}
                 <Button
-                  onClick={handleRotate}
+                  onClick={handleOrganize}
                   loading={running}
-                  disabled={running || instructions.length === 0}
-                  icon={<RotateCw size={20} />}
+                  disabled={running || pages.length === 0}
+                  icon={<Layers3 size={20} />}
                   fullWidth
                   size="lg"
                 >
-                  {running ? 'Rotating...' : 'Rotate & Download'}
+                  {running ? 'Organizing...' : 'Organize & Download'}
                 </Button>
               </div>
             </>
@@ -267,23 +261,20 @@ const RotatePage = () => {
               <div className="preview-header">
                 <h3>
                   Preview: {file.name}
-                  {pages.length > 0 && ` (${pages.length} pages)`}
+                  {pages.length > 0 && ` (${pages.length} output pages)`}
                 </h3>
                 <span className="preview-hint">
-                  Per-page controls update the export preview
+                  <RotateCw size={14} aria-hidden="true" />
+                  Changes are applied in the displayed order
                 </span>
               </div>
-              <div className="page-organizer-workbench rotate-organizer">
+              <div className="page-organizer-workbench organize-workbench">
                 <PageThumbnailOrganizer
                   file={file}
                   pages={pages}
-                  onPagesChange={setPages}
+                  onPagesChange={handlePagesChange}
                   selectedPageId={selectedPageId}
                   onSelectPage={setSelectedPageId}
-                  allowMove={false}
-                  allowDuplicate={false}
-                  allowDelete={false}
-                  allowRotate
                   disabled={running}
                   maxPages={1000}
                   onError={(message) => addToast(message, 'error')}
@@ -292,9 +283,9 @@ const RotatePage = () => {
             </>
           ) : (
             <div className="preview-empty">
-              <RotateCw size={64} />
-              <h3>Upload a PDF to preview</h3>
-              <p>Rotate the entire document or tune pages individually.</p>
+              <Layers3 size={64} />
+              <h3>Upload a PDF to organize</h3>
+              <p>Build the exact page sequence you want to export.</p>
             </div>
           )}
         </main>
@@ -303,4 +294,4 @@ const RotatePage = () => {
   );
 };
 
-export default RotatePage;
+export default OrganizePage;

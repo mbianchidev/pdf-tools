@@ -77,35 +77,10 @@
   line-height: 1.55;
 }
 
-.rotate-organizer {
-  height: calc(100% - 45px);
-  overflow: auto;
-  padding: 1.5rem;
-}
-
-.rotate-organizer .page-organizer {
-  display: grid;
-  margin: 0;
-  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
-  gap: 1rem;
-}
-
-.rotate-organizer .page-organizer > li {
-  min-width: 0;
-  border: 1px solid rgb(255 255 255 / 12%);
-  background: var(--ink-soft);
-}
-
 .rotate-organizer .page-organizer-preview {
-  color: var(--line-strong);
   cursor: default;
 }
 
 .rotate-organizer .page-organizer-actions {
   justify-content: flex-end;
-}
-
-.rotate-organizer .page-organizer-actions button {
-  color: var(--iris-dark);
-  background: var(--iris-soft);
 }

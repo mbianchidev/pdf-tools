@@ -1,0 +1,61 @@
+.organize-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.organize-stats span {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem;
+  color: var(--muted);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-size: var(--text-xs);
+}
+
+.organize-stats strong {
+  color: var(--iris);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+.organize-reset {
+  display: inline-flex;
+  min-height: 40px;
+  margin-top: 0.85rem;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--iris);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+.organize-reset:focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 2px;
+}
+
+.organize-reset:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.organize-help {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+}
+
+.organize-workbench .page-organizer-preview {
+  cursor: grab;
+}
+
+.organize-workbench .page-organizer-preview:active {
+  cursor: grabbing;
+}

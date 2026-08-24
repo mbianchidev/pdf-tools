@@ -75,7 +75,7 @@ public class PdfSplitEngine {
             progress,
             cancellationCheck,
             pageCount -> planFactory.create(options, pageCount),
-            (page, sourcePageNumber) -> {
+            (page, sourcePageNumber, outputPosition) -> {
             }
         );
     }
@@ -90,7 +90,7 @@ public class PdfSplitEngine {
             sourcePath,
             workspace,
             selector,
-            (page, sourcePageNumber) -> {
+            (page, sourcePageNumber, outputPosition) -> {
             },
             progress,
             cancellationCheck
@@ -196,6 +196,7 @@ public class PdfSplitEngine {
                                 cancellationCheck
                             ).stream()
                         );
+                    int outputPosition = 0;
                     for (int pageNumber : group.pages()) {
                         if (processedPages
                                 % CANCELLATION_PAGE_INTERVAL == 0) {
@@ -215,7 +216,11 @@ public class PdfSplitEngine {
                             content,
                             resources
                         );
-                        transformer.transform(copiedPage, pageNumber);
+                        transformer.transform(
+                            copiedPage,
+                            pageNumber,
+                            ++outputPosition
+                        );
                         destination.addPage(copiedPage);
                         processedPages++;
                     }
@@ -284,7 +289,11 @@ public class PdfSplitEngine {
 
     @FunctionalInterface
     public interface PageTransformer {
-        void transform(PDPage page, int sourcePageNumber);
+        void transform(
+            PDPage page,
+            int sourcePageNumber,
+            int outputPosition
+        );
     }
 
     private void validateDocument(PDDocument source) {

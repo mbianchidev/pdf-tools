@@ -10,6 +10,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Extract Pages** - Extract specific pages (e.g., "1,3,5-7")
 - **Remove Pages** - Validated ranges, visual selection, progress, and cancellation
 - **Rotate PDF** - Whole-document actions and independent page controls
+- **Organize PDF** - Visual reorder, rotate, duplicate, and delete controls
 - **Add Watermark** - Add text watermarks with positioning and rotation
 - **Add Text** - Add custom text with fonts, colors, and drag positioning
 - **Add Signature** - Type, draw, or upload signatures

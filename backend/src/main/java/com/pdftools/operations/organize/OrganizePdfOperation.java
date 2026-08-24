@@ -1,4 +1,4 @@
-package com.pdftools.operations.rotate;
+package com.pdftools.operations.organize;
 
 import com.pdftools.operations.OperationContext;
 import com.pdftools.operations.OperationOutput;
@@ -11,59 +11,61 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component
-public class RotatePdfOperation implements PdfOperation {
+public class OrganizePdfOperation implements PdfOperation {
 
     private static final int MAX_OUTPUT_FILENAME_BYTES = 120;
 
     private final PdfSplitEngine pageCopyEngine;
-    private final RotatePlanFactory planFactory;
+    private final OrganizePlanFactory planFactory;
 
-    public RotatePdfOperation(
+    public OrganizePdfOperation(
             PdfSplitEngine pageCopyEngine,
-            RotatePlanFactory planFactory) {
+            OrganizePlanFactory planFactory) {
         this.pageCopyEngine = pageCopyEngine;
         this.planFactory = planFactory;
     }
 
     @Override
     public String key() {
-        return "rotate";
+        return "organize";
     }
 
     @Override
     public void validateSubmission(OperationSubmission submission) {
-        PdfOperationValidation.requireSinglePdf(submission, "Rotate PDF");
+        PdfOperationValidation.requireSinglePdf(submission, "Organize PDF");
         planFactory.validateShape(submission.options());
         PdfOperationValidation.validateOptionalOutputFilename(
             submission.options(),
             ".pdf",
             MAX_OUTPUT_FILENAME_BYTES,
-            "Rotate PDF"
+            "Organize PDF"
         );
     }
 
     @Override
     public List<OperationOutput> execute(OperationContext context) {
-        AtomicReference<RotatePlanFactory.RotatePlan> plan =
+        AtomicReference<OrganizePlanFactory.OrganizePlan> plan =
             new AtomicReference<>();
         Path output = pageCopyEngine.copySelectedPages(
             context.inputs().getFirst().path(),
             context.workspace(),
             pageCount -> {
-                plan.set(planFactory.create(context.options(), pageCount));
-                List<Integer> allPages = new ArrayList<>(pageCount);
-                for (int page = 1; page <= pageCount; page++) {
-                    allPages.add(page);
-                }
-                return List.copyOf(allPages);
+                OrganizePlanFactory.OrganizePlan resolved =
+                    planFactory.create(context.options(), pageCount);
+                plan.set(resolved);
+                return resolved.pages().stream()
+                    .map(OrganizePlanFactory.OrganizedPage::sourcePage)
+                    .toList();
             },
             (page, sourcePageNumber, outputPosition) -> {
-                int rotation = plan.get().rotationFor(sourcePageNumber);
+                int rotation = plan.get()
+                    .pages()
+                    .get(outputPosition - 1)
+                    .rotation();
                 if (rotation != 0) {
                     page.setRotation(Math.floorMod(
                         page.getRotation() + rotation,
@@ -92,10 +94,10 @@ public class RotatePdfOperation implements PdfOperation {
                 requested,
                 ".pdf",
                 MAX_OUTPUT_FILENAME_BYTES,
-                "Rotate PDF"
+                "Organize PDF"
             );
-            return FilenameSanitizer.sanitize(requested, "rotated.pdf");
+            return FilenameSanitizer.sanitize(requested, "organized.pdf");
         }
-        return FilenameSanitizer.withSuffix(sourceFilename, "_rotated");
+        return FilenameSanitizer.withSuffix(sourceFilename, "_organized");
     }
 }

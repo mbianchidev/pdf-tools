@@ -140,3 +140,9 @@ See [Remove Pages](operations/remove.md) for validation and fidelity details.
 `operation=rotate` accepts one PDF with either a shared `rotation` plus optional
 `pages`, or non-overlapping `rotations[]` instructions for independent page angles.
 It returns one PDF. See [Rotate PDF](operations/rotate.md).
+
+## Organize PDF
+
+`operation=organize` accepts one PDF and an ordered `options.pages[]` plan. Repeated
+source pages duplicate, omitted source pages delete, order controls reordering, and
+each item carries a relative rotation. See [Organize PDF](operations/organize.md).
