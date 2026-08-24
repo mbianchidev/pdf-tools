@@ -1,9 +1,8 @@
 package com.pdftools.operations.pdfjpg;
 
 import com.pdftools.operations.OperationException;
+import com.pdftools.operations.shared.worker.IsolatedJavaWorker;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -35,11 +34,15 @@ public final class PdfToJpgWorkerMain {
                 Integer.parseInt(arguments[6])
             );
         } catch (OperationException exception) {
-            writeError(errorFile, exception.getCode(), exception.getMessage());
+            IsolatedJavaWorker.writeError(
+                errorFile,
+                exception.getCode(),
+                exception.getMessage()
+            );
             System.exit(2);
         } catch (Throwable throwable) {
             throwable.printStackTrace(System.err);
-            writeError(
+            IsolatedJavaWorker.writeError(
                 errorFile,
                 "JPG_RENDER_WORKER_FAILED",
                 "The isolated PDF renderer failed"
@@ -66,14 +69,4 @@ public final class PdfToJpgWorkerMain {
         return properties;
     }
 
-    private static void writeError(
-            Path errorFile,
-            String code,
-            String message) {
-        try {
-            Files.writeString(errorFile, code + "\n" + message);
-        } catch (IOException exception) {
-            exception.printStackTrace(System.err);
-        }
-    }
 }

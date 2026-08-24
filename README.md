@@ -40,7 +40,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Edit PDF** - Text, images, vector shapes, highlights, and notes
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs
-- **Redact Content** - Redact sensitive information with black boxes
+- **Redact PDF** - Irreversibly rasterize selected regions into a sanitized PDF
 - **Convert to Markdown** - Export PDF content as Markdown
 - **Convert to DOCX** - Export PDF content as Word documents
 
@@ -167,7 +167,22 @@ Parameters:
   - page (page number, default: 1)
 ```
 
-#### Redact Content
+#### Secure Redact PDF
+```
+POST /api/v1/jobs
+Content-Type: multipart/form-data
+Parts:
+  - operation: redact
+  - options: {"areas":[{"page":1,"x":0.1,"y":0.2,"width":0.4,"height":0.2}]}
+  - files: PDF file
+```
+
+The secure operation rasterizes every page into a fresh PDF after burning selected
+normalized visual rectangles to black. Original text, images, annotations, forms,
+attachments, metadata, and prior revisions are not copied. See
+[`docs/operations/redact.md`](docs/operations/redact.md).
+
+#### Legacy Redact Overlay
 ```
 POST /api/pdf/redact
 Content-Type: multipart/form-data

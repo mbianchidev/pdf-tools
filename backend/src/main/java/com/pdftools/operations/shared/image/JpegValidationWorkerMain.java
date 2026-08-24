@@ -1,6 +1,7 @@
 package com.pdftools.operations.shared.image;
 
 import com.pdftools.operations.OperationException;
+import com.pdftools.operations.shared.worker.IsolatedJavaWorker;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -24,11 +25,15 @@ public final class JpegValidationWorkerMain {
         try {
             validateManifest(Path.of(arguments[0]));
         } catch (OperationException exception) {
-            writeError(errorFile, exception.getCode(), exception.getMessage());
+            IsolatedJavaWorker.writeError(
+                errorFile,
+                exception.getCode(),
+                exception.getMessage()
+            );
             System.exit(2);
         } catch (Throwable throwable) {
             throwable.printStackTrace(System.err);
-            writeError(
+            IsolatedJavaWorker.writeError(
                 errorFile,
                 "JPEG_VALIDATION_WORKER_FAILED",
                 "The isolated JPEG validator failed"
@@ -77,16 +82,5 @@ public final class JpegValidationWorkerMain {
             "JPEG_VALIDATION_PROTOCOL_ERROR",
             "The JPEG validation manifest is invalid"
         );
-    }
-
-    private static void writeError(
-            Path errorFile,
-            String code,
-            String message) {
-        try {
-            Files.writeString(errorFile, code + "\n" + message);
-        } catch (IOException exception) {
-            exception.printStackTrace(System.err);
-        }
     }
 }

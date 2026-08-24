@@ -192,3 +192,10 @@ mode-specific styling are supported. See [Watermark PDF](operations/watermark.md
 `operation=edit` accepts one PDF followed by up to 10 PNG/JPEG assets and an
 ordered `elements[]` plan. Text, image, rectangle, ellipse, line, highlight, and
 note elements can be applied in one job. See [Edit PDF](operations/edit.md).
+
+## Redact PDF
+
+`operation=redact` accepts one unencrypted PDF and normalized visual
+`areas[]`. Every page is rasterized into a new PDF after selected regions are
+burned to black, preventing recovery through text extraction, object inspection,
+attachments, or prior revisions. See [Redact PDF](operations/redact.md).

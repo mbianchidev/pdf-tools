@@ -1,291 +1,472 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  EyeOff,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { EyeOff, ArrowLeft, Download, Plus, Trash2 } from 'lucide-react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-// Set worker source for PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-import FileUpload from '../components/FileUpload';
+import '../lib/pdfWorker';
 import Button from '../components/Button';
+import FileUpload from '../components/FileUpload';
 import ToastContainer from '../components/Toast';
-import { pdfService, downloadBlob } from '../services/pdfService';
+import { normalizedRectangleStyle } from '../features/editor/coordinates';
+import JobProgress from '../features/jobs/JobProgress';
+import { startBrowserDownload } from '../features/jobs/startBrowserDownload';
+import { usePdfJob } from '../features/jobs/usePdfJob';
+import { getApiErrorMessage, jobService } from '../services/jobService';
 import './OperationPage.css';
 import './RedactPage.css';
+
+const MIN_DRAW_PIXELS = 4;
 
 const RedactPage = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
-  const [fileUrl, setFileUrl] = useState(null);
   const [numPages, setNumPages] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageDimensions, setPageDimensions] = useState({ width: 595, height: 842 });
-  const [scale, setScale] = useState(1);
-  
-  // Redaction areas
-  const [redactions, setRedactions] = useState([]);
+  const [pageSize, setPageSize] = useState(null);
+  const [areas, setAreas] = useState([]);
+  const [draft, setDraft] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  
-  // Drawing state
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [drawStart, setDrawStart] = useState({ x: 0, y: 0 });
-  const [currentRect, setCurrentRect] = useState(null);
-  
-  const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
-  
-  const previewRef = useRef(null);
-  const containerRef = useRef(null);
+  const sequenceRef = useRef(0);
+  const documentRef = useRef(null);
+  const pageRequestRef = useRef(0);
+  const handledJobRef = useRef(null);
+  const {
+    job,
+    running,
+    connectionError,
+    start,
+    cancel,
+    reset,
+  } = usePdfJob();
 
-  const addToast = (message, type = 'success', duration = 5000) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
-  };
+  const addToast = useCallback((message, type = 'success', duration = 5000) => {
+    setToasts((current) => [
+      ...current,
+      { id: Date.now(), message, type, duration },
+    ]);
+  }, []);
 
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
+  const removeToast = useCallback((id) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
 
-  const handleFilesChange = useCallback((files) => {
-    const newFile = files[0] || null;
-    setFile(newFile);
-    setRedactions([]);
-    setSelectedId(null);
-    if (newFile) {
-      setFileUrl(URL.createObjectURL(newFile));
-    } else {
-      setFileUrl(null);
+  const downloadOutput = useCallback((output) => {
+    try {
+      startBrowserDownload(
+        jobService.getDownloadUrl(output),
+        output.filename,
+      );
+      addToast('Securely redacted PDF download started!', 'success');
+    } catch (error) {
+      console.error('Redact PDF download error:', error);
+      addToast(
+        getApiErrorMessage(error, 'Failed to download redacted PDF'),
+        'error',
+      );
+    }
+  }, [addToast]);
+
+  useEffect(() => {
+    if (!job || !['COMPLETED', 'FAILED', 'CANCELLED'].includes(job.status)) {
+      return undefined;
+    }
+    const resultKey = `${job.id}:${job.status}`;
+    if (handledJobRef.current === resultKey) {
+      return undefined;
+    }
+    handledJobRef.current = resultKey;
+    let active = true;
+    const handleResult = async () => {
+      await Promise.resolve();
+      if (!active) return;
+      if (job.status === 'FAILED') {
+        addToast(job.errorMessage || 'Failed to redact PDF', 'error');
+        return;
+      }
+      if (job.status === 'CANCELLED') {
+        addToast('Secure redaction cancelled', 'error');
+        return;
+      }
+      const output = job.outputs[0];
+      if (!output) {
+        addToast('The redaction job completed without an output.', 'error');
+        return;
+      }
+      downloadOutput(output);
+    };
+    handleResult();
+    return () => {
+      active = false;
+    };
+  }, [addToast, downloadOutput, job]);
+
+  const loadPageSize = useCallback(async (pageNumber, document) => {
+    const request = ++pageRequestRef.current;
+    const page = await document.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 1 });
+    if (request === pageRequestRef.current) {
+      setPageSize({
+        width: viewport.width,
+        height: viewport.height,
+      });
     }
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (fileUrl) URL.revokeObjectURL(fileUrl);
-    };
-  }, [fileUrl]);
-
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
+  const handleDocumentLoad = useCallback(async (document) => {
+    documentRef.current = document;
+    setNumPages(document.numPages);
     setCurrentPage(1);
+    await loadPageSize(1, document);
+  }, [loadPageSize]);
+
+  const goToPage = async (pageNumber) => {
+    if (!documentRef.current || !numPages) return;
+    const next = Math.min(Math.max(pageNumber, 1), numPages);
+    setCurrentPage(next);
+    setSelectedId(null);
+    setDraft(null);
+    await loadPageSize(next, documentRef.current);
   };
 
-  const onPageLoadSuccess = (page) => {
-    const { width, height } = page;
-    setPageDimensions({ width, height });
-    if (containerRef.current) {
-      const containerWidth = containerRef.current.clientWidth - 48;
-      setScale(Math.min(containerWidth / width, 1));
+  const handleFilesChange = useCallback((files) => {
+    if (running) return;
+    setFile(files[0] || null);
+    setNumPages(null);
+    setCurrentPage(1);
+    setPageSize(null);
+    setAreas([]);
+    setDraft(null);
+    setSelectedId(null);
+    documentRef.current = null;
+    handledJobRef.current = null;
+    reset();
+  }, [reset, running]);
+
+  const beginArea = (event) => {
+    if (running || !pageSize) return;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    const point = normalizedPoint(event);
+    setSelectedId(null);
+    setDraft({
+      pointerId: event.pointerId,
+      anchorX: point.x,
+      anchorY: point.y,
+      x: point.x,
+      y: point.y,
+      width: 0,
+      height: 0,
+    });
+  };
+
+  const resizeArea = (event) => {
+    if (!draft || draft.pointerId !== event.pointerId) return;
+    const point = normalizedPoint(event);
+    setDraft((current) => rectangleFromPoints(
+      current,
+      point,
+    ));
+  };
+
+  const finishArea = (event) => {
+    if (!draft || draft.pointerId !== event.pointerId) return;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    const rectangle = rectangleFromPoints(draft, normalizedPoint(event));
+    setDraft(null);
+    if (
+      rectangle.width * renderWidth < MIN_DRAW_PIXELS
+      || rectangle.height * renderHeight < MIN_DRAW_PIXELS
+    ) {
+      return;
     }
-  };
-
-  const removeRedaction = (id) => {
-    setRedactions(redactions.filter(r => r.id !== id));
-    if (selectedId === id) setSelectedId(null);
-  };
-
-  // Drawing redaction boxes
-  const handleMouseDown = (e) => {
-    if (!previewRef.current) return;
-    const rect = previewRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
-    setDrawStart({ x, y });
-    setIsDrawing(true);
-    setCurrentRect({ x, y, width: 0, height: 0 });
-  };
-
-  const handleMouseMove = useCallback((e) => {
-    if (!isDrawing || !previewRef.current) return;
-    const rect = previewRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
-    
-    const newRect = {
-      x: Math.min(drawStart.x, x),
-      y: Math.min(drawStart.y, y),
-      width: Math.abs(x - drawStart.x),
-      height: Math.abs(y - drawStart.y),
+    const area = {
+      id: `redaction-${sequenceRef.current}`,
+      page: currentPage,
+      x: quantize(rectangle.x),
+      y: quantize(rectangle.y),
+      width: quantize(rectangle.width),
+      height: quantize(rectangle.height),
     };
-    setCurrentRect(newRect);
-  }, [isDrawing, drawStart, scale]);
+    sequenceRef.current += 1;
+    setAreas((current) => [...current, area]);
+    setSelectedId(area.id);
+    handledJobRef.current = null;
+    reset();
+  };
 
-  const handleMouseUp = useCallback(() => {
-    if (!isDrawing || !currentRect) return;
-    
-    // Only add if rectangle has meaningful size
-    if (currentRect.width > 10 && currentRect.height > 5) {
-      // Convert to PDF coordinates (y is from bottom)
-      const pdfY = pageDimensions.height - currentRect.y - currentRect.height;
-      
-      const newRedaction = {
-        id: Date.now(),
-        pageNum: currentPage,
-        x: currentRect.x,
-        y: pdfY,
-        width: currentRect.width,
-        height: currentRect.height,
-        // Store display coordinates too
-        displayX: currentRect.x,
-        displayY: currentRect.y,
-      };
-      setRedactions([...redactions, newRedaction]);
-      setSelectedId(newRedaction.id);
+  const removeArea = (id) => {
+    setAreas((current) => current.filter((area) => area.id !== id));
+    if (selectedId === id) {
+      setSelectedId(null);
     }
-    
-    setIsDrawing(false);
-    setCurrentRect(null);
-  }, [isDrawing, currentRect, currentPage, pageDimensions, redactions]);
+    handledJobRef.current = null;
+    reset();
+  };
 
-  useEffect(() => {
-    if (isDrawing) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDrawing, handleMouseMove, handleMouseUp]);
-
-  const handleRedact = async () => {
-    if (!file) { addToast('Please upload a PDF file', 'error'); return; }
-    if (redactions.length === 0) { addToast('Please draw at least one redaction area', 'error'); return; }
-
-    setLoading(true);
-    try {
-      // Format redactions for backend
-      const formattedRedactions = redactions.map(r => ({
-        x: r.x,
-        y: r.y,
-        width: r.width,
-        height: r.height,
-        pageNum: r.pageNum,
-      }));
-      
-      const result = await pdfService.redactMultiple(file, formattedRedactions);
-      const baseName = file.name.replace(/\.[pP][dD][fF]$/, '');
-      downloadBlob(result, `${baseName}_redacted.pdf`);
-      addToast('Content redacted successfully!', 'success');
-    } catch (error) {
-      console.error('Redact error:', error);
-      addToast(error.response?.data?.message || error.message || 'Failed to redact content', 'error');
-    } finally {
-      setLoading(false);
+  const selectArea = async (area) => {
+    setSelectedId(area.id);
+    if (area.page !== currentPage) {
+      await goToPage(area.page);
+      setSelectedId(area.id);
     }
   };
 
-  const currentPageRedactions = redactions.filter(r => r.pageNum === currentPage);
+  const handleSubmit = async () => {
+    if (!file || !numPages || areas.length === 0) {
+      addToast('Draw at least one redaction area.', 'error');
+      return;
+    }
+    const submittedAreas = areas
+      .map(({ id, ...area }) => area)
+      .sort(areaOrder);
+    try {
+      await start('redact', [file], { areas: submittedAreas });
+    } catch (error) {
+      console.error('Redact PDF job error:', error);
+      addToast(
+        getApiErrorMessage(error, 'Failed to start secure redaction'),
+        'error',
+      );
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      await cancel();
+    } catch (error) {
+      console.error('Redact PDF cancellation error:', error);
+      addToast(getApiErrorMessage(error, 'Failed to cancel job'), 'error');
+    }
+  };
+
+  const renderWidth = Math.min(
+    620,
+    Math.max(280, globalThis.innerWidth - 48),
+  );
+  const renderHeight = pageSize
+    ? renderWidth * pageSize.height / pageSize.width
+    : 0;
+  const currentAreas = areas.filter((area) => area.page === currentPage);
 
   return (
     <div className="operation-page">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <header className="operation-header">
         <button className="back-button" onClick={() => navigate('/')}>
-          <ArrowLeft size={20} /><span>Back</span>
+          <ArrowLeft size={20} />
+          <span>Back</span>
         </button>
         <div className="operation-title">
-          <EyeOff size={28} /><h1>Redact Content</h1>
+          <EyeOff size={28} />
+          <h1>Redact PDF</h1>
         </div>
-        <p className="operation-description">Draw rectangles to cover sensitive content. Click and drag on the PDF preview.</p>
+        <p className="operation-description">
+          Permanently remove sensitive regions from a sanitized PDF.
+        </p>
       </header>
 
       <div className="operation-content">
         <aside className="operation-sidebar">
           <div className="sidebar-section">
             <h3 className="sidebar-title">Upload PDF</h3>
-            <FileUpload onFilesChange={handleFilesChange} files={file ? [file] : []} multiple={false} />
+            <FileUpload
+              onFilesChange={handleFilesChange}
+              files={file ? [file] : []}
+              multiple={false}
+              disabled={running}
+            />
           </div>
 
           {file && (
-            <div className="sidebar-section">
-              <div className="section-header">
-                <h3 className="sidebar-title">Redaction Areas</h3>
-                <span className="redaction-count">{redactions.length} area{redactions.length !== 1 ? 's' : ''}</span>
+            <>
+              <div className="sidebar-section redact-security-note">
+                <ShieldCheck size={20} />
+                <div>
+                  <h3>Irreversible output</h3>
+                  <p>
+                    Every page is rasterized into a new PDF. Searchable text,
+                    links, forms, and original objects are removed.
+                  </p>
+                </div>
               </div>
-              
-              <p className="draw-hint">Click and drag on the preview to draw redaction boxes</p>
-              
-              <div className="redactions-list">
-                {redactions.length === 0 ? (
-                  <p className="no-items-hint">No redaction areas yet</p>
+
+              <div className="sidebar-section redact-areas">
+                <div className="redact-areas__heading">
+                  <h3 className="sidebar-title">Redaction areas</h3>
+                  <span>
+                    {areas.length} {areas.length === 1 ? 'area' : 'areas'}
+                  </span>
+                </div>
+                <p className="redact-help">
+                  Drag across the preview to mark content for removal.
+                </p>
+                {areas.length === 0 ? (
+                  <p className="redact-empty">No redaction areas yet</p>
                 ) : (
-                  redactions.map((r, index) => (
-                    <div key={r.id} className={`redaction-item ${selectedId === r.id ? 'selected' : ''}`}
-                      onClick={() => { setSelectedId(r.id); setCurrentPage(r.pageNum); }}>
-                      <div className="redaction-info">
-                        <span className="redaction-label">Area {index + 1}</span>
-                        <span className="redaction-dims">{Math.round(r.width)}×{Math.round(r.height)}</span>
+                  <div className="redact-area-list">
+                    {areas.map((area, index) => (
+                      <div
+                        className={area.id === selectedId ? 'selected' : ''}
+                        key={area.id}
+                      >
+                        <button
+                          type="button"
+                          className="redact-area-select"
+                          onClick={() => selectArea(area)}
+                          disabled={running}
+                        >
+                          <span>
+                            <strong>Area {index + 1}</strong>
+                            <small>
+                              Page {area.page} · {percent(area.width)}
+                              {' × '}
+                              {percent(area.height)}
+                            </small>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="redact-area-delete"
+                          aria-label={`Delete redaction area ${index + 1}`}
+                          onClick={() => removeArea(area.id)}
+                          disabled={running}
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </div>
-                      <span className="redaction-page">Page {r.pageNum}</span>
-                      <button className="redaction-delete" onClick={(e) => { e.stopPropagation(); removeRedaction(r.id); }}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
-          )}
 
-          {file && redactions.length > 0 && (
-            <div className="sidebar-actions">
-              <Button onClick={handleRedact} loading={loading} disabled={loading} icon={<Download size={20} />} fullWidth size="lg">
-                {loading ? 'Redacting...' : 'Redact & Download'}
-              </Button>
-            </div>
+              <div className="sidebar-actions">
+                {job && (
+                  <JobProgress
+                    job={job}
+                    connectionError={connectionError}
+                    onCancel={handleCancel}
+                  />
+                )}
+                {job?.status === 'COMPLETED' && job.outputs[0] && (
+                  <Button
+                    onClick={() => downloadOutput(job.outputs[0])}
+                    variant="outline"
+                    icon={<Download size={20} />}
+                    fullWidth
+                  >
+                    Download result again
+                  </Button>
+                )}
+                <Button
+                  onClick={handleSubmit}
+                  loading={running}
+                  disabled={running || areas.length === 0}
+                  icon={<Download size={20} />}
+                  fullWidth
+                  size="lg"
+                >
+                  {running
+                    ? 'Redacting securely...'
+                    : 'Redact securely & Download'}
+                </Button>
+              </div>
+            </>
           )}
         </aside>
 
-        <main className="operation-preview" ref={containerRef}>
-          {file && fileUrl ? (
+        <main className="operation-preview">
+          {file ? (
             <>
               <div className="preview-header">
-                <h3>Preview: {file.name}</h3>
-                <div className="page-nav">
-                  <button disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>←</button>
-                  <span>Page {currentPage} of {numPages || '?'}</span>
-                  <button disabled={currentPage >= (numPages || 1)} onClick={() => setCurrentPage(p => p + 1)}>→</button>
+                <span>Page {currentPage} of {numPages || '?'}</span>
+                <div className="page-number-navigation">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={running || currentPage <= 1}
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={running || currentPage >= (numPages || 1)}
+                    aria-label="Next page"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
               </div>
-              <div className="pdf-preview-container">
-                <div className="pdf-page-wrapper redact-mode" ref={previewRef} 
-                  style={{ position: 'relative', width: pageDimensions.width * scale, height: pageDimensions.height * scale, cursor: 'crosshair' }}
-                  onMouseDown={handleMouseDown}>
-                  <Document file={fileUrl} onLoadSuccess={onDocumentLoadSuccess} loading={<div className="loading-placeholder">Loading PDF...</div>}>
-                    <Page pageNumber={currentPage} scale={scale} onLoadSuccess={onPageLoadSuccess} renderTextLayer={false} renderAnnotationLayer={false} />
-                  </Document>
-                  
-                  {/* Existing redactions */}
-                  {currentPageRedactions.map((r) => (
-                    <div key={r.id} className={`redact-overlay ${selectedId === r.id ? 'selected' : ''}`}
-                      style={{
-                        left: r.displayX * scale,
-                        top: r.displayY * scale,
-                        width: r.width * scale,
-                        height: r.height * scale,
-                      }}
-                      onClick={(e) => { e.stopPropagation(); setSelectedId(r.id); }}>
-                    </div>
-                  ))}
-                  
-                  {/* Currently drawing rectangle */}
-                  {isDrawing && currentRect && (
-                    <div className="redact-overlay drawing" style={{
-                      left: currentRect.x * scale,
-                      top: currentRect.y * scale,
-                      width: currentRect.width * scale,
-                      height: currentRect.height * scale,
-                    }} />
-                  )}
-                </div>
+              <div className="redact-preview">
+                <Document
+                  file={file}
+                  onLoadSuccess={handleDocumentLoad}
+                  loading={<p>Loading secure redaction preview...</p>}
+                >
+                  <div
+                    className="redact-canvas"
+                    role="application"
+                    aria-label="Redaction canvas"
+                    style={{
+                      width: renderWidth,
+                      height: renderHeight || 'auto',
+                    }}
+                    onPointerDown={beginArea}
+                    onPointerMove={resizeArea}
+                    onPointerUp={finishArea}
+                    onPointerCancel={() => setDraft(null)}
+                  >
+                    <Page
+                      pageNumber={currentPage}
+                      width={renderWidth}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                    />
+                    {currentAreas.map((area, index) => (
+                      <button
+                        type="button"
+                        className={[
+                          'redact-box',
+                          area.id === selectedId ? 'selected' : '',
+                        ].join(' ')}
+                        style={normalizedRectangleStyle(area)}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={() => setSelectedId(area.id)}
+                        aria-label={`Select redaction area ${index + 1}`}
+                        disabled={running}
+                        key={area.id}
+                      />
+                    ))}
+                    {draft && (
+                      <span
+                        className="redact-box drawing"
+                        style={normalizedRectangleStyle(draft)}
+                      />
+                    )}
+                  </div>
+                </Document>
               </div>
             </>
           ) : (
             <div className="preview-empty">
               <EyeOff size={64} />
-              <h3>Upload a PDF to preview</h3>
-              <p>Draw boxes to black out sensitive information</p>
+              <h3>Upload a PDF to redact</h3>
+              <p>Draw black boxes over content that must be removed.</p>
             </div>
           )}
         </main>
@@ -293,5 +474,35 @@ const RedactPage = () => {
     </div>
   );
 };
+
+const normalizedPoint = (event) => {
+  const bounds = event.currentTarget.getBoundingClientRect();
+  return {
+    x: clamp((event.clientX - bounds.left) / bounds.width),
+    y: clamp((event.clientY - bounds.top) / bounds.height),
+  };
+};
+
+const rectangleFromPoints = (start, end) => ({
+  ...start,
+  x: Math.min(start.anchorX, end.x),
+  y: Math.min(start.anchorY, end.y),
+  width: Math.abs(end.x - start.anchorX),
+  height: Math.abs(end.y - start.anchorY),
+});
+
+const areaOrder = (left, right) => (
+  left.page - right.page
+  || left.x - right.x
+  || left.y - right.y
+  || left.width - right.width
+  || left.height - right.height
+);
+
+const quantize = (value) => Number(value.toFixed(6));
+
+const percent = (value) => `${Math.round(value * 100)}%`;
+
+const clamp = (value) => Math.min(Math.max(value, 0), 1);
 
 export default RedactPage;

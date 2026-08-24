@@ -77,6 +77,15 @@ Important settings:
 | `EDIT_MAX_IMAGES` | `10` | Maximum uploaded edit images |
 | `EDIT_MAX_IMAGE_BYTES` | `10485760` | Per-edit-image byte limit |
 | `EDIT_MAX_TOTAL_DECODED_IMAGE_BYTES` | `67108864` | Aggregate decoded edit-image budget |
+| `REDACT_MAX_AREAS` | `500` | Maximum redaction areas |
+| `REDACT_MAX_AREAS_PER_PAGE` | `100` | Maximum areas on one page |
+| `REDACT_MAX_DOCUMENT_PAGES` | `1000` | Maximum input pages |
+| `REDACT_RENDER_DPI` | `200` | Sanitized raster resolution |
+| `REDACT_JPEG_QUALITY` | `95` | Sanitized raster JPEG quality |
+| `REDACT_MAX_PIXELS_PER_PAGE` | `20000000` | Pre-allocation page pixel limit |
+| `REDACT_MAX_OUTPUT_BYTES` | `536870912` | Sanitized PDF byte limit |
+| `REDACT_WORKER_HEAP_BYTES` | `268435456` | Isolated worker heap cap |
+| `REDACT_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

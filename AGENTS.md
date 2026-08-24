@@ -116,6 +116,7 @@ pdf-tools/
 - **JPG-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/jpgpdf/`
 - **Watermark implementation**: `backend/src/main/java/com/pdftools/operations/watermark/`
 - **Edit implementation**: `backend/src/main/java/com/pdftools/operations/edit/`
+- **Secure Redact implementation**: `backend/src/main/java/com/pdftools/operations/redact/`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`
@@ -296,3 +297,8 @@ node test-script.js
 - `EDIT_MAX_ELEMENTS`: Maximum elements in one unified edit plan
 - `EDIT_MAX_IMAGE_BYTES`: Per-edit-image byte limit
 - `EDIT_MAX_TOTAL_DECODED_IMAGE_BYTES`: Decoded edit-image budget
+- `REDACT_MAX_AREAS`: Maximum secure redaction rectangles
+- `REDACT_RENDER_DPI`: Sanitized raster resolution
+- `REDACT_MAX_PIXELS_PER_PAGE`: Redaction page pixel limit
+- `REDACT_WORKER_HEAP_BYTES`: Isolated redaction heap cap
+- `REDACT_WORKER_TIMEOUT`: Isolated redaction wall-time cap

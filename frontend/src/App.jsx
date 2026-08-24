@@ -166,8 +166,8 @@ const operations = [
     id: 'redact',
     icon: EyeOff,
     group: 'Mark up',
-    title: 'Redact Content',
-    description: 'Redact sensitive information from your PDF',
+    title: 'Redact PDF',
+    description: 'Permanently remove regions in a sanitized output',
   },
   {
     id: 'convert-markdown',

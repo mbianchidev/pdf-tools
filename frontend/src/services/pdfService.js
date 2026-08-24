@@ -112,26 +112,6 @@ export const pdfService = {
     return performOperationAndDownload('/add-signature', formData, file.name);
   },
 
-  // Redact content (single)
-  redact: async (file, x, y, width, height, page) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('x', x);
-    formData.append('y', y);
-    formData.append('width', width);
-    formData.append('height', height);
-    formData.append('page', page);
-    return performOperationAndDownload('/redact', formData, file.name);
-  },
-
-  // Redact multiple areas
-  redactMultiple: async (file, redactions) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('redactions', JSON.stringify(redactions));
-    return performOperationAndDownload('/redact-multiple', formData, file.name);
-  },
-
   // Convert to Markdown
   convertToMarkdown: async (file) => {
     const formData = new FormData();

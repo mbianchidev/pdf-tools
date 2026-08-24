@@ -21,7 +21,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Edit PDF** - Place text, images, shapes, highlights, and notes
 - **Add Text** - Add custom text with fonts, colors, and drag positioning
 - **Add Signature** - Type, draw, or upload signatures
-- **Redact Content** - Draw-to-select redaction areas
+- **Redact PDF** - Draw irreversible areas with explicit rasterization warnings
 - **Convert to Markdown** - Convert PDF to Markdown format
 - **Convert to DOCX** - Convert PDF to Microsoft Word format
 
