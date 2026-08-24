@@ -30,6 +30,17 @@
   transform: translate(-3px, -3px);
 }
 
+.file-upload .dropzone-disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.file-upload .dropzone-disabled:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
+  transform: none;
+}
+
 .dropzone-content {
   position: relative;
   z-index: 1;

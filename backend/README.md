@@ -28,6 +28,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Protect** - AES-256 password encryption and explicit permissions
 - **Unlock** - Authenticated password removal with structure preservation
 - **PDF to JPG** - Bounded page rendering with DPI and quality controls
+- **JPG to PDF** - Ordered raw JPEG embedding with paper controls
 - **Watermark** - Add text watermarks with positioning
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
@@ -75,7 +76,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, and `pdf-to-jpg`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, and `jpg-to-pdf`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -86,6 +87,7 @@ Page numbering is documented in [`docs/operations/page-numbers.md`](../docs/oper
 Protection and sensitive option storage are documented in [`docs/operations/protect.md`](../docs/operations/protect.md).
 Password removal is documented in [`docs/operations/unlock.md`](../docs/operations/unlock.md).
 Raster conversion is documented in [`docs/operations/pdf-to-jpg.md`](../docs/operations/pdf-to-jpg.md).
+Image assembly is documented in [`docs/operations/jpg-to-pdf.md`](../docs/operations/jpg-to-pdf.md).
 
 The following legacy endpoints remain during migration:
 
@@ -201,6 +203,11 @@ cors.allowed-origins=http://localhost:80,http://localhost:3000
 | `PDF_TO_JPG_MAX_PIXELS_PER_PAGE` | `20000000` | Pre-allocation page pixel limit |
 | `PDF_TO_JPG_MAX_WORKER_HEAP_BYTES` | `268435456` | Isolated renderer heap cap |
 | `PDF_TO_JPG_WORKER_TIMEOUT` | `5m` | Isolated renderer wall-time cap |
+| `JPG_TO_PDF_MAX_IMAGES` | `100` | Maximum ordered JPEG inputs |
+| `JPG_TO_PDF_MAX_PIXELS_PER_IMAGE` | `50000000` | Per-image pixel limit |
+| `JPG_TO_PDF_MAX_OUTPUT_BYTES` | `134217728` | Generated PDF byte limit |
+| `JPG_TO_PDF_VALIDATION_WORKER_HEAP_BYTES` | `134217728` | JPEG validator heap cap |
+| `JPG_TO_PDF_VALIDATION_WORKER_TIMEOUT` | `2m` | JPEG validator wall-time cap |
 | `CORS_ALLOWED_ORIGINS` | local frontend origins | Allowed CORS origins |
 
 For a rolling deployment, first deploy new code to every worker while leaving new

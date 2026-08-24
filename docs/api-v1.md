@@ -174,3 +174,9 @@ unencrypted rewrite. See [Unlock PDF](operations/unlock.md).
 `operation=pdf-to-jpg` accepts one unencrypted PDF, a page expression, DPI, and
 JPEG quality. It returns one deterministic ZIP with JPG entries in source-page
 order. See [PDF to JPG](operations/pdf-to-jpg.md).
+
+## JPG to PDF
+
+`operation=jpg-to-pdf` accepts ordered JPEG multipart inputs plus page size,
+orientation, and margin controls. It returns one PDF preserving multipart order.
+See [JPG to PDF](operations/jpg-to-pdf.md).

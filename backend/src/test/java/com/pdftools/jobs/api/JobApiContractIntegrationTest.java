@@ -25,7 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.servlet.multipart.max-file-size=100KB",
-        "spring.servlet.multipart.max-request-size=100KB"
+        "spring.servlet.multipart.max-request-size=100KB",
+        "server.tomcat.max-part-count=110",
+        "pdf.jobs.max-files=100",
+        "pdf.jobs.enabled-operations=jpg-to-pdf"
     }
 )
 class JobApiContractIntegrationTest {
@@ -254,6 +257,31 @@ class JobApiContractIntegrationTest {
         assertTrue(optionsResponse.body().contains("\"code\":\"OPTIONS_TOO_LARGE\""));
     }
 
+    @Test
+    void acceptsOneHundredFilePartsAtTheConnectorBoundary()
+            throws Exception {
+        String boundary = "many-jpg-parts";
+        HttpResponse<String> response = client.send(
+            HttpRequest.newBuilder(uri("/api/v1/jobs"))
+                .header(
+                    "Content-Type",
+                    "multipart/form-data; boundary=" + boundary
+                )
+                .POST(HttpRequest.BodyPublishers.ofByteArray(
+                    multipartJpgJob(boundary, 100)
+                ))
+                .build(),
+            HttpResponse.BodyHandlers.ofString()
+        );
+
+        assertEquals(422, response.statusCode(), response.body());
+        assertTrue(
+            response.body().contains(
+                "\"code\":\"INVALID_JPG_PDF_MARGIN\""
+            )
+        );
+    }
+
     private URI uri(String path) {
         return URI.create("http://127.0.0.1:" + port + path);
     }
@@ -330,6 +358,44 @@ class JobApiContractIntegrationTest {
                 .getBytes(StandardCharsets.UTF_8));
             body.write(content);
             body.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+            return body.toByteArray();
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    private byte[] multipartJpgJob(String boundary, int fileCount) {
+        try {
+            ByteArrayOutputStream body = new ByteArrayOutputStream();
+            body.write(("--" + boundary + "\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+            body.write(
+                ("Content-Disposition: form-data; name=\"operation\"\r\n\r\n"
+                    + "jpg-to-pdf\r\n")
+                    .getBytes(StandardCharsets.UTF_8)
+            );
+            body.write(("--" + boundary + "\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+            body.write(
+                ("Content-Disposition: form-data; name=\"options\"\r\n\r\n"
+                    + "{\"margin\":145}\r\n")
+                    .getBytes(StandardCharsets.UTF_8)
+            );
+            for (int index = 0; index < fileCount; index++) {
+                body.write(("--" + boundary + "\r\n")
+                    .getBytes(StandardCharsets.UTF_8));
+                body.write(
+                    ("Content-Disposition: form-data; name=\"files\"; "
+                        + "filename=\"image-" + index + ".jpg\"\r\n")
+                        .getBytes(StandardCharsets.UTF_8)
+                );
+                body.write("Content-Type: image/jpeg\r\n\r\n"
+                    .getBytes(StandardCharsets.UTF_8));
+                body.write(new byte[]{(byte) 0xFF, (byte) 0xD8});
+                body.write("\r\n".getBytes(StandardCharsets.UTF_8));
+            }
+            body.write(("--" + boundary + "--\r\n")
+                .getBytes(StandardCharsets.UTF_8));
             return body.toByteArray();
         } catch (java.io.IOException exception) {
             throw new IllegalStateException(exception);

@@ -65,6 +65,11 @@ Important settings:
 | `PDF_TO_JPG_MAX_PIXELS_PER_PAGE` | `20000000` | Per-page render pixel limit |
 | `PDF_TO_JPG_MAX_WORKER_HEAP_BYTES` | `268435456` | Isolated renderer heap cap |
 | `PDF_TO_JPG_WORKER_TIMEOUT` | `5m` | Isolated renderer wall-time cap |
+| `JPG_TO_PDF_MAX_IMAGES` | `100` | Maximum JPEG inputs per conversion |
+| `JPG_TO_PDF_MAX_PIXELS_PER_IMAGE` | `50000000` | Per-image pixel limit |
+| `JPG_TO_PDF_MAX_OUTPUT_BYTES` | `134217728` | Generated PDF byte limit |
+| `JPG_TO_PDF_VALIDATION_WORKER_HEAP_BYTES` | `134217728` | JPEG validator heap cap |
+| `JPG_TO_PDF_VALIDATION_WORKER_TIMEOUT` | `2m` | JPEG validator wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

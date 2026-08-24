@@ -35,7 +35,16 @@ public class CheckpointInputStream extends FilterInputStream {
         return read;
     }
 
-    private void afterRead(int bytes) {
+    @Override
+    public long skip(long bytes) throws IOException {
+        long skipped = in.skip(bytes);
+        if (skipped > 0) {
+            afterRead(skipped);
+        }
+        return skipped;
+    }
+
+    private void afterRead(long bytes) {
         count += bytes;
         if (count >= nextCheckpoint) {
             checkpoint.run();
