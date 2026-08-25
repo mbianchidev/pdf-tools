@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Link, Route, Routes } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -178,7 +178,7 @@ const operations = [
     description: 'Add or edit custom text at a specific position',
   },
   {
-    id: 'add-signature',
+    id: 'signature',
     icon: PenTool,
     group: 'Mark up',
     title: 'Add Signature',
@@ -454,12 +454,11 @@ function HomePage() {
           <div className="shell">
             <div className="section-heading">
               <div>
-                <h2>What your instance provides.</h2>
+                <h2>Choose a PDF workflow.</h2>
               </div>
               <p>
-                The installed workspace collects focused document workflows.
-                Merge already uses persisted progress, cancellation,
-                structured errors, and expiring outputs.
+                Open a tool to upload files, configure the operation, and
+                download the result from your own instance.
               </p>
             </div>
 
@@ -471,13 +470,17 @@ function HomePage() {
                     {operations
                       .filter((operation) => operation.group === group)
                       .map(({ id, icon: Icon, title, description }) => (
-                        <div className="tool-summary" key={id}>
-                          <Icon aria-hidden="true" />
+                        <Link className="tool-summary" key={id} to={`/${id}`}>
+                          <Icon className="tool-summary__icon" aria-hidden="true" />
                           <span>
                             <strong>{title}</strong>
                             <small>{description}</small>
                           </span>
-                        </div>
+                          <ArrowRight
+                            className="tool-summary__arrow"
+                            aria-hidden="true"
+                          />
+                        </Link>
                       ))}
                   </div>
                 </section>
