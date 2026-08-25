@@ -8,14 +8,34 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl gosu \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        fonts-dejavu-core \
+        fonts-liberation \
+        gosu \
+        libreoffice-writer \
+        util-linux \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 pdftools \
-    && useradd --system --uid 10001 --gid pdftools --home-dir /app pdftools
+    && useradd --system --uid 10001 --gid pdftools --home-dir /app pdftools \
+    && groupadd --system --gid 10002 officeworker \
+    && useradd --system --uid 10002 --gid officeworker \
+        --home-dir /nonexistent officeworker
 COPY --from=build /app/target/*.jar app.jar
 COPY docker-entrypoint.sh /usr/local/bin/pdf-tools-entrypoint
-RUN mkdir -p /tmp/pdf-storage /tmp/pdf-work /tmp/pdf-multipart \
-    && chown -R pdftools:pdftools /app /tmp/pdf-storage /tmp/pdf-work /tmp/pdf-multipart \
+RUN mkdir -p \
+        /tmp/pdf-storage \
+        /tmp/pdf-work \
+        /tmp/pdf-multipart \
+        /var/lib/pdf-tools-office/requests \
+        /var/lib/pdf-tools-office/responses \
+        /var/lib/pdf-tools-office/signals \
+    && chown -R pdftools:pdftools \
+        /app \
+        /tmp/pdf-storage \
+        /tmp/pdf-work \
+        /tmp/pdf-multipart \
+        /var/lib/pdf-tools-office \
     && chmod 0700 /tmp/pdf-multipart \
     && chmod 0755 /usr/local/bin/pdf-tools-entrypoint
 EXPOSE 8080

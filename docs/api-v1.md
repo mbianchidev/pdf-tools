@@ -199,3 +199,11 @@ note elements can be applied in one job. See [Edit PDF](operations/edit.md).
 `areas[]`. Every page is rasterized into a new PDF after selected regions are
 burned to black, preventing recovery through text extraction, object inspection,
 attachments, or prior revisions. See [Redact PDF](operations/redact.md).
+
+## Word to PDF
+
+`operation=word-to-pdf` accepts one DOCX or DOC file and returns one PDF.
+The Docker deployment passes jobs through a volume-backed queue to a separate
+networkless LibreOffice container with no database, storage, or backend-secret
+mounts. Native process limits and a private profile apply inside that boundary. See
+[Word to PDF](operations/word-to-pdf.md).

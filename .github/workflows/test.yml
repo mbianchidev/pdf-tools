@@ -27,6 +27,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Install LibreOffice
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            fonts-dejavu-core fonts-liberation libreoffice-writer util-linux
+
       - name: Run tests
         run: mvn -B test
 

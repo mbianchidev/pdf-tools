@@ -34,6 +34,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
 - **Redact** - Irreversible raster redaction with document sanitization
+- **Word to PDF** - Sandboxed LibreOffice Writer conversion
 - **Convert to Markdown** - Extract text as Markdown
 - **Convert to DOCX** - Convert to Word document
 
@@ -77,7 +78,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, and `redact`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, and `word-to-pdf`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -92,6 +93,7 @@ Image assembly is documented in [`docs/operations/jpg-to-pdf.md`](../docs/operat
 Watermark styling is documented in [`docs/operations/watermark.md`](../docs/operations/watermark.md).
 Unified editing is documented in [`docs/operations/edit.md`](../docs/operations/edit.md).
 Secure redaction is documented in [`docs/operations/redact.md`](../docs/operations/redact.md).
+Word conversion is documented in [`docs/operations/word-to-pdf.md`](../docs/operations/word-to-pdf.md).
 
 The following legacy endpoints remain during migration:
 
@@ -221,6 +223,23 @@ cors.allowed-origins=http://localhost:80,http://localhost:3000
 | `REDACT_MAX_OUTPUT_BYTES` | `536870912` | Sanitized PDF byte limit |
 | `REDACT_WORKER_HEAP_BYTES` | `268435456` | Isolated redaction heap cap |
 | `REDACT_WORKER_TIMEOUT` | `5m` | Isolated redaction wall-time cap |
+| `OFFICE_LIBREOFFICE_BINARY` | `soffice` | LibreOffice executable |
+| `OFFICE_CONVERSION_MODE` | `queue` | `queue` sidecar or explicit local `direct` mode |
+| `OFFICE_QUEUE_REQUEST_ROOT` | `/var/lib/pdf-tools-office/requests` | Backend-write/sidecar-read requests |
+| `OFFICE_QUEUE_RESPONSE_ROOT` | `/var/lib/pdf-tools-office/responses` | Sidecar-write/backend-read responses |
+| `OFFICE_QUEUE_SIGNAL_ROOT` | `/var/lib/pdf-tools-office/signals` | Backend-write/sidecar-read signals |
+| `OFFICE_QUEUE_WAIT_TIMEOUT` | `5m` | Queue wait before conversion starts |
+| `OFFICE_QUEUE_RETENTION` | `1h` | Stale request/response retention |
+| `OFFICE_QUEUE_CLEANUP_INTERVAL` | `1m` | Backend request/signal cleanup cadence |
+| `OFFICE_SIDECAR_WORK_ROOT` | `/tmp/office-work` | Size-limited sidecar scratch mount |
+| `OFFICE_WORKER_USER` | `officeworker` | Non-root native converter identity |
+| `OFFICE_MAX_INPUT_BYTES` | `52428800` | Office input byte limit |
+| `OFFICE_MAX_EXPANDED_INPUT_BYTES` | `268435456` | Expanded OOXML limit |
+| `OFFICE_MAX_OUTPUT_BYTES` | `134217728` | Converted PDF byte limit |
+| `OFFICE_MAX_ADDRESS_SPACE_BYTES` | `1073741824` | Linux native-process address-space cap |
+| `OFFICE_CPU_TIME_SECONDS` | `120` | Native-process CPU limit |
+| `OFFICE_MAX_WORKER_PROCESSES` | `96` | Worker-UID process limit; reserves supervisor headroom |
+| `OFFICE_WALL_TIMEOUT` | `2m` | Conversion wall-time cap |
 | `CORS_ALLOWED_ORIGINS` | local frontend origins | Allowed CORS origins |
 
 For a rolling deployment, first deploy new code to every worker while leaving new

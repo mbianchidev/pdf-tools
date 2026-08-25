@@ -86,12 +86,40 @@ Important settings:
 | `REDACT_MAX_OUTPUT_BYTES` | `536870912` | Sanitized PDF byte limit |
 | `REDACT_WORKER_HEAP_BYTES` | `268435456` | Isolated worker heap cap |
 | `REDACT_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
+| `OFFICE_LIBREOFFICE_BINARY` | `soffice` | LibreOffice executable |
+| `OFFICE_CONVERSION_MODE` | `queue` | Networkless sidecar or explicit `direct` mode |
+| `OFFICE_QUEUE_REQUEST_ROOT` | `/var/lib/pdf-tools-office/requests` | Backend-write/sidecar-read requests |
+| `OFFICE_QUEUE_RESPONSE_ROOT` | `/var/lib/pdf-tools-office/responses` | Sidecar-write/backend-read responses |
+| `OFFICE_QUEUE_SIGNAL_ROOT` | `/var/lib/pdf-tools-office/signals` | Backend-write/sidecar-read signals |
+| `OFFICE_QUEUE_WAIT_TIMEOUT` | `5m` | Queue wait before conversion starts |
+| `OFFICE_QUEUE_RETENTION` | `1h` | Stale queue retention |
+| `OFFICE_QUEUE_CLEANUP_INTERVAL` | `1m` | Queue cleanup cadence |
+| `OFFICE_SIDECAR_WORK_ROOT` | `/tmp/office-work` | Size-limited sidecar scratch |
+| `OFFICE_WORKER_USER` | `officeworker` | Native converter user |
+| `OFFICE_MAX_INPUT_BYTES` | `52428800` | Office input byte limit |
+| `OFFICE_MAX_EXPANDED_INPUT_BYTES` | `268435456` | Expanded OOXML limit |
+| `OFFICE_MAX_ARCHIVE_ENTRIES` | `10000` | OOXML ZIP entry limit |
+| `OFFICE_MAX_OUTPUT_BYTES` | `134217728` | Converted PDF byte limit |
+| `OFFICE_MAX_LOG_BYTES` | `1048576` | Per-conversion log byte limit |
+| `OFFICE_MAX_ADDRESS_SPACE_BYTES` | `1073741824` | Linux address-space cap |
+| `OFFICE_CPU_TIME_SECONDS` | `120` | Native-process CPU limit |
+| `OFFICE_MAX_OPEN_FILES` | `256` | Native-process file-descriptor limit |
+| `OFFICE_MAX_WORKER_PROCESSES` | `96` | Worker-UID process limit |
+| `OFFICE_WALL_TIMEOUT` | `2m` | Conversion wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 
 Roll out a new operation in two phases across multiple replicas: deploy the binary
 everywhere with its key disabled, then add the key to `PDF_ENABLED_OPERATIONS`.
 Workers only dispatch operation keys registered in their local binary.
+
+Docker Compose starts `office-converter` with `network_mode: none`, a private PID
+namespace, memory/CPU/PID limits, and three one-way queue volumes. The backend can
+write requests/signals but only read responses; the sidecar has the inverse mounts.
+For local Maven development on macOS, set `OFFICE_CONVERSION_MODE=direct`;
+Seatbelt still denies IP networking and native limits remain active, but filesystem
+reads are not isolated and only trusted local fixtures should be used. Linux direct
+mode fails closed; use Docker Compose so conversion stays in the sidecar.
 
 ## Local frontend
 

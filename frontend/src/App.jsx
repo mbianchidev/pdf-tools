@@ -25,6 +25,7 @@ import {
   Images,
   FileImage,
   PencilRuler,
+  FileInput,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -48,6 +49,7 @@ const SignaturePage = lazy(() => import('./pages/SignaturePage'));
 const RedactPage = lazy(() => import('./pages/RedactPage'));
 const ConvertMarkdownPage = lazy(() => import('./pages/ConvertMarkdownPage'));
 const ConvertDocxPage = lazy(() => import('./pages/ConvertDocxPage'));
+const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'));
 
 const operations = [
   {
@@ -168,6 +170,13 @@ const operations = [
     group: 'Mark up',
     title: 'Redact PDF',
     description: 'Permanently remove regions in a sanitized output',
+  },
+  {
+    id: 'word-to-pdf',
+    icon: FileInput,
+    group: 'Convert',
+    title: 'Word to PDF',
+    description: 'Convert DOCX and DOC files with isolated LibreOffice',
   },
   {
     id: 'convert-markdown',
@@ -433,6 +442,7 @@ function App() {
         <Route path="/add-text" element={<AddTextPage />} />
         <Route path="/signature" element={<SignaturePage />} />
         <Route path="/redact" element={<RedactPage />} />
+        <Route path="/word-to-pdf" element={<WordToPdfPage />} />
         <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
         <Route path="/convert-docx" element={<ConvertDocxPage />} />
       </Routes>

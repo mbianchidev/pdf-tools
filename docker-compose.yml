@@ -17,12 +17,14 @@ services:
       retries: 10
 
   backend:
+    image: pdf-tools-backend:local
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: pdf-tools-backend
     ports:
       - "127.0.0.1:8080:8080"
+    pids_limit: 256
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - DATABASE_URL=jdbc:postgresql://postgres:5432/pdftools
@@ -40,7 +42,7 @@ services:
       - PDF_STORAGE_S3_CREATE_BUCKET=${PDF_STORAGE_S3_CREATE_BUCKET:-false}
       - PDF_OPTIONS_ENCRYPTION_KEY=${PDF_OPTIONS_ENCRYPTION_KEY:-}
       - PDF_SECURITY_MAX_OUTPUT_BYTES=${PDF_SECURITY_MAX_OUTPUT_BYTES:-134217728}
-      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact}
+      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact,word-to-pdf}
       - PDF_TO_JPG_MAX_DOCUMENT_PAGES=${PDF_TO_JPG_MAX_DOCUMENT_PAGES:-1000}
       - PDF_TO_JPG_MAX_SELECTED_PAGES=${PDF_TO_JPG_MAX_SELECTED_PAGES:-500}
       - PDF_TO_JPG_MAX_DPI=${PDF_TO_JPG_MAX_DPI:-300}
@@ -77,13 +79,36 @@ services:
       - REDACT_MAX_OUTPUT_BYTES=${REDACT_MAX_OUTPUT_BYTES:-536870912}
       - REDACT_WORKER_HEAP_BYTES=${REDACT_WORKER_HEAP_BYTES:-268435456}
       - REDACT_WORKER_TIMEOUT=${REDACT_WORKER_TIMEOUT:-5m}
+      - OFFICE_LIBREOFFICE_BINARY=${OFFICE_LIBREOFFICE_BINARY:-/usr/bin/soffice}
+      - OFFICE_CONVERSION_MODE=queue
+      - OFFICE_QUEUE_REQUEST_ROOT=/var/lib/pdf-tools-office/requests
+      - OFFICE_QUEUE_RESPONSE_ROOT=/var/lib/pdf-tools-office/responses
+      - OFFICE_QUEUE_SIGNAL_ROOT=/var/lib/pdf-tools-office/signals
+      - OFFICE_QUEUE_WAIT_TIMEOUT=${OFFICE_QUEUE_WAIT_TIMEOUT:-5m}
+      - OFFICE_QUEUE_RETENTION=${OFFICE_QUEUE_RETENTION:-1h}
+      - OFFICE_QUEUE_CLEANUP_INTERVAL=${OFFICE_QUEUE_CLEANUP_INTERVAL:-1m}
+      - OFFICE_MAX_INPUT_BYTES=${OFFICE_MAX_INPUT_BYTES:-52428800}
+      - OFFICE_MAX_EXPANDED_INPUT_BYTES=${OFFICE_MAX_EXPANDED_INPUT_BYTES:-268435456}
+      - OFFICE_MAX_ARCHIVE_ENTRIES=${OFFICE_MAX_ARCHIVE_ENTRIES:-10000}
+      - OFFICE_MAX_OUTPUT_BYTES=${OFFICE_MAX_OUTPUT_BYTES:-134217728}
+      - OFFICE_MAX_LOG_BYTES=${OFFICE_MAX_LOG_BYTES:-1048576}
+      - OFFICE_MAX_ADDRESS_SPACE_BYTES=${OFFICE_MAX_ADDRESS_SPACE_BYTES:-1073741824}
+      - OFFICE_CPU_TIME_SECONDS=${OFFICE_CPU_TIME_SECONDS:-120}
+      - OFFICE_MAX_OPEN_FILES=${OFFICE_MAX_OPEN_FILES:-256}
+      - OFFICE_MAX_WORKER_PROCESSES=${OFFICE_MAX_WORKER_PROCESSES:-96}
+      - OFFICE_WALL_TIMEOUT=${OFFICE_WALL_TIMEOUT:-2m}
       - CORS_ALLOWED_ORIGINS=http://localhost:80,http://localhost:3000
     volumes:
       - pdf-storage:/tmp/pdf-storage
+      - office-requests:/var/lib/pdf-tools-office/requests
+      - office-responses:/var/lib/pdf-tools-office/responses:ro
+      - office-signals:/var/lib/pdf-tools-office/signals
     networks:
       - pdf-tools-network
     depends_on:
       postgres:
+        condition: service_healthy
+      office-converter:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/pdf/health"]
@@ -91,6 +116,60 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  office-converter:
+    image: pdf-tools-backend:local
+    init: true
+    container_name: pdf-tools-office-converter
+    command:
+      - java
+      - -Dloader.main=com.pdftools.operations.office.OfficeConverterDaemonMain
+      - -cp
+      - /app/app.jar
+      - org.springframework.boot.loader.launch.PropertiesLauncher
+    network_mode: none
+    environment:
+      - PDF_TOOLS_RUN_AS_ROOT=true
+      - OFFICE_QUEUE_REQUEST_ROOT=/var/lib/pdf-tools-office/requests
+      - OFFICE_QUEUE_RESPONSE_ROOT=/var/lib/pdf-tools-office/responses
+      - OFFICE_QUEUE_SIGNAL_ROOT=/var/lib/pdf-tools-office/signals
+      - OFFICE_QUEUE_RETENTION=${OFFICE_QUEUE_RETENTION:-1h}
+      - OFFICE_SIDECAR_WORK_ROOT=/tmp/office-work
+      - OFFICE_WORKER_USER=officeworker
+      - OFFICE_LIBREOFFICE_BINARY=${OFFICE_LIBREOFFICE_BINARY:-/usr/bin/soffice}
+      - OFFICE_MAX_INPUT_BYTES=${OFFICE_MAX_INPUT_BYTES:-52428800}
+      - OFFICE_MAX_EXPANDED_INPUT_BYTES=${OFFICE_MAX_EXPANDED_INPUT_BYTES:-268435456}
+      - OFFICE_MAX_ARCHIVE_ENTRIES=${OFFICE_MAX_ARCHIVE_ENTRIES:-10000}
+      - OFFICE_MAX_OUTPUT_BYTES=${OFFICE_MAX_OUTPUT_BYTES:-134217728}
+      - OFFICE_MAX_LOG_BYTES=${OFFICE_MAX_LOG_BYTES:-1048576}
+      - OFFICE_MAX_ADDRESS_SPACE_BYTES=${OFFICE_MAX_ADDRESS_SPACE_BYTES:-1073741824}
+      - OFFICE_CPU_TIME_SECONDS=${OFFICE_CPU_TIME_SECONDS:-120}
+      - OFFICE_MAX_OPEN_FILES=${OFFICE_MAX_OPEN_FILES:-256}
+      - OFFICE_MAX_WORKER_PROCESSES=${OFFICE_MAX_WORKER_PROCESSES:-96}
+      - OFFICE_WALL_TIMEOUT=${OFFICE_WALL_TIMEOUT:-2m}
+    volumes:
+      - office-requests:/var/lib/pdf-tools-office/requests:ro
+      - office-responses:/var/lib/pdf-tools-office/responses
+      - office-signals:/var/lib/pdf-tools-office/signals:ro
+    mem_limit: 1200m
+    cpus: 2.0
+    pids_limit: 128
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - KILL
+      - SETGID
+      - SETUID
+    tmpfs:
+      - /tmp/office-work:size=768m,mode=0711
+    healthcheck:
+      test: ["CMD", "test", "-f", "/var/lib/pdf-tools-office/responses/.daemon-ready"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 5s
 
   frontend:
     build:
@@ -169,6 +248,12 @@ networks:
 
 volumes:
   pdf-storage:
+    driver: local
+  office-requests:
+    driver: local
+  office-responses:
+    driver: local
+  office-signals:
     driver: local
   postgres-data:
     driver: local

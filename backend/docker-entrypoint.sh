@@ -24,7 +24,8 @@ if [ "$legacy_root" = "$volume_root/legacy" ] && [ "$jobs_root" = "$volume_root/
     done
 fi
 
-chown -R pdftools:pdftools "$legacy_root" "$jobs_root" "$work_root" "$multipart_root"
+chown -R pdftools:pdftools \
+    "$legacy_root" "$jobs_root" "$work_root" "$multipart_root"
 chmod 0700 "$multipart_root"
 
 case "${1:-}" in
@@ -32,5 +33,9 @@ case "${1:-}" in
         set -- java -jar /app/app.jar "$@"
         ;;
 esac
+
+if [ "${PDF_TOOLS_RUN_AS_ROOT:-false}" = "true" ]; then
+    exec "$@"
+fi
 
 exec gosu pdftools "$@"

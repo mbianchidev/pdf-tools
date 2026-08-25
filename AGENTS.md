@@ -117,6 +117,9 @@ pdf-tools/
 - **Watermark implementation**: `backend/src/main/java/com/pdftools/operations/watermark/`
 - **Edit implementation**: `backend/src/main/java/com/pdftools/operations/edit/`
 - **Secure Redact implementation**: `backend/src/main/java/com/pdftools/operations/redact/`
+- **Office conversion sandbox**: `backend/src/main/java/com/pdftools/operations/office/`
+- **Word-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/wordpdf/`
+- **Office queue daemon**: `backend/src/main/java/com/pdftools/operations/office/OfficeConverterDaemonMain.java`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
 - **Frontend job API**: `frontend/src/services/jobService.js`
@@ -302,3 +305,15 @@ node test-script.js
 - `REDACT_MAX_PIXELS_PER_PAGE`: Redaction page pixel limit
 - `REDACT_WORKER_HEAP_BYTES`: Isolated redaction heap cap
 - `REDACT_WORKER_TIMEOUT`: Isolated redaction wall-time cap
+- `OFFICE_LIBREOFFICE_BINARY`: LibreOffice executable
+- `OFFICE_CONVERSION_MODE`: `queue` sidecar or explicit local `direct`
+- `OFFICE_QUEUE_REQUEST_ROOT`: Backend-write/sidecar-read request queue
+- `OFFICE_QUEUE_RESPONSE_ROOT`: Sidecar-write/backend-read response queue
+- `OFFICE_QUEUE_SIGNAL_ROOT`: Backend-write/sidecar-read signal queue
+- `OFFICE_SIDECAR_WORK_ROOT`: Size-limited sidecar scratch mount
+- `OFFICE_WORKER_USER`: Non-root native converter identity
+- `OFFICE_MAX_INPUT_BYTES`: Office input byte limit
+- `OFFICE_MAX_EXPANDED_INPUT_BYTES`: Expanded OOXML limit
+- `OFFICE_MAX_ADDRESS_SPACE_BYTES`: Linux converter address-space cap
+- `OFFICE_CPU_TIME_SECONDS`: Converter CPU limit
+- `OFFICE_WALL_TIMEOUT`: Converter wall-time limit

@@ -41,6 +41,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs
 - **Redact PDF** - Irreversibly rasterize selected regions into a sanitized PDF
+- **Word to PDF** - Convert DOCX/DOC with network-denied, resource-limited LibreOffice
 - **Convert to Markdown** - Export PDF content as Markdown
 - **Convert to DOCX** - Export PDF content as Word documents
 
@@ -48,7 +49,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, PostgreSQL, Flyway
 - **Frontend**: React 19, Vite 8, react-pdf, Framer Motion, Axios
 - **Storage**: Local streaming storage in development; SeaweedFS S3 in production
-- **Deployment**: Docker Compose, PostgreSQL, Nginx
+- **Deployment**: Docker Compose, PostgreSQL, Nginx, networkless LibreOffice worker
 
 ## Quick Start
 
