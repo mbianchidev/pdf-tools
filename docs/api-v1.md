@@ -228,3 +228,10 @@ the shared isolated Office sidecar. See [Excel to PDF](operations/excel-to-pdf.m
 plus paper size, orientation, background, and margin controls. It returns one
 PDF from a dedicated networkless Playwright/Chromium sidecar. External URLs and
 local-file access are blocked. See [HTML to PDF](operations/html-to-pdf.md).
+
+## PDF to Word
+
+`operation=pdf-to-word` accepts one unencrypted PDF and returns one DOCX.
+`editable` mode reconstructs positioned text, headings, aligned tables,
+embedded images, and pagination. `visual` mode preserves each page as an image.
+See [PDF to Word](operations/pdf-to-word.md).

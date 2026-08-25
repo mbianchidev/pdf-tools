@@ -119,13 +119,6 @@ export const pdfService = {
     return performOperationAndDownload('/convert/markdown', formData, file.name);
   },
 
-  // Convert to DOCX
-  convertToDocx: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return performOperationAndDownload('/convert/docx', formData, file.name);
-  },
-
   // Download file
   download: async (filename) => {
     const response = await api.get(`/download/${filename}`, {

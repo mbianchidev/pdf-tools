@@ -59,7 +59,7 @@ pdf-tools/
 │   │   │   ├── SignaturePage.jsx        # Add signatures
 │   │   │   ├── WatermarkPage.jsx        # Add watermarks
 │   │   │   ├── RedactPage.jsx           # Redact content
-│   │   │   ├── ConvertDocxPage.jsx      # Convert to DOCX
+│   │   │   ├── PdfToWordPage.jsx        # PDF to Word
 │   │   │   ├── ConvertMarkdownPage.jsx  # Convert to Markdown
 │   │   │   └── OperationPage.css        # Shared operation styles
 │   │   └── services/
@@ -123,6 +123,7 @@ pdf-tools/
 - **Excel-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/excelpdf/`
 - **HTML-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/htmlpdf/`
 - **HTML converter sidecar**: `html-converter/`
+- **PDF-to-Word implementation**: `backend/src/main/java/com/pdftools/operations/pdfword/`
 - **Office queue daemon**: `backend/src/main/java/com/pdftools/operations/office/OfficeConverterDaemonMain.java`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`

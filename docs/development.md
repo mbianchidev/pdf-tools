@@ -118,6 +118,16 @@ Important settings:
 | `HTML_MAX_INPUT_BYTES` | `10485760` | UTF-8 HTML input byte limit |
 | `HTML_MAX_OUTPUT_BYTES` | `67108864` | Rendered PDF byte limit |
 | `HTML_MAX_PAGES` | `200` | Rendered PDF page limit |
+| `PDF_WORD_MAX_INPUT_BYTES` | `52428800` | PDF-to-Word input byte limit |
+| `PDF_WORD_MAX_PAGES` | `200` | PDF-to-Word page limit |
+| `PDF_WORD_MAX_TEXT_CHARACTERS` | `2000000` | Extracted text character limit |
+| `PDF_WORD_MAX_IMAGES` | `200` | Embedded or rendered image limit |
+| `PDF_WORD_MAX_TOTAL_IMAGE_PIXELS` | `200000000` | Aggregate image pixel budget |
+| `PDF_WORD_MAX_TOTAL_IMAGE_BYTES` | `268435456` | Aggregate encoded image budget |
+| `PDF_WORD_MAX_OUTPUT_BYTES` | `134217728` | DOCX output byte limit |
+| `PDF_WORD_RENDER_DPI` | `144` | Visual-mode page resolution |
+| `PDF_WORD_WORKER_HEAP_BYTES` | `536870912` | Isolated conversion heap cap |
+| `PDF_WORD_WORKER_TIMEOUT` | `5m` | Isolated conversion wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

@@ -38,6 +38,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **PowerPoint to PDF** - Sandboxed LibreOffice Impress conversion
 - **Excel to PDF** - Sandboxed LibreOffice Calc conversion with print controls
 - **HTML to PDF** - Sandboxed Playwright/Chromium conversion with print controls
+- **PDF to Word** - Bounded editable extraction or visual page-to-DOCX conversion
 - **Convert to Markdown** - Extract text as Markdown
 - **Convert to DOCX** - Convert to Word document
 
@@ -81,7 +82,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, and `html-to-pdf`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, and `pdf-to-word`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -100,6 +101,7 @@ Word conversion is documented in [`docs/operations/word-to-pdf.md`](../docs/oper
 Presentation conversion is documented in [`docs/operations/powerpoint-to-pdf.md`](../docs/operations/powerpoint-to-pdf.md).
 Workbook conversion is documented in [`docs/operations/excel-to-pdf.md`](../docs/operations/excel-to-pdf.md).
 HTML conversion is documented in [`docs/operations/html-to-pdf.md`](../docs/operations/html-to-pdf.md).
+PDF-to-Word conversion is documented in [`docs/operations/pdf-to-word.md`](../docs/operations/pdf-to-word.md).
 
 The following legacy endpoints remain during migration:
 

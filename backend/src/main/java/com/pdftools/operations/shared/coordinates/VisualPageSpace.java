@@ -18,10 +18,12 @@ public record VisualPageSpace(
 
     public static VisualPageSpace from(PDPage page) {
         float userUnit = page.getUserUnit();
-        if (!Float.isFinite(userUnit) || userUnit <= 0) {
+        if (!Float.isFinite(userUnit)
+                || userUnit <= 0
+                || userUnit > 75_000) {
             throw new OperationException(
                 "INVALID_PAGE_USER_UNIT",
-                "Page UserUnit must be a positive finite number"
+                "Page UserUnit must be between 0 and 75000"
             );
         }
         PDRectangle box = page.getCropBox();

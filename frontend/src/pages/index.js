@@ -7,4 +7,4 @@ export { default as AddTextPage } from './AddTextPage';
 export { default as SignaturePage } from './SignaturePage';
 export { default as RedactPage } from './RedactPage';
 export { default as ConvertMarkdownPage } from './ConvertMarkdownPage';
-export { default as ConvertDocxPage } from './ConvertDocxPage';
+export { default as PdfToWordPage } from './PdfToWordPage';

@@ -45,8 +45,8 @@ inside a deployed instance; the public landing does not upload or process docume
 - **PowerPoint to PDF** - Convert PPTX/PPT slides in the isolated Office sidecar
 - **Excel to PDF** - Convert XLSX/XLS with print-area and orientation controls
 - **HTML to PDF** - Render self-contained HTML in a networkless Chromium sandbox
+- **PDF to Word** - Recover editable text, tables, images, and pagination or preserve pages visually
 - **Convert to Markdown** - Export PDF content as Markdown
-- **Convert to DOCX** - Export PDF content as Word documents
 
 ### Technology Stack
 - **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, PostgreSQL, Flyway

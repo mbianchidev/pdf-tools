@@ -51,7 +51,7 @@ const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
 const RedactPage = lazy(() => import('./pages/RedactPage'));
 const ConvertMarkdownPage = lazy(() => import('./pages/ConvertMarkdownPage'));
-const ConvertDocxPage = lazy(() => import('./pages/ConvertDocxPage'));
+const PdfToWordPage = lazy(() => import('./pages/PdfToWordPage'));
 const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'));
 const PowerPointToPdfPage = lazy(
   () => import('./pages/PowerPointToPdfPage'),
@@ -215,11 +215,11 @@ const operations = [
     description: 'Convert PDF to Markdown format',
   },
   {
-    id: 'convert-docx',
+    id: 'pdf-to-word',
     icon: FileType,
     group: 'Convert',
-    title: 'Convert to DOCX',
-    description: 'Convert PDF to Microsoft Word format',
+    title: 'PDF to Word',
+    description: 'Recover editable structure or preserve pages visually',
   },
 ];
 
@@ -479,7 +479,8 @@ function App() {
         <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
         <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
         <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
-        <Route path="/convert-docx" element={<ConvertDocxPage />} />
+        <Route path="/pdf-to-word" element={<PdfToWordPage />} />
+        <Route path="/convert-docx" element={<PdfToWordPage />} />
       </Routes>
     </Suspense>
   );

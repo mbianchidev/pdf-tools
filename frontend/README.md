@@ -26,8 +26,8 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **PowerPoint to PDF** - Upload PPTX/PPT files for isolated slide conversion
 - **Excel to PDF** - Configure workbook print areas and page orientation
 - **HTML to PDF** - Render self-contained HTML with isolated Chromium
+- **PDF to Word** - Choose editable extraction or visual page preservation
 - **Convert to Markdown** - Convert PDF to Markdown format
-- **Convert to DOCX** - Convert PDF to Microsoft Word format
 
 ### UI Features
 - Documentation-first self-hosting landing page
@@ -104,7 +104,7 @@ frontend/
 │   │   ├── SignaturePage.jsx
 │   │   ├── WatermarkPage.jsx
 │   │   ├── RedactPage.jsx
-│   │   ├── ConvertDocxPage.jsx
+│   │   ├── PdfToWordPage.jsx
 │   │   ├── ConvertMarkdownPage.jsx
 │   │   └── OperationPage.css  # Shared operation styles
 │   ├── services/

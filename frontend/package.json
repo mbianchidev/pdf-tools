@@ -19,7 +19,6 @@
     "axios": "^1.19.0",
     "framer-motion": "^13.1.0",
     "lucide-react": "^1.33.0",
-    "mammoth": "^1.12.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-dropzone": "^20.1.0",

@@ -32,6 +32,7 @@ scheduler isolated from storage cleanup.
 | `operations.shared.pages` | Shared page-expression grammar and duplicate policy |
 | `operations.shared.coordinates` | Normalized preview-to-PDF coordinate conversion |
 | `operations.shared.queue` | Durable one-way sidecar queue protocol and lifecycle |
+| `operations.pdfword` | Isolated best-effort PDF-to-DOCX extraction and visual fallback |
 | `storage` | Local filesystem and S3-compatible streaming adapters |
 | `api` | Structured HTTP error contract |
 | `service` | Legacy `/api/pdf` implementation retained during migration |
