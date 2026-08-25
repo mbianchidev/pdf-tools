@@ -1,7 +1,11 @@
-import React from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense, useState } from 'react';
+import { Route, Routes } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
+  ArrowRight,
+  Check,
+  Code2,
+  Copy,
   Combine,
   Scissors,
   FileOutput,
@@ -12,159 +16,488 @@ import {
   EyeOff,
   FileText,
   FileType,
+  LockKeyhole,
+  LockOpen,
+  RotateCw,
+  Layers3,
+  Crop as CropIcon,
+  ListOrdered,
+  Images,
+  FileImage,
+  PencilRuler,
+  FileInput,
+  Presentation,
+  Sheet,
+  CodeXml,
+  Minimize2,
+  Wrench,
+  Archive,
+  GitCompareArrows,
 } from 'lucide-react';
-import {
-  MergePage,
-  SplitPage,
-  ExtractPage,
-  RemovePage,
-  WatermarkPage,
-  AddTextPage,
-  SignaturePage,
-  RedactPage,
-  ConvertMarkdownPage,
-  ConvertDocxPage,
-} from './pages';
+import Brand from './components/Brand';
 import './App.css';
+
+const MergePage = lazy(() => import('./pages/MergePage'));
+const SplitPage = lazy(() => import('./pages/SplitPage'));
+const ExtractPage = lazy(() => import('./pages/ExtractPage'));
+const RemovePage = lazy(() => import('./pages/RemovePage'));
+const RotatePage = lazy(() => import('./pages/RotatePage'));
+const OrganizePage = lazy(() => import('./pages/OrganizePage'));
+const CropPage = lazy(() => import('./pages/CropPage'));
+const PageNumbersPage = lazy(() => import('./pages/PageNumbersPage'));
+const ProtectPage = lazy(() => import('./pages/ProtectPage'));
+const UnlockPage = lazy(() => import('./pages/UnlockPage'));
+const PdfToJpgPage = lazy(() => import('./pages/PdfToJpgPage'));
+const JpgToPdfPage = lazy(() => import('./pages/JpgToPdfPage'));
+const EditPage = lazy(() => import('./pages/EditPage'));
+const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
+const AddTextPage = lazy(() => import('./pages/AddTextPage'));
+const SignaturePage = lazy(() => import('./pages/SignaturePage'));
+const RedactPage = lazy(() => import('./pages/RedactPage'));
+const PdfToMarkdownPage = lazy(() => import('./pages/PdfToMarkdownPage'));
+const PdfToWordPage = lazy(() => import('./pages/PdfToWordPage'));
+const PdfToPowerPointPage = lazy(
+  () => import('./pages/PdfToPowerPointPage'),
+);
+const PdfToExcelPage = lazy(() => import('./pages/PdfToExcelPage'));
+const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'));
+const PowerPointToPdfPage = lazy(
+  () => import('./pages/PowerPointToPdfPage'),
+);
+const ExcelToPdfPage = lazy(() => import('./pages/ExcelToPdfPage'));
+const HtmlToPdfPage = lazy(() => import('./pages/HtmlToPdfPage'));
+const CompressPage = lazy(() => import('./pages/CompressPage'));
+const RepairPage = lazy(() => import('./pages/RepairPage'));
+const PdfAPage = lazy(() => import('./pages/PdfAPage'));
+const ComparePage = lazy(() => import('./pages/ComparePage'));
 
 const operations = [
   {
     id: 'merge',
-    path: '/merge',
-    icon: <Combine size={28} />,
+    icon: Combine,
+    group: 'Organize',
     title: 'Merge PDFs',
     description: 'Combine multiple PDF files into a single document',
   },
   {
     id: 'split',
-    path: '/split',
-    icon: <Scissors size={28} />,
+    icon: Scissors,
+    group: 'Organize',
     title: 'Split PDF',
     description: 'Split a PDF into multiple documents',
   },
   {
     id: 'extract',
-    path: '/extract',
-    icon: <FileOutput size={28} />,
+    icon: FileOutput,
+    group: 'Organize',
     title: 'Extract Pages',
     description: 'Extract specific pages from a PDF',
   },
   {
     id: 'remove',
-    path: '/remove',
-    icon: <Trash2 size={28} />,
+    icon: Trash2,
+    group: 'Organize',
     title: 'Remove Pages',
     description: 'Remove specific pages from a PDF',
   },
   {
+    id: 'rotate',
+    icon: RotateCw,
+    group: 'Organize',
+    title: 'Rotate PDF',
+    description: 'Rotate all pages or adjust pages individually',
+  },
+  {
+    id: 'organize',
+    icon: Layers3,
+    group: 'Organize',
+    title: 'Organize PDF',
+    description: 'Reorder, rotate, duplicate, and delete pages',
+  },
+  {
+    id: 'crop',
+    icon: CropIcon,
+    group: 'Organize',
+    title: 'Crop PDF',
+    description: 'Apply shared or independent visual crop boxes',
+  },
+  {
+    id: 'page-numbers',
+    icon: ListOrdered,
+    group: 'Mark up',
+    title: 'Add Page Numbers',
+    description: 'Number ranges with templates, fonts, and positions',
+  },
+  {
+    id: 'protect',
+    icon: LockKeyhole,
+    group: 'Secure',
+    title: 'Protect PDF',
+    description: 'Encrypt with passwords and explicit permissions',
+  },
+  {
+    id: 'unlock',
+    icon: LockOpen,
+    group: 'Secure',
+    title: 'Unlock PDF',
+    description: 'Remove encryption with a known password',
+  },
+  {
+    id: 'pdf-to-jpg',
+    icon: Images,
+    group: 'Convert',
+    title: 'PDF to JPG',
+    description: 'Render page ranges with resolution and quality controls',
+  },
+  {
+    id: 'jpg-to-pdf',
+    icon: FileImage,
+    group: 'Convert',
+    title: 'JPG to PDF',
+    description: 'Order images with page size, orientation, and margins',
+  },
+  {
     id: 'watermark',
-    path: '/watermark',
-    icon: <Droplet size={28} />,
-    title: 'Add Watermark',
-    description: 'Add a text watermark to all pages',
+    icon: Droplet,
+    group: 'Mark up',
+    title: 'Watermark PDF',
+    description: 'Style text or image watermarks on selected pages',
+  },
+  {
+    id: 'edit',
+    icon: PencilRuler,
+    group: 'Mark up',
+    title: 'Edit PDF',
+    description: 'Add text, images, shapes, highlights, and notes',
   },
   {
     id: 'add-text',
-    path: '/add-text',
-    icon: <Type size={28} />,
+    icon: Type,
+    group: 'Mark up',
     title: 'Add/Edit Text',
     description: 'Add or edit custom text at a specific position',
   },
   {
     id: 'add-signature',
-    path: '/signature',
-    icon: <PenTool size={28} />,
+    icon: PenTool,
+    group: 'Mark up',
     title: 'Add Signature',
     description: 'Add a signature image to your PDF',
   },
   {
     id: 'redact',
-    path: '/redact',
-    icon: <EyeOff size={28} />,
-    title: 'Redact Content',
-    description: 'Redact sensitive information from your PDF',
+    icon: EyeOff,
+    group: 'Mark up',
+    title: 'Redact PDF',
+    description: 'Permanently remove regions in a sanitized output',
   },
   {
-    id: 'convert-markdown',
-    path: '/convert-markdown',
-    icon: <FileText size={28} />,
-    title: 'Convert to Markdown',
-    description: 'Convert PDF to Markdown format',
+    id: 'word-to-pdf',
+    icon: FileInput,
+    group: 'Convert',
+    title: 'Word to PDF',
+    description: 'Convert DOCX and DOC files with isolated LibreOffice',
   },
   {
-    id: 'convert-docx',
-    path: '/convert-docx',
-    icon: <FileType size={28} />,
-    title: 'Convert to DOCX',
-    description: 'Convert PDF to Microsoft Word format',
+    id: 'powerpoint-to-pdf',
+    icon: Presentation,
+    group: 'Convert',
+    title: 'PowerPoint to PDF',
+    description: 'Convert PPTX and PPT slides with isolated LibreOffice',
+  },
+  {
+    id: 'excel-to-pdf',
+    icon: Sheet,
+    group: 'Convert',
+    title: 'Excel to PDF',
+    description: 'Convert XLSX and XLS with print-area controls',
+  },
+  {
+    id: 'html-to-pdf',
+    icon: CodeXml,
+    group: 'Convert',
+    title: 'HTML to PDF',
+    description: 'Render self-contained HTML with isolated Chromium',
+  },
+  {
+    id: 'pdf-to-markdown',
+    icon: FileText,
+    group: 'Convert',
+    title: 'PDF to Markdown',
+    description: 'Recover structure, tables, images, and reading order',
+  },
+  {
+    id: 'compress',
+    icon: Minimize2,
+    group: 'Organize',
+    title: 'Compress PDF',
+    description: 'Choose lossless, balanced, or extreme compression',
+  },
+  {
+    id: 'repair',
+    icon: Wrench,
+    group: 'Organize',
+    title: 'Repair PDF',
+    description: 'Recover damaged structure with explicit warnings',
+  },
+  {
+    id: 'pdf-to-pdfa',
+    icon: Archive,
+    group: 'Convert',
+    title: 'PDF to PDF/A',
+    description: 'Create veraPDF-validated archival profiles',
+  },
+  {
+    id: 'compare',
+    icon: GitCompareArrows,
+    group: 'Organize',
+    title: 'Compare PDFs',
+    description: 'Inspect text, layout, and rendered-page differences',
+  },
+  {
+    id: 'pdf-to-word',
+    icon: FileType,
+    group: 'Convert',
+    title: 'PDF to Word',
+    description: 'Recover editable structure or preserve pages visually',
+  },
+  {
+    id: 'pdf-to-powerpoint',
+    icon: Presentation,
+    group: 'Convert',
+    title: 'PDF to PowerPoint',
+    description: 'Create editable elements or visual page slides',
+  },
+  {
+    id: 'pdf-to-excel',
+    icon: Sheet,
+    group: 'Convert',
+    title: 'PDF to Excel',
+    description: 'Detect tables into page or table worksheets',
   },
 ];
 
+const toolGroups = ['Organize', 'Mark up', 'Secure', 'Convert'];
+const INSTALL_COMMAND = `git clone https://github.com/mbianchidev/pdf-tools.git
+cd pdf-tools
+docker compose up --build`;
+
 function HomePage() {
-  const navigate = useNavigate();
+  const [copyStatus, setCopyStatus] = useState('idle');
+
+  const copyInstallCommand = async () => {
+    try {
+      await navigator.clipboard.writeText(INSTALL_COMMAND);
+      setCopyStatus('copied');
+    } catch (error) {
+      console.error('Failed to copy self-hosting commands:', error);
+      setCopyStatus('failed');
+    }
+  };
 
   return (
-    <div className="app">
-      {/* Header */}
-      <header className="app-header">
-        <div className="container">
-          <motion.div
-            className="header-content"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+    <div className="landing">
+      <header className="landing__header shell">
+        <Brand />
+        <nav className="landing__nav" aria-label="Project links">
+          <a href="#self-host">Self-host</a>
+          <a
+            className="button button--quiet button--small"
+            href="https://github.com/mbianchidev/pdf-tools"
+            target="_blank"
+            rel="noreferrer"
           >
-            <div className="header-logo">
-              <div className="logo-icon">
-                <FileText size={32} />
-              </div>
-              <h1 className="logo-text">PDF Tools</h1>
-            </div>
-            <p className="header-subtitle">
-              Professional PDF manipulation made simple
-            </p>
-          </motion.div>
-        </div>
+            <Code2 aria-hidden="true" />
+            GitHub
+          </a>
+        </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="app-main">
-        <div className="container">
-          <div className="operations-grid">
-            {operations.map((op, index) => (
-              <motion.div
-                key={op.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <div
-                  className="operation-card-link"
-                  onClick={() => navigate(op.path)}
-                >
-                  <div className="operation-card">
-                    <div className="operation-card-header">
-                      <div className="operation-card-icon">{op.icon}</div>
-                      <div className="operation-card-info">
-                        <h3 className="operation-card-title">{op.title}</h3>
-                        <p className="operation-card-description">{op.description}</p>
-                      </div>
-                    </div>
-                  </div>
+      <main>
+        <section className="hero shell">
+          <motion.div
+            className="hero__copy"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h1>
+              Your PDFs.
+              <span> Your server.</span>
+            </h1>
+            <p className="hero__lede">
+              Deploy one open-source workspace to combine, organize, edit,
+              convert, and secure documents under your own infrastructure.
+            </p>
+            <a className="text-link" href="#self-host">
+              Self-host PDF Tools
+              <ArrowRight aria-hidden="true" />
+            </a>
+            <p className="hero__trust">
+              <LockKeyhole aria-hidden="true" />
+              Open source · self-hosted · server-controlled files
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="hero__visual"
+            aria-label="PDF document workbench preview"
+            initial={{ opacity: 0, rotate: -1, scale: 0.96 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="document-board" aria-hidden="true">
+              <div className="document-board__top">
+                <span />
+                <span />
+                <span />
+                <b>PDF_WORKSPACE</b>
+              </div>
+              <div className="document-board__canvas">
+                <div className="paper paper--back">
+                  <i />
+                  <i />
+                  <i />
                 </div>
-              </motion.div>
-            ))}
+                <div className="paper paper--middle">
+                  <i />
+                  <i />
+                </div>
+                <div className="paper paper--front">
+                  <strong>PDF</strong>
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              </div>
+              <div className="document-board__strip">
+                <span>STREAMED</span>
+                <span>V1 JOBS · 2H</span>
+                <strong>READY</strong>
+              </div>
+            </div>
+            <div className="hero__badge">Runs where you deploy it</div>
+          </motion.div>
+        </section>
+
+        <section className="self-host" id="self-host">
+          <div className="shell">
+            <div className="section-heading">
+              <div>
+                <h2>Three steps to your own PDF workspace.</h2>
+              </div>
+              <p>
+                Docker Compose provisions the app, PostgreSQL job metadata,
+                and local streaming storage with one command.
+              </p>
+            </div>
+
+            <ol className="deploy-steps">
+              <li>
+                <span>1</span>
+                <div>
+                  <strong>Clone the source</strong>
+                  <p>Keep the deployment inspectable and under your control.</p>
+                </div>
+              </li>
+              <li>
+                <span>2</span>
+                <div>
+                  <strong>Start the stack</strong>
+                  <p>Build the frontend, API, and PostgreSQL services.</p>
+                </div>
+              </li>
+              <li>
+                <span>3</span>
+                <div>
+                  <strong>Open your instance</strong>
+                  <p>Use the workspace at your own hostname or localhost.</p>
+                </div>
+              </li>
+            </ol>
+
+            <div className="deploy-command" aria-label="Self-hosting commands">
+              <div className="deploy-command__bar">
+                <span />
+                <span />
+                <span />
+                <b>TERMINAL</b>
+                <button
+                  type="button"
+                  onClick={copyInstallCommand}
+                  aria-label="Copy self-hosting commands"
+                >
+                  {copyStatus === 'copied'
+                    ? <Check aria-hidden="true" />
+                    : <Copy aria-hidden="true" />}
+                  {copyStatus === 'copied'
+                    ? 'Copied'
+                    : copyStatus === 'failed' ? 'Select manually' : 'Copy'}
+                </button>
+              </div>
+              <pre><code>{INSTALL_COMMAND}</code></pre>
+              <div className="deploy-command__footer">
+                <span>Open http://localhost</span>
+                <strong>Docker 24+ · Compose v2</strong>
+              </div>
+            </div>
+
+            <p className="deployment-note">
+              For production, place the frontend behind TLS, inject database
+              credentials from your secret store, and switch artifact storage
+              to a private SeaweedFS S3 endpoint.
+            </p>
           </div>
-        </div>
+        </section>
+
+        <section className="hosted-tools" id="tools">
+          <div className="shell">
+            <div className="section-heading">
+              <div>
+                <h2>What your instance provides.</h2>
+              </div>
+              <p>
+                The installed workspace collects focused document workflows.
+                Merge already uses persisted progress, cancellation,
+                structured errors, and expiring outputs.
+              </p>
+            </div>
+
+            <div className="tool-columns">
+              {toolGroups.map((group) => (
+                <section className="tool-group" key={group}>
+                  <h3>{group}</h3>
+                  <div className="tool-list">
+                    {operations
+                      .filter((operation) => operation.group === group)
+                      .map(({ id, icon: Icon, title, description }) => (
+                        <div className="tool-summary" key={id}>
+                          <Icon aria-hidden="true" />
+                          <span>
+                            <strong>{title}</strong>
+                            <small>{description}</small>
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="app-footer">
-        <div className="container">
-          <p className="footer-text">
-            Built with React & Spring Boot • All processing happens on your server
-          </p>
-        </div>
+      <footer className="landing__footer shell">
+        <Brand compact />
+        <p>Open source, inspectable, and self-hosted under the MIT License.</p>
+        <a
+          href="https://github.com/mbianchidev/pdf-tools"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Source code
+          <ArrowRight aria-hidden="true" />
+        </a>
       </footer>
     </div>
   );
@@ -172,19 +505,48 @@ function HomePage() {
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/merge" element={<MergePage />} />
-      <Route path="/split" element={<SplitPage />} />
-      <Route path="/extract" element={<ExtractPage />} />
-      <Route path="/remove" element={<RemovePage />} />
-      <Route path="/watermark" element={<WatermarkPage />} />
-      <Route path="/add-text" element={<AddTextPage />} />
-      <Route path="/signature" element={<SignaturePage />} />
-      <Route path="/redact" element={<RedactPage />} />
-      <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
-      <Route path="/convert-docx" element={<ConvertDocxPage />} />
-    </Routes>
+    <Suspense fallback={<div className="route-loading">Loading tool...</div>}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/merge" element={<MergePage />} />
+        <Route path="/split" element={<SplitPage />} />
+        <Route path="/extract" element={<ExtractPage />} />
+        <Route path="/remove" element={<RemovePage />} />
+        <Route path="/rotate" element={<RotatePage />} />
+        <Route path="/organize" element={<OrganizePage />} />
+        <Route path="/crop" element={<CropPage />} />
+        <Route path="/page-numbers" element={<PageNumbersPage />} />
+        <Route path="/protect" element={<ProtectPage />} />
+        <Route path="/unlock" element={<UnlockPage />} />
+        <Route path="/pdf-to-jpg" element={<PdfToJpgPage />} />
+        <Route path="/jpg-to-pdf" element={<JpgToPdfPage />} />
+        <Route path="/watermark" element={<WatermarkPage />} />
+        <Route path="/edit" element={<EditPage />} />
+        <Route path="/add-text" element={<AddTextPage />} />
+        <Route path="/signature" element={<SignaturePage />} />
+        <Route path="/redact" element={<RedactPage />} />
+        <Route path="/word-to-pdf" element={<WordToPdfPage />} />
+        <Route
+          path="/powerpoint-to-pdf"
+          element={<PowerPointToPdfPage />}
+        />
+        <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
+        <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
+        <Route path="/pdf-to-markdown" element={<PdfToMarkdownPage />} />
+        <Route path="/convert-markdown" element={<PdfToMarkdownPage />} />
+        <Route path="/pdf-to-word" element={<PdfToWordPage />} />
+        <Route
+          path="/pdf-to-powerpoint"
+          element={<PdfToPowerPointPage />}
+        />
+        <Route path="/pdf-to-excel" element={<PdfToExcelPage />} />
+        <Route path="/compress" element={<CompressPage />} />
+        <Route path="/repair" element={<RepairPage />} />
+        <Route path="/pdf-to-pdfa" element={<PdfAPage />} />
+        <Route path="/compare" element={<ComparePage />} />
+        <Route path="/convert-docx" element={<PdfToWordPage />} />
+      </Routes>
+    </Suspense>
   );
 }
 

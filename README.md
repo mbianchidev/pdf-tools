@@ -2,35 +2,63 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-25+-orange.svg)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
 A comprehensive locally hostable PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
+
+The root landing page documents self-hosting only. PDF workflows run from tool routes
+inside a deployed instance; the public landing does not upload or process documents.
 
 ## Documentation
 
 - **[Frontend README](frontend/README.md)** - React application documentation
 - **[Backend README](backend/README.md)** - Spring Boot API documentation
+- **[Architecture](docs/architecture.md)** - Jobs, storage, persistence, and operation boundaries
+- **[Jobs API v1](docs/api-v1.md)** - Versioned asynchronous API contract
+- **[Development](docs/development.md)** - Local, Docker, SeaweedFS, and validation workflows
+- **[Product](PRODUCT.md)** - Durable product truth and self-hosting position
+- **[Design system](DESIGN.md)** - Shared img-tools family visual language
 - **[AGENTS.md](AGENTS.md)** - Agent navigation guide for AI assistants
 
 ## Features
 
 ### PDF Operations
-- **Merge PDFs** - Combine multiple PDF files into one
-- **Split PDF** - Split a PDF into individual pages
+- **Merge PDFs** - Disk-backed ordered merge with strict validation, limits, progress, and cancellation
+- **Split PDF** - Individual pages, explicit ranges, or fixed groups in one ZIP
 - **Extract Pages** - Extract specific pages from a PDF
-- **Remove Pages** - Remove specific pages from a PDF
-- **Add Watermark** - Add text watermarks to PDF pages
+- **Remove Pages** - Strict ranges with duplicate, invalid, and all-page rejection
+- **Rotate PDF** - Whole-document or independent per-page rotation
+- **Organize PDF** - Reorder, rotate, duplicate, and delete pages visually
+- **Crop PDF** - Shared or per-page normalized crop boxes with visual preview
+- **Add Page Numbers** - Ranges, starts, templates, fonts, and visual positions
+- **Protect PDF** - AES-256 passwords and least-privilege user permissions
+- **Unlock PDF** - Authenticated password removal when the password is known
+- **PDF to JPG** - Page ranges with resolution and JPEG quality controls
+- **JPG to PDF** - Ordered images with paper, orientation, and margin controls
+- **Watermark PDF** - Text/image modes, real opacity, styling, and page ranges
+- **Edit PDF** - Text, images, vector shapes, highlights, and notes
 - **Add Text** - Add custom text to PDFs at specific positions
 - **Add Signature** - Add signature images to PDFs
-- **Redact Content** - Redact sensitive information with black boxes
-- **Convert to Markdown** - Export PDF content as Markdown
-- **Convert to DOCX** - Export PDF content as Word documents
+- **Redact PDF** - Irreversibly rasterize selected regions into a sanitized PDF
+- **Word to PDF** - Convert DOCX/DOC with network-denied, resource-limited LibreOffice
+- **PowerPoint to PDF** - Convert PPTX/PPT slides in the isolated Office sidecar
+- **Excel to PDF** - Convert XLSX/XLS with print-area and orientation controls
+- **HTML to PDF** - Render self-contained HTML in a networkless Chromium sandbox
+- **PDF to Word** - Recover editable text, tables, images, and pagination or preserve pages visually
+- **PDF to PowerPoint** - Create editable slide elements or preserve each page visually
+- **PDF to Excel** - Detect aligned tables into page or table worksheets
+- **PDF to Markdown** - Recover headings, lists, tables, images, page boundaries, and reading order
+- **Compress PDF** - Lossless, recommended, and extreme modes with before/after size comparison
+- **Repair PDF** - qpdf structural recovery with explicit partial-recovery reports
+- **PDF to PDF/A** - Selected archival profiles with independent veraPDF validation
+- **Compare PDF** - Combined text, layout, and rendered-page differences
 
 ### Technology Stack
-- **Backend**: Java 25, Spring Boot 3.2.1, Apache PDFBox, iText, Apache POI
-- **Frontend**: React 19, Vite 7, Framer Motion, Axios
-- **Deployment**: Docker, Docker Compose, Nginx
+- **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, veraPDF, PostgreSQL, Flyway
+- **Frontend**: React 19, Vite 8, react-pdf, Framer Motion, Axios
+- **Storage**: Local streaming storage in development; SeaweedFS S3 in production
+- **Deployment**: Docker Compose, PostgreSQL, Nginx, networkless LibreOffice/Chromium/qpdf workers
 
 ## Quick Start
 
@@ -47,11 +75,11 @@ git clone https://github.com/mbianchidev/pdf-tools.git
 cd pdf-tools
 
 # Build and start all services
-docker-compose up --build
+docker compose up --build
 
 # Access the application
 # Frontend: http://localhost
-# Backend API: http://localhost:8080/api/pdf
+# Backend API: http://localhost:8080/api/v1
 ```
 
 The application will be available at `http://localhost`. The frontend automatically proxies API requests to the backend.
@@ -76,6 +104,11 @@ npm run dev
 Frontend will run on `http://localhost:5173`
 
 ## API Documentation
+
+New and migrated tools use the asynchronous [`/api/v1/jobs`](docs/api-v1.md)
+contract with persisted progress, cancellation, multiple outputs, and streaming
+downloads. Existing `/api/pdf` routes remain available while tools migrate behind
+feature flags.
 
 ### Endpoints
 
@@ -144,7 +177,22 @@ Parameters:
   - page (page number, default: 1)
 ```
 
-#### Redact Content
+#### Secure Redact PDF
+```
+POST /api/v1/jobs
+Content-Type: multipart/form-data
+Parts:
+  - operation: redact
+  - options: {"areas":[{"page":1,"x":0.1,"y":0.2,"width":0.4,"height":0.2}]}
+  - files: PDF file
+```
+
+The secure operation rasterizes every page into a fresh PDF after burning selected
+normalized visual rectangles to black. Original text, images, annotations, forms,
+attachments, metadata, and prior revisions are not copied. See
+[`docs/operations/redact.md`](docs/operations/redact.md).
+
+#### Legacy Redact Overlay
 ```
 POST /api/pdf/redact
 Content-Type: multipart/form-data
@@ -157,12 +205,19 @@ Parameters:
   - page (page number, default: 1)
 ```
 
-#### Convert to Markdown
+#### PDF to Markdown
 ```
-POST /api/pdf/convert/markdown
+POST /api/v1/jobs
 Content-Type: multipart/form-data
-Parameters: file (PDF file)
+Parts:
+  - operation: pdf-to-markdown
+  - options: {"detectHeadings":true,"detectLists":true,"detectTables":true,"includeImages":true,"preservePageBreaks":true}
+  - files: one text-based, unencrypted PDF
 ```
+
+The output is a ZIP containing `document.md` and optional linked PNG images.
+Image-only PDFs are rejected explicitly. See
+[`docs/operations/pdf-to-markdown.md`](docs/operations/pdf-to-markdown.md).
 
 #### Convert to DOCX
 ```

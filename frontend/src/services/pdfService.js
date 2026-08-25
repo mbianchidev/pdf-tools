@@ -53,7 +53,7 @@ export const pdfService = {
     }
     formData.append('originalFilename', file.name);
     
-    // Split returns multiple files as comma-separated filenames
+    // Legacy split returns one ZIP artifact.
     const operationResponse = await api.post('/split', formData);
     const result = operationResponse.data;
     
@@ -61,19 +61,14 @@ export const pdfService = {
       throw new Error(result.message || 'Operation failed');
     }
     
-    // The outputFilename contains comma-separated filenames
-    const filenames = result.outputFilename.split(',');
-    
-    if (filenames.length > 1) {
-      // Return info for multiple files
-      return { filenames, message: result.message };
-    } else {
-      // Single file - download and return blob
-      const downloadResponse = await api.get(`/download/${filenames[0]}`, {
-        responseType: 'blob',
-      });
-      return { blob: downloadResponse.data, filenames };
-    }
+    const downloadResponse = await api.get(`/download/${result.outputFilename}`, {
+      responseType: 'blob',
+    });
+    return {
+      blob: downloadResponse.data,
+      filenames: [result.outputFilename],
+      message: result.message,
+    };
   },
 
   // Extract specific pages
@@ -90,18 +85,6 @@ export const pdfService = {
     formData.append('file', file);
     formData.append('pages', pages);
     return performOperationAndDownload('/remove', formData, file.name);
-  },
-
-  // Add watermark with positioning
-  addWatermark: async (file, text, x = null, y = null, rotation = 45, opacity = 0.3) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('text', text);
-    if (x !== null) formData.append('x', x);
-    if (y !== null) formData.append('y', y);
-    formData.append('rotation', rotation);
-    formData.append('opacity', opacity);
-    return performOperationAndDownload('/watermark', formData, file.name);
   },
 
   // Add text to PDF with font customization
@@ -127,40 +110,6 @@ export const pdfService = {
     formData.append('y', y);
     formData.append('page', page);
     return performOperationAndDownload('/add-signature', formData, file.name);
-  },
-
-  // Redact content (single)
-  redact: async (file, x, y, width, height, page) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('x', x);
-    formData.append('y', y);
-    formData.append('width', width);
-    formData.append('height', height);
-    formData.append('page', page);
-    return performOperationAndDownload('/redact', formData, file.name);
-  },
-
-  // Redact multiple areas
-  redactMultiple: async (file, redactions) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('redactions', JSON.stringify(redactions));
-    return performOperationAndDownload('/redact-multiple', formData, file.name);
-  },
-
-  // Convert to Markdown
-  convertToMarkdown: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return performOperationAndDownload('/convert/markdown', formData, file.name);
-  },
-
-  // Convert to DOCX
-  convertToDocx: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return performOperationAndDownload('/convert/docx', formData, file.name);
   },
 
   // Download file

@@ -6,10 +6,14 @@ A Java Spring Boot REST API for PDF manipulation operations.
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| Spring Boot | 3.2.1 | Application framework |
-| Apache PDFBox | 3.0.1 | PDF manipulation |
-| iText | 8.0.2 | Advanced PDF operations |
-| Apache POI | 5.2.5 | DOCX generation |
+| Spring Boot | 4.1 | Application framework |
+| Apache PDFBox | 3.0.8 | PDF manipulation |
+| PostgreSQL | 18 | Job metadata |
+| Flyway | managed | Schema migrations |
+| AWS SDK S3 | 2.54 | SeaweedFS-compatible artifact storage |
+| Apache POI | 5.5 | Office document generation |
+| qpdf | 11+ | Structural PDF repair and rewriting |
+| veraPDF | 1.30 | PDF/A conformance validation |
 | Java | 25 | Runtime |
 
 ## Features
@@ -18,19 +22,40 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Merge** - Combine multiple PDF files
 - **Split** - Split into individual pages or custom groups
 - **Extract** - Extract specific pages
-- **Remove** - Remove specific pages
-- **Watermark** - Add text watermarks with positioning
+- **Remove** - Remove strict page ranges while retaining at least one page
+- **Rotate** - Apply shared or independent page rotations
+- **Organize** - Reorder, rotate, duplicate, and omit pages in one plan
+- **Crop** - Apply normalized shared or per-page crop boxes
+- **Page Numbers** - Number ranges with templates, fonts, and positions
+- **Protect** - AES-256 password encryption and explicit permissions
+- **Unlock** - Authenticated password removal with structure preservation
+- **PDF to JPG** - Bounded page rendering with DPI and quality controls
+- **JPG to PDF** - Ordered raw JPEG embedding with paper controls
+- **Watermark** - Styled text/image overlays on selected pages
+- **Edit** - Unified text, image, shape, highlight, and note plans
 - **Add Text** - Add text with fonts and colors
 - **Add Signature** - Add signature images
-- **Redact** - Add redaction boxes
-- **Convert to Markdown** - Extract text as Markdown
+- **Redact** - Irreversible raster redaction with document sanitization
+- **Word to PDF** - Sandboxed LibreOffice Writer conversion
+- **PowerPoint to PDF** - Sandboxed LibreOffice Impress conversion
+- **Excel to PDF** - Sandboxed LibreOffice Calc conversion with print controls
+- **HTML to PDF** - Sandboxed Playwright/Chromium conversion with print controls
+- **PDF to Word** - Bounded editable extraction or visual page-to-DOCX conversion
+- **PDF to PowerPoint** - Bounded editable elements or visual page-to-slide conversion
+- **PDF to Excel** - Bounded table detection and typed workbook generation
+- **PDF to Markdown** - Recover structured Markdown and linked images in a ZIP
+- **Compress PDF** - Bounded lossless or image-aware size reduction
+- **Repair PDF** - Sandboxed qpdf recovery with structured warning reports
+- **PDF to PDF/A** - Isolated LibreOffice conversion plus veraPDF validation
+- **Compare PDF** - Bounded text, layout, and rendered-page diff reports
 - **Convert to DOCX** - Convert to Word document
 
 ## Getting Started
 
 ### Prerequisites
 - Java 25 or higher
-- Maven 3.6+
+- Maven 3.9+
+- PostgreSQL 18
 
 ### Running Locally
 
@@ -42,7 +67,8 @@ mvn clean package
 mvn spring-boot:run
 ```
 
-The API will be available at http://localhost:8080
+The API will be available at http://localhost:8080. Configure PostgreSQL through
+`DATABASE_URL`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD`.
 
 ### Running with JAR
 
@@ -52,6 +78,47 @@ java -jar target/pdf-tools-backend-1.0.0.jar
 ```
 
 ## API Endpoints
+
+Versioned tools use the asynchronous jobs API documented in
+[`docs/api-v1.md`](../docs/api-v1.md):
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/jobs` | Validate, persist, and queue an operation |
+| GET | `/api/v1/jobs/{jobId}` | Read status and `outputs[]` |
+| GET | `/api/v1/jobs/{jobId}/events` | Stream SSE progress |
+| DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
+| GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
+
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, `compress`, `repair`, `pdf-to-pdfa`, and `compare`. Their contracts and fidelity limits are
+documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
+[`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
+in [`docs/operations/remove.md`](../docs/operations/remove.md).
+Rotate options are documented in [`docs/operations/rotate.md`](../docs/operations/rotate.md).
+Organize plans are documented in [`docs/operations/organize.md`](../docs/operations/organize.md).
+Crop coordinates are documented in [`docs/operations/crop.md`](../docs/operations/crop.md).
+Page numbering is documented in [`docs/operations/page-numbers.md`](../docs/operations/page-numbers.md).
+Protection and sensitive option storage are documented in [`docs/operations/protect.md`](../docs/operations/protect.md).
+Password removal is documented in [`docs/operations/unlock.md`](../docs/operations/unlock.md).
+Raster conversion is documented in [`docs/operations/pdf-to-jpg.md`](../docs/operations/pdf-to-jpg.md).
+Image assembly is documented in [`docs/operations/jpg-to-pdf.md`](../docs/operations/jpg-to-pdf.md).
+Watermark styling is documented in [`docs/operations/watermark.md`](../docs/operations/watermark.md).
+Unified editing is documented in [`docs/operations/edit.md`](../docs/operations/edit.md).
+Secure redaction is documented in [`docs/operations/redact.md`](../docs/operations/redact.md).
+Word conversion is documented in [`docs/operations/word-to-pdf.md`](../docs/operations/word-to-pdf.md).
+Presentation conversion is documented in [`docs/operations/powerpoint-to-pdf.md`](../docs/operations/powerpoint-to-pdf.md).
+Workbook conversion is documented in [`docs/operations/excel-to-pdf.md`](../docs/operations/excel-to-pdf.md).
+HTML conversion is documented in [`docs/operations/html-to-pdf.md`](../docs/operations/html-to-pdf.md).
+PDF-to-Word conversion is documented in [`docs/operations/pdf-to-word.md`](../docs/operations/pdf-to-word.md).
+PDF-to-PowerPoint conversion is documented in [`docs/operations/pdf-to-powerpoint.md`](../docs/operations/pdf-to-powerpoint.md).
+PDF-to-Excel conversion is documented in [`docs/operations/pdf-to-excel.md`](../docs/operations/pdf-to-excel.md).
+PDF-to-Markdown conversion is documented in [`docs/operations/pdf-to-markdown.md`](../docs/operations/pdf-to-markdown.md).
+PDF compression is documented in [`docs/operations/compress.md`](../docs/operations/compress.md).
+PDF repair is documented in [`docs/operations/repair.md`](../docs/operations/repair.md).
+PDF/A conversion is documented in [`docs/operations/pdf-to-pdfa.md`](../docs/operations/pdf-to-pdfa.md).
+PDF comparison is documented in [`docs/operations/compare.md`](../docs/operations/compare.md).
+
+The following legacy endpoints remain during migration:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -151,9 +218,60 @@ cors.allowed-origins=http://localhost:80,http://localhost:3000
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SPRING_PROFILES_ACTIVE` | `default` | Active Spring profile |
-| `PDF_UPLOAD_DIR` | `/tmp/pdf-uploads` | Temp file storage |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:80` | Allowed CORS origins |
+| `DATABASE_URL` | `jdbc:postgresql://localhost:5432/pdftools` | PostgreSQL JDBC URL |
+| `DATABASE_USERNAME` | `pdftools` | PostgreSQL user |
+| `DATABASE_PASSWORD` | `pdftools` | PostgreSQL password |
+| `PDF_STORAGE_TYPE` | `local` | `local` or `s3` artifact storage |
+| `PDF_STORAGE_LOCAL_ROOT` | `/tmp/pdf-storage/jobs` | Local artifact root |
+| `PDF_JOB_WORK_ROOT` | `/tmp/pdf-work` | Isolated worker root |
+| `PDF_ENABLED_OPERATIONS` | completed stable operations | Comma-separated submission feature flags |
+| `PDF_OPTIONS_ENCRYPTION_KEY` | generated local key | Base64 32-byte shared key for sensitive job options |
+| `PDF_SECURITY_MAX_OUTPUT_BYTES` | `134217728` | Protect/Unlock output byte limit |
+| `PDF_TO_JPG_MAX_SELECTED_PAGES` | `500` | Maximum pages rendered per job |
+| `PDF_TO_JPG_MAX_DPI` | `300` | Maximum requested render resolution |
+| `PDF_TO_JPG_MAX_PIXELS_PER_PAGE` | `20000000` | Pre-allocation page pixel limit |
+| `PDF_TO_JPG_MAX_WORKER_HEAP_BYTES` | `268435456` | Isolated renderer heap cap |
+| `PDF_TO_JPG_WORKER_TIMEOUT` | `5m` | Isolated renderer wall-time cap |
+| `JPG_TO_PDF_MAX_IMAGES` | `100` | Maximum ordered JPEG inputs |
+| `JPG_TO_PDF_MAX_PIXELS_PER_IMAGE` | `50000000` | Per-image pixel limit |
+| `JPG_TO_PDF_MAX_OUTPUT_BYTES` | `134217728` | Generated PDF byte limit |
+| `JPG_TO_PDF_VALIDATION_WORKER_HEAP_BYTES` | `134217728` | JPEG validator heap cap |
+| `JPG_TO_PDF_VALIDATION_WORKER_TIMEOUT` | `2m` | JPEG validator wall-time cap |
+| `WATERMARK_MAX_IMAGE_PIXELS` | `4000000` | Watermark image pixel limit |
+| `EDIT_MAX_ELEMENTS` | `500` | Maximum elements in one edit plan |
+| `EDIT_MAX_IMAGES` | `10` | Maximum uploaded edit images |
+| `REDACT_MAX_AREAS` | `500` | Maximum secure redaction areas |
+| `REDACT_RENDER_DPI` | `200` | Sanitized page raster resolution |
+| `REDACT_MAX_PIXELS_PER_PAGE` | `20000000` | Pre-allocation page pixel limit |
+| `REDACT_MAX_OUTPUT_BYTES` | `536870912` | Sanitized PDF byte limit |
+| `REDACT_WORKER_HEAP_BYTES` | `268435456` | Isolated redaction heap cap |
+| `REDACT_WORKER_TIMEOUT` | `5m` | Isolated redaction wall-time cap |
+| `OFFICE_LIBREOFFICE_BINARY` | `soffice` | LibreOffice executable |
+| `OFFICE_CONVERSION_MODE` | `queue` | `queue` sidecar or explicit local `direct` mode |
+| `OFFICE_QUEUE_REQUEST_ROOT` | `/var/lib/pdf-tools-office/requests` | Backend-write/sidecar-read requests |
+| `OFFICE_QUEUE_RESPONSE_ROOT` | `/var/lib/pdf-tools-office/responses` | Sidecar-write/backend-read responses |
+| `OFFICE_QUEUE_SIGNAL_ROOT` | `/var/lib/pdf-tools-office/signals` | Backend-write/sidecar-read signals |
+| `OFFICE_QUEUE_WAIT_TIMEOUT` | `5m` | Queue wait before conversion starts |
+| `OFFICE_QUEUE_RETENTION` | `1h` | Stale request/response retention |
+| `OFFICE_QUEUE_CLEANUP_INTERVAL` | `1m` | Backend request/signal cleanup cadence |
+| `OFFICE_SIDECAR_WORK_ROOT` | `/tmp/office-work` | Size-limited sidecar scratch mount |
+| `OFFICE_WORKER_USER` | `officeworker` | Non-root native converter identity |
+| `OFFICE_MAX_INPUT_BYTES` | `52428800` | Office input byte limit |
+| `OFFICE_MAX_EXPANDED_INPUT_BYTES` | `268435456` | Expanded OOXML limit |
+| `OFFICE_MAX_OUTPUT_BYTES` | `134217728` | Converted PDF byte limit |
+| `OFFICE_MAX_ADDRESS_SPACE_BYTES` | `1073741824` | Linux native-process address-space cap |
+| `OFFICE_CPU_TIME_SECONDS` | `120` | Native-process CPU limit |
+| `OFFICE_MAX_WORKER_PROCESSES` | `96` | Worker-UID process limit; reserves supervisor headroom |
+| `OFFICE_WALL_TIMEOUT` | `2m` | Conversion wall-time cap |
+| `EXCEL_MAX_SHEETS` | `100` | Workbook sheet limit |
+| `EXCEL_MAX_USED_CELLS` | `1000000` | Used-range scan cell limit |
+| `EXCEL_MAX_PREPARED_BYTES` | `104857600` | Prepared workbook byte limit |
+| `CORS_ALLOWED_ORIGINS` | local frontend origins | Allowed CORS origins |
+
+For a rolling deployment, first deploy new code to every worker while leaving new
+operation keys out of `PDF_ENABLED_OPERATIONS`. Enable a new key only after every
+worker can execute it. Dispatchers ignore queued operations not registered in their
+local binary.
 
 ## Docker
 
@@ -170,8 +288,8 @@ docker run -p 8080:8080 pdf-tools-backend
 # Run all tests
 mvn test
 
-# Run with coverage
-mvn test jacoco:report
+# Compile without tests
+mvn -DskipTests compile
 ```
 
 ## Dependencies

@@ -1,37 +1,71 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Combine, Download, Trash2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-// Set worker source for PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+import '../lib/pdfWorker';
 import FileUpload from '../components/FileUpload';
 import Button from '../components/Button';
 import ToastContainer from '../components/Toast';
-import { pdfService, downloadBlob } from '../services/pdfService';
+import JobProgress from '../features/jobs/JobProgress';
+import { usePdfJob } from '../features/jobs/usePdfJob';
+import { jobService, getApiErrorMessage } from '../services/jobService';
+import { downloadBlob } from '../services/pdfService';
 import './OperationPage.css';
 import './MergePage.css';
+
+const MAX_MERGE_BYTES = 100 * 1024 * 1024;
 
 const MergePage = () => {
   const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [selectedFileUrl, setSelectedFileUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [failedOutput, setFailedOutput] = useState(null);
+  const [downloadingOutput, setDownloadingOutput] = useState(false);
   const urlRef = useRef(null);
+  const handledJobRef = useRef(null);
+  const {
+    job,
+    running,
+    connectionError,
+    start,
+    cancel,
+    reset,
+  } = usePdfJob();
+  const totalBytes = useMemo(
+    () => files.reduce((total, file) => total + file.size, 0),
+    [files],
+  );
 
-  const addToast = (message, type = 'success', duration = 5000) => {
+  const addToast = useCallback((message, type = 'success', duration = 5000) => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type, duration }]);
-  };
+  }, []);
 
-  const removeToast = (id) => {
+  const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
+  }, []);
+
+  const downloadOutput = useCallback(async (output) => {
+    setDownloadingOutput(true);
+    try {
+      const blob = await jobService.download(output);
+      downloadBlob(blob, output.filename);
+      setFailedOutput(null);
+      addToast('PDFs merged successfully!', 'success');
+    } catch (error) {
+      console.error('Merge download error:', error);
+      setFailedOutput(output);
+      addToast(getApiErrorMessage(error, 'Failed to download merged PDF'), 'error');
+    } finally {
+      setDownloadingOutput(false);
+    }
+  }, [addToast]);
 
   const updatePreviewUrl = useCallback((index, fileList) => {
     if (urlRef.current) {
@@ -56,7 +90,47 @@ const MergePage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!job || !['COMPLETED', 'FAILED', 'CANCELLED'].includes(job.status)) {
+      return undefined;
+    }
+    const resultKey = `${job.id}:${job.status}`;
+    if (handledJobRef.current === resultKey) {
+      return undefined;
+    }
+    handledJobRef.current = resultKey;
+
+    let active = true;
+    const handleResult = async () => {
+      await Promise.resolve();
+      if (!active) return;
+      if (job.status === 'FAILED') {
+        addToast(job.errorMessage || 'Failed to merge PDFs', 'error');
+        return;
+      }
+      if (job.status === 'CANCELLED') {
+        addToast('PDF merge cancelled', 'error');
+        return;
+      }
+
+      const output = job.outputs[0];
+      if (!output) {
+        addToast('The merge job completed without an output.', 'error');
+        return;
+      }
+      await downloadOutput(output);
+    };
+    handleResult();
+    return () => {
+      active = false;
+    };
+  }, [addToast, downloadOutput, job]);
+
   const handleFilesChange = useCallback((newFiles) => {
+    if (running) return;
+    reset();
+    handledJobRef.current = null;
+    setFailedOutput(null);
     setFiles(newFiles);
     let newIndex = selectedFileIndex;
     if (newFiles.length === 0) {
@@ -67,10 +141,13 @@ const MergePage = () => {
       setSelectedFileIndex(newIndex);
     }
     updatePreviewUrl(newIndex, newFiles);
-  }, [selectedFileIndex, updatePreviewUrl]);
+  }, [reset, running, selectedFileIndex, updatePreviewUrl]);
 
   const moveFile = (fromIndex, toIndex) => {
-    if (toIndex < 0 || toIndex >= files.length) return;
+    if (running || toIndex < 0 || toIndex >= files.length) return;
+    reset();
+    handledJobRef.current = null;
+    setFailedOutput(null);
     const newFiles = [...files];
     const [movedFile] = newFiles.splice(fromIndex, 1);
     newFiles.splice(toIndex, 0, movedFile);
@@ -80,6 +157,10 @@ const MergePage = () => {
   };
 
   const removeFile = (index) => {
+    if (running) return;
+    reset();
+    handledJobRef.current = null;
+    setFailedOutput(null);
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
     let newIndex = selectedFileIndex;
@@ -101,19 +182,41 @@ const MergePage = () => {
       addToast('Please upload at least 2 PDF files to merge', 'error');
       return;
     }
+    if (totalBytes > MAX_MERGE_BYTES) {
+      addToast('Merge inputs must stay within the 100 MB total limit', 'error');
+      return;
+    }
 
-    setLoading(true);
+    const invalidFile = files.find((file) => !file.name.toLowerCase().endsWith('.pdf'));
+    if (invalidFile) {
+      addToast(`${invalidFile.name} is not a PDF file`, 'error');
+      return;
+    }
+
+    handledJobRef.current = null;
+    setFailedOutput(null);
     try {
-      const result = await pdfService.merge(files);
-      const baseName = files[0].name.replace(/\.[pP][dD][fF]$/, '');
-      downloadBlob(result, `${baseName}_merged.pdf`);
-      addToast('PDFs merged successfully!', 'success');
+      await start('merge', files, {});
     } catch (error) {
       console.error('Merge error:', error);
-      addToast(error.response?.data?.message || error.message || 'Failed to merge PDFs', 'error');
-    } finally {
-      setLoading(false);
+      addToast(getApiErrorMessage(error, 'Failed to merge PDFs'), 'error');
     }
+  };
+
+  const handleCancel = async () => {
+    try {
+      await cancel();
+    } catch (error) {
+      console.error('Merge cancellation error:', error);
+      addToast(getApiErrorMessage(error, 'Failed to cancel merge'), 'error');
+    }
+  };
+
+  const handleDrop = (targetIndex) => {
+    if (dragIndex !== null) {
+      moveFile(dragIndex, targetIndex);
+    }
+    setDragIndex(null);
   };
 
   return (
@@ -141,8 +244,12 @@ const MergePage = () => {
               <>
                 <div className="file-order-list">
                   {files.map((file, index) => (
-                    <motion.div key={`${file.name}-${index}`}
+                    <motion.div key={`${file.name}-${file.size}-${file.lastModified}-${index}`}
                       className={`file-order-item ${selectedFileIndex === index ? 'active' : ''}`}
+                      draggable={!running}
+                      onDragStart={() => setDragIndex(index)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => handleDrop(index)}
                       initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
                       <div className="file-order-grip"><GripVertical size={16} /></div>
                       <div className="file-order-info" onClick={() => { setSelectedFileIndex(index); updatePreviewUrl(index, files); }}>
@@ -151,25 +258,47 @@ const MergePage = () => {
                         <span className="file-order-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                       </div>
                       <div className="file-order-actions">
-                        <button className="file-order-btn" onClick={() => moveFile(index, index - 1)} disabled={index === 0} title="Move up"><ArrowUp size={14} /></button>
-                        <button className="file-order-btn" onClick={() => moveFile(index, index + 1)} disabled={index === files.length - 1} title="Move down"><ArrowDown size={14} /></button>
-                        <button className="file-order-btn delete" onClick={() => removeFile(index)} title="Remove"><Trash2 size={14} /></button>
+                        <button className="file-order-btn" onClick={() => moveFile(index, index - 1)} disabled={running || index === 0} aria-label={`Move ${file.name} up`}><ArrowUp size={14} /></button>
+                        <button className="file-order-btn" onClick={() => moveFile(index, index + 1)} disabled={running || index === files.length - 1} aria-label={`Move ${file.name} down`}><ArrowDown size={14} /></button>
+                        <button className="file-order-btn delete" onClick={() => removeFile(index)} disabled={running} aria-label={`Remove ${file.name}`}><Trash2 size={14} /></button>
                       </div>
                     </motion.div>
                   ))}
                 </div>
-                <div className="add-more-files">
-                  <FileUpload onFilesChange={(newFiles) => { const combined = [...files, ...newFiles]; setFiles(combined); updatePreviewUrl(selectedFileIndex, combined); }} files={[]} multiple={true} maxFiles={20 - files.length} />
+                <div className={`merge-size ${totalBytes > MAX_MERGE_BYTES ? 'over-limit' : ''}`}>
+                  {(totalBytes / 1024 / 1024).toFixed(2)} MB of 100 MB
                 </div>
+                {!running && files.length < 20 && <div className="add-more-files">
+                  <FileUpload onFilesChange={(newFiles) => handleFilesChange([...files, ...newFiles])} files={[]} multiple={true} maxFiles={20 - files.length} />
+                </div>}
               </>
             )}
           </div>
 
           {files.length >= 2 && (
             <div className="sidebar-actions">
-              <Button onClick={handleMerge} loading={loading} disabled={loading || files.length < 2}
+              {job && (
+                <JobProgress
+                  job={job}
+                  connectionError={connectionError}
+                  onCancel={handleCancel}
+                />
+              )}
+              {failedOutput && (
+                <Button
+                  onClick={() => downloadOutput(failedOutput)}
+                  loading={downloadingOutput}
+                  disabled={downloadingOutput}
+                  variant="outline"
+                  icon={<Download size={20} />}
+                  fullWidth
+                >
+                  {downloadingOutput ? 'Downloading...' : 'Retry download'}
+                </Button>
+              )}
+              <Button onClick={handleMerge} loading={running} disabled={running || files.length < 2 || totalBytes > MAX_MERGE_BYTES}
                 icon={<Download size={20} />} fullWidth size="lg">
-                {loading ? 'Merging...' : 'Merge & Download'}
+                {running ? 'Merging...' : 'Merge & Download'}
               </Button>
             </div>
           )}

@@ -1,0 +1,27 @@
+.page-organizer-workbench {
+  height: calc(100% - 45px);
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.page-organizer-workbench .page-organizer {
+  display: grid;
+  margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 1rem;
+}
+
+.page-organizer-workbench .page-organizer > li {
+  min-width: 0;
+  border: 1px solid rgb(255 255 255 / 12%);
+  background: var(--ink-soft);
+}
+
+.page-organizer-workbench .page-organizer-preview {
+  color: var(--line-strong);
+}
+
+.page-organizer-workbench .page-organizer-actions button {
+  color: var(--iris-dark);
+  background: var(--iris-soft);
+}

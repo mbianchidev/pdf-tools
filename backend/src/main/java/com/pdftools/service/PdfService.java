@@ -2,6 +2,24 @@ package com.pdftools.service;
 
 import com.pdftools.dto.PdfOperationResult;
 import com.pdftools.exception.PdfProcessingException;
+import com.pdftools.config.JobProperties;
+import com.pdftools.operations.OperationException;
+import com.pdftools.operations.OperationCancelledException;
+import com.pdftools.operations.LegacyWorkspaceRegistry;
+import com.pdftools.operations.LegacyOperationGuard;
+import com.pdftools.operations.OperationOutput;
+import com.pdftools.operations.ZipArtifactService;
+import com.pdftools.operations.merge.MergeProperties;
+import com.pdftools.operations.merge.MergeSource;
+import com.pdftools.operations.merge.PdfMergeEngine;
+import com.pdftools.operations.shared.pages.PageExpressionParser;
+import com.pdftools.operations.split.PdfSplitEngine;
+import com.pdftools.operations.split.SplitPlanFactory;
+import com.pdftools.operations.split.SplitProperties;
+import com.pdftools.operations.split.SplitResult;
+import com.pdftools.util.FilenameSanitizer;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -16,145 +34,429 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class PdfService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PdfService.class);
+    private static final Set<String> PDF_MEDIA_TYPES = Set.of(
+        "application/pdf",
+        "application/x-pdf",
+        "application/octet-stream"
+    );
+    private static final int MAX_LEGACY_SPLIT_GROUPS_LENGTH = 65_536;
+
     @Value("${pdf.upload.dir}")
     private String uploadDir;
 
+    private final PdfMergeEngine mergeEngine;
+    private final MergeProperties mergeProperties;
+    private final JobProperties jobProperties;
+    private final LegacyWorkspaceRegistry legacyWorkspaceRegistry;
+    private final PdfSplitEngine splitEngine;
+    private final SplitProperties splitProperties;
+    private final ZipArtifactService zipArtifactService;
+    private final ObjectMapper objectMapper;
+
     public PdfService() {
-        // Constructor
+        this.mergeProperties = new MergeProperties();
+        this.mergeEngine = new PdfMergeEngine(mergeProperties);
+        this.jobProperties = new JobProperties();
+        this.legacyWorkspaceRegistry = new LegacyWorkspaceRegistry();
+        SplitProperties splitProperties = new SplitProperties();
+        this.splitProperties = splitProperties;
+        PageExpressionParser pageExpressionParser = new PageExpressionParser();
+        this.splitEngine = new PdfSplitEngine(new SplitPlanFactory(
+            pageExpressionParser,
+            splitProperties
+        ), splitProperties);
+        this.zipArtifactService = new ZipArtifactService();
+        this.objectMapper = new ObjectMapper();
+    }
+
+    @Autowired
+    public PdfService(
+            PdfMergeEngine mergeEngine,
+            MergeProperties mergeProperties,
+            JobProperties jobProperties,
+            LegacyWorkspaceRegistry legacyWorkspaceRegistry,
+            PdfSplitEngine splitEngine,
+            SplitProperties splitProperties,
+            ZipArtifactService zipArtifactService,
+            ObjectMapper objectMapper) {
+        this.mergeEngine = mergeEngine;
+        this.mergeProperties = mergeProperties;
+        this.jobProperties = jobProperties;
+        this.legacyWorkspaceRegistry = legacyWorkspaceRegistry;
+        this.splitEngine = splitEngine;
+        this.splitProperties = splitProperties;
+        this.zipArtifactService = zipArtifactService;
+        this.objectMapper = objectMapper;
     }
 
     /**
      * Merge multiple PDFs into one
      */
     public PdfOperationResult mergePdfs(List<MultipartFile> files, String originalFilename) throws PdfProcessingException {
-        List<PDDocument> sourceDocs = new ArrayList<>();
+        validateLegacyMergeFiles(files);
+        Path workspace = null;
+        Path outputPath = null;
+        FileChannel workspaceLockChannel = null;
+        FileLock workspaceLock = null;
         try {
-            PDDocument mergedDoc = new PDDocument();
-            
-            for (MultipartFile file : files) {
-                PDDocument doc = Loader.loadPDF(file.getBytes());
-                sourceDocs.add(doc); // Keep reference to prevent closing
-                
-                for (int i = 0; i < doc.getNumberOfPages(); i++) {
-                    PDPage page = doc.getPage(i);
-                    // Import page to new document to avoid reference issues
-                    mergedDoc.importPage(page);
+            Files.createDirectories(jobProperties.getWorkRoot());
+            workspace = Files.createTempDirectory(
+                jobProperties.getWorkRoot(),
+                ".legacy-merge-"
+            );
+            workspaceLockChannel = FileChannel.open(
+                workspace.resolve(".active.lock"),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE
+            );
+            workspaceLock = workspaceLockChannel.lock();
+            legacyWorkspaceRegistry.register(workspace);
+            List<MergeSource> sources = new ArrayList<>();
+            for (int index = 0; index < files.size(); index++) {
+                MultipartFile file = files.get(index);
+                String filename = FilenameSanitizer.sanitize(
+                    file.getOriginalFilename(),
+                    "input-" + (index + 1) + ".pdf"
+                );
+                Path inputPath = workspace.resolve(String.format(
+                    Locale.ROOT,
+                    "input-%04d.bin",
+                    index + 1
+                ));
+                try (InputStream input = file.getInputStream()) {
+                    Files.copy(input, inputPath);
                 }
+                sources.add(new MergeSource(
+                    index + 1,
+                    inputPath,
+                    filename,
+                    Files.size(inputPath)
+                ));
             }
 
-            File outputFile = saveDocument(mergedDoc, "merged", originalFilename);
-            mergedDoc.close();
-            
-            // Close source documents after merged doc is saved
-            for (PDDocument doc : sourceDocs) {
-                doc.close();
-            }
+            outputPath = reserveLegacyOutput("merged_", ".pdf");
+            mergeEngine.merge(sources, outputPath, ignored -> {
+            }, () -> {
+            });
 
-            return new PdfOperationResult(true, "PDFs merged successfully", outputFile.getName());
+            return new PdfOperationResult(
+                true,
+                "PDFs merged successfully",
+                outputPath.getFileName().toString()
+            );
+        } catch (OperationException exception) {
+            deleteOutput(outputPath);
+            throw new PdfProcessingException(exception.getMessage(), exception);
         } catch (Exception e) {
-            // Clean up on error
-            for (PDDocument doc : sourceDocs) {
-                try { doc.close(); } catch (Exception ignored) {}
-            }
+            deleteOutput(outputPath);
             throw new PdfProcessingException("Failed to merge PDFs: " + e.getMessage(), e);
+        } finally {
+            releaseWorkspaceLock(workspaceLock, workspaceLockChannel);
+            legacyWorkspaceRegistry.unregister(workspace);
+            deleteWorkspace(workspace);
+        }
+    }
+
+    private void releaseWorkspaceLock(FileLock lock, FileChannel channel) {
+        try {
+            if (lock != null && lock.isValid()) {
+                lock.release();
+            }
+        } catch (IOException exception) {
+            logger.warn("Failed to release legacy merge workspace lock", exception);
+        }
+        try {
+            if (channel != null) {
+                channel.close();
+            }
+        } catch (IOException exception) {
+            logger.warn("Failed to close legacy merge workspace lock channel", exception);
+        }
+    }
+
+    private void validateLegacyMergeFiles(List<MultipartFile> files) throws PdfProcessingException {
+        if (files == null || files.size() < 2 || files.size() > mergeProperties.getMaxFiles()) {
+            throw new PdfProcessingException(
+                "Merge requires between 2 and " + mergeProperties.getMaxFiles() + " PDF files"
+            );
+        }
+
+        long totalBytes = 0;
+        for (int index = 0; index < files.size(); index++) {
+            MultipartFile file = files.get(index);
+            String filename = FilenameSanitizer.sanitize(
+                file.getOriginalFilename(),
+                "input-" + (index + 1) + ".pdf"
+            );
+            String mediaType = file.getContentType() == null
+                ? "application/octet-stream"
+                : file.getContentType().toLowerCase(Locale.ROOT);
+            if (file.isEmpty()
+                    || !hasPdfStem(filename)
+                    || !PDF_MEDIA_TYPES.contains(mediaType)) {
+                throw new PdfProcessingException(
+                    "Every merge input must be a non-empty PDF"
+                );
+            }
+            try {
+                totalBytes = Math.addExact(totalBytes, file.getSize());
+            } catch (ArithmeticException exception) {
+                throw new PdfProcessingException("Merge inputs exceed the total size limit");
+            }
+        }
+        if (totalBytes > mergeProperties.getMaxTotalInputBytes()) {
+            throw new PdfProcessingException("Merge inputs exceed the total size limit");
+        }
+    }
+
+    private boolean hasPdfStem(String filename) {
+        String lower = filename.toLowerCase(Locale.ROOT);
+        return lower.endsWith(".pdf")
+            && !filename.substring(0, filename.length() - 4).isBlank();
+    }
+
+    private void deleteOutput(Path outputPath) {
+        if (outputPath == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(outputPath);
+        } catch (IOException exception) {
+            logger.warn("Failed to remove partial legacy merge output {}", outputPath, exception);
+        }
+    }
+
+    private void deleteWorkspace(Path workspace) {
+        if (workspace == null || !Files.exists(workspace)) {
+            return;
+        }
+        try (var paths = Files.walk(workspace)) {
+            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException exception) {
+                    logger.warn("Failed to remove legacy merge workspace path {}", path, exception);
+                }
+            });
+        } catch (IOException exception) {
+            logger.warn("Failed to inspect legacy merge workspace {}", workspace, exception);
         }
     }
 
     /**
-     * Split PDF into separate documents based on page groups
-     * @param groups - comma-separated page groups, e.g. "1-3,4-5" creates two PDFs
-     *                 If null or empty, splits into individual pages
+     * Split a PDF into a deterministic ZIP artifact.
      */
-    public PdfOperationResult splitPdf(MultipartFile file, String groups, String originalFilename) throws PdfProcessingException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            List<String> outputFiles = new ArrayList<>();
-            int pageCount = document.getNumberOfPages();
-            String baseName = getBaseFilename(originalFilename, "split");
-
-            if (groups == null || groups.trim().isEmpty()) {
-                // Split into individual pages (legacy behavior)
-                for (int i = 0; i < pageCount; i++) {
-                    PDDocument singlePageDoc = new PDDocument();
-                    singlePageDoc.addPage(document.getPage(i));
-                    
-                    File outputFile = new File(getUploadDir(),
-                        baseName + "_page" + (i + 1) + "_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf");
-                    singlePageDoc.save(outputFile);
-                    outputFiles.add(outputFile.getName());
-                    singlePageDoc.close();
-                }
-            } else {
-                // Split into custom groups
-                String[] groupArray = groups.split(";");
-                int groupNum = 1;
-                for (String group : groupArray) {
-                    PDDocument groupDoc = new PDDocument();
-                    List<Integer> pageNums = parsePageGroup(group.trim(), pageCount);
-                    
-                    for (Integer pageNum : pageNums) {
-                        if (pageNum > 0 && pageNum <= pageCount) {
-                            groupDoc.addPage(document.getPage(pageNum - 1));
-                        }
-                    }
-                    
-                    if (groupDoc.getNumberOfPages() > 0) {
-                        File outputFile = new File(getUploadDir(),
-                            baseName + "_part" + groupNum + "_" + UUID.randomUUID().toString().substring(0, 8) + ".pdf");
-                        groupDoc.save(outputFile);
-                        outputFiles.add(outputFile.getName());
-                    }
-                    groupDoc.close();
-                    groupNum++;
-                }
-            }
-
-            return new PdfOperationResult(true, "PDF split into " + outputFiles.size() + " documents", 
-                String.join(",", outputFiles));
-        } catch (Exception e) {
-            throw new PdfProcessingException("Failed to split PDF: " + e.getMessage(), e);
+    public PdfOperationResult splitPdf(
+            MultipartFile file,
+            String groups,
+            String originalFilename) throws PdfProcessingException {
+        LegacyOperationGuard guard = new LegacyOperationGuard();
+        try {
+            return splitPdf(file, groups, originalFilename, guard);
+        } finally {
+            guard.complete();
         }
     }
 
-    /**
-     * Parse page group string like "1-3" or "1,2,5" or "1-3,5"
-     */
-    private List<Integer> parsePageGroup(String group, int maxPages) {
-        List<Integer> pages = new ArrayList<>();
-        String[] parts = group.split(",");
-        for (String part : parts) {
-            part = part.trim();
-            if (part.contains("-")) {
-                String[] range = part.split("-");
-                int start = Integer.parseInt(range[0].trim());
-                int end = Integer.parseInt(range[1].trim());
-                for (int i = start; i <= end && i <= maxPages; i++) {
-                    if (i > 0 && !pages.contains(i)) {
-                        pages.add(i);
-                    }
-                }
+    public PdfOperationResult splitPdf(
+            MultipartFile file,
+            String groups,
+            String originalFilename,
+            LegacyOperationGuard guard) throws PdfProcessingException {
+        guard.checkCancelled();
+        validateLegacySplitGroups(groups);
+        String multipartFilename = file == null ? null : file.getOriginalFilename();
+        String sourceFilename = FilenameSanitizer.sanitize(
+            originalFilename == null || originalFilename.isBlank()
+                ? multipartFilename
+                : originalFilename,
+            "source.pdf"
+        );
+        validateLegacySplitFile(file, sourceFilename);
+        Path workspace = null;
+        Path outputPath = null;
+        FileChannel workspaceLockChannel = null;
+        FileLock workspaceLock = null;
+        try {
+            Files.createDirectories(jobProperties.getWorkRoot());
+            workspace = Files.createTempDirectory(
+                jobProperties.getWorkRoot(),
+                ".legacy-split-"
+            );
+            workspaceLockChannel = FileChannel.open(
+                workspace.resolve(".active.lock"),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE
+            );
+            workspaceLock = workspaceLockChannel.lock();
+            legacyWorkspaceRegistry.register(workspace);
+
+            Path inputPath = workspace.resolve("input-0001.bin");
+            try (InputStream input = file.getInputStream()) {
+                Files.copy(input, inputPath);
+            }
+            ObjectNode options = objectMapper.createObjectNode();
+            if (groups == null || groups.isBlank()) {
+                options.put("mode", "individual");
             } else {
-                int pageNum = Integer.parseInt(part);
-                if (pageNum > 0 && pageNum <= maxPages && !pages.contains(pageNum)) {
-                    pages.add(pageNum);
+                options.put("mode", "ranges");
+                var ranges = options.putArray("ranges");
+                for (String group : groups.split(";", -1)) {
+                    ranges.add(group.trim());
                 }
             }
+
+            SplitResult result = splitEngine.split(
+                inputPath,
+                options,
+                workspace,
+                ignored -> {
+                },
+                guard::checkCancelled
+            );
+            List<OperationOutput> parts = new ArrayList<>(result.parts().size());
+            for (SplitResult.Part part : result.parts()) {
+                String suffix = groups == null || groups.isBlank()
+                    ? String.format(Locale.ROOT, "_page_%04d", part.pages().getFirst())
+                    : String.format(Locale.ROOT, "_part_%04d", part.position());
+                parts.add(new OperationOutput(
+                    part.path(),
+                    FilenameSanitizer.withSuffix(sourceFilename, suffix),
+                    "application/pdf"
+                ));
+            }
+            OperationOutput zip = zipArtifactService.create(
+                parts,
+                workspace.resolve("split.zip"),
+                "split.zip",
+                Math.addExact(
+                    splitProperties.getMaxTotalOutputBytes(),
+                    1024L * 1024L
+                ),
+                guard::checkCancelled,
+                true
+            );
+            outputPath = reserveLegacyOutput("split_", ".zip");
+            guard.own(outputPath);
+            Files.move(
+                zip.path(),
+                outputPath,
+                StandardCopyOption.REPLACE_EXISTING
+            );
+            guard.checkCancelled();
+            return new PdfOperationResult(
+                true,
+                "PDF split into " + result.parts().size() + " documents",
+                outputPath.getFileName().toString()
+            );
+        } catch (OperationCancelledException exception) {
+            deleteOutput(outputPath);
+            throw new PdfProcessingException("Split was cancelled", exception);
+        } catch (OperationException exception) {
+            deleteOutput(outputPath);
+            throw new PdfProcessingException(exception.getMessage(), exception);
+        } catch (Exception exception) {
+            deleteOutput(outputPath);
+            throw new PdfProcessingException(
+                "Failed to split PDF: " + exception.getMessage(),
+                exception
+            );
+        } finally {
+            releaseWorkspaceLock(workspaceLock, workspaceLockChannel);
+            legacyWorkspaceRegistry.unregister(workspace);
+            deleteWorkspace(workspace);
         }
-        return pages;
+    }
+
+    private void validateLegacySplitGroups(String groups)
+            throws PdfProcessingException {
+        if (groups == null) {
+            return;
+        }
+        if (groups.length() > MAX_LEGACY_SPLIT_GROUPS_LENGTH) {
+            throw new PdfProcessingException(
+                "Split ranges exceed the 64 KiB options limit"
+            );
+        }
+        if (groups.isBlank()) {
+            return;
+        }
+
+        int rangeCount = 1;
+        for (int index = 0; index < groups.length(); index++) {
+            char character = groups.charAt(index);
+            if (character > 0x7f) {
+                throw new PdfProcessingException(
+                    "Split ranges may contain only ASCII characters"
+                );
+            }
+            if (character == ';'
+                    && ++rangeCount > splitProperties.getMaxOutputs()) {
+                throw new PdfProcessingException(
+                    "Split ranges exceed the "
+                        + splitProperties.getMaxOutputs()
+                        + " output limit"
+                );
+            }
+        }
+    }
+
+    private void validateLegacySplitFile(
+            MultipartFile file,
+            String sourceFilename) throws PdfProcessingException {
+        validateLegacyPdfFile(file, sourceFilename, "Split");
+    }
+
+    private void validateLegacyPdfFile(
+            MultipartFile file,
+            String sourceFilename,
+            String operationName) throws PdfProcessingException {
+        if (file == null || file.isEmpty()) {
+            throw new PdfProcessingException(
+                operationName + " requires one non-empty PDF"
+            );
+        }
+
+        String mediaType = file.getContentType() == null
+            ? "application/octet-stream"
+            : file.getContentType().toLowerCase(Locale.ROOT);
+        if (!hasPdfStem(sourceFilename) || !PDF_MEDIA_TYPES.contains(mediaType)) {
+            throw new PdfProcessingException(
+                operationName + " input must be a PDF"
+            );
+        }
+        if (file.getSize() > mergeProperties.getMaxTotalInputBytes()) {
+            throw new PdfProcessingException(
+                operationName + " input exceeds the total size limit"
+            );
+        }
     }
 
     /**
@@ -177,29 +479,6 @@ public class PdfService {
             return new PdfOperationResult(true, "Pages extracted successfully", outputFile.getName());
         } catch (Exception e) {
             throw new PdfProcessingException("Failed to extract pages: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Remove specific pages from PDF
-     */
-    public PdfOperationResult removePages(MultipartFile file, List<Integer> pageNumbers, String originalFilename) 
-            throws PdfProcessingException {
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
-            // Sort in reverse order to remove from end to start
-            pageNumbers.sort((a, b) -> b - a);
-            
-            for (Integer pageNum : pageNumbers) {
-                if (pageNum > 0 && pageNum <= document.getNumberOfPages()) {
-                    document.removePage(pageNum - 1);
-                }
-            }
-
-            File outputFile = saveDocument(document, "removed", originalFilename);
-
-            return new PdfOperationResult(true, "Pages removed successfully", outputFile.getName());
-        } catch (Exception e) {
-            throw new PdfProcessingException("Failed to remove pages: " + e.getMessage(), e);
         }
     }
 
@@ -360,9 +639,9 @@ public class PdfService {
             throws PdfProcessingException {
         try (PDDocument document = Loader.loadPDF(file.getBytes())) {
             // Parse JSON array of redactions: [{x, y, width, height, pageNum}, ...]
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
             java.util.List<java.util.Map<String, Object>> redactions = mapper.readValue(redactionsJson, 
-                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<java.util.Map<String, Object>>>(){});
+                new tools.jackson.core.type.TypeReference<java.util.List<java.util.Map<String, Object>>>(){});
             
             for (java.util.Map<String, Object> redaction : redactions) {
                 int pageNum = ((Number) redaction.get("pageNum")).intValue();
@@ -548,10 +827,28 @@ public class PdfService {
      */
     private File getUploadDir() throws IOException {
         File dir = new File(uploadDir);
-        if (!dir.exists()) {
-            dir.mkdirs();
+        Files.createDirectories(dir.toPath());
+        if (!dir.isDirectory()) {
+            throw new IOException("Upload path is not a directory: " + dir);
         }
         return dir;
+    }
+
+
+    private Path reserveLegacyOutput(String prefix, String suffix)
+            throws IOException {
+        Path directory = getUploadDir().toPath();
+        for (int attempt = 0; attempt < 3; attempt++) {
+            Path candidate = directory.resolve(
+                prefix + UUID.randomUUID() + suffix
+            );
+            try {
+                return Files.createFile(candidate);
+            } catch (FileAlreadyExistsException ignored) {
+                // Retry with a new opaque identifier.
+            }
+        }
+        throw new IOException("Could not reserve a unique output filename");
     }
 
     /**
@@ -583,8 +880,13 @@ public class PdfService {
         String baseName = filename.substring(0, lastDot);
         String extension = filename.substring(lastDot + 1).toLowerCase();
         
-        if (!extension.equals("pdf") && !extension.equals("md") && !extension.equals("docx")) {
-            throw new PdfProcessingException("Invalid filename: only .pdf, .md, or .docx extensions are allowed");
+        if (!extension.equals("pdf")
+                && !extension.equals("md")
+                && !extension.equals("docx")
+                && !extension.equals("zip")) {
+            throw new PdfProcessingException(
+                "Invalid filename: only .pdf, .md, .docx, or .zip extensions are allowed"
+            );
         }
         
         // Prevent obvious parent directory references while still allowing multiple dots in the base name
@@ -600,27 +902,75 @@ public class PdfService {
      * Download file
      */
     public byte[] downloadFile(String filename) throws PdfProcessingException {
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            streamDownloadFile(filename, output);
+            return output.toByteArray();
+        } catch (IOException exception) {
+            throw new PdfProcessingException(
+                "Failed to buffer download: " + exception.getMessage(),
+                exception
+            );
+        }
+    }
+
+    public long getDownloadFileSize(String filename) throws PdfProcessingException {
         try {
-            // Validate filename to prevent path traversal attacks
+            return Files.size(resolveDownloadPath(filename));
+        } catch (IOException exception) {
+            throw new PdfProcessingException(
+                "Failed to read download size: " + exception.getMessage(),
+                exception
+            );
+        }
+    }
+
+    public String getDownloadMediaType(String filename) throws PdfProcessingException {
+        validateFilename(filename);
+        String extension = filename.substring(filename.lastIndexOf('.') + 1)
+            .toLowerCase(Locale.ROOT);
+        return switch (extension) {
+            case "pdf" -> "application/pdf";
+            case "zip" -> "application/zip";
+            case "md" -> "text/markdown";
+            case "docx" ->
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            default -> "application/octet-stream";
+        };
+    }
+
+    public void streamDownloadFile(
+            String filename,
+            OutputStream output) throws PdfProcessingException {
+        try (InputStream input = Files.newInputStream(resolveDownloadPath(filename))) {
+            input.transferTo(output);
+        } catch (IOException exception) {
+            throw new PdfProcessingException(
+                "Failed to stream download: " + exception.getMessage(),
+                exception
+            );
+        }
+    }
+
+    private Path resolveDownloadPath(String filename) throws PdfProcessingException {
+        try {
             validateFilename(filename);
-            
-            Path filePath = Paths.get(uploadDir, filename);
-            
-            // Additional security check: ensure the resolved path is within the upload directory
             Path uploadPath = Paths.get(uploadDir).toRealPath();
-            Path resolvedPath = filePath.toRealPath();
-            
+            Path resolvedPath = uploadPath.resolve(filename).normalize().toRealPath();
             if (!resolvedPath.startsWith(uploadPath)) {
-                throw new PdfProcessingException("Access denied: file is outside the allowed directory");
+                throw new PdfProcessingException(
+                    "Access denied: file is outside the allowed directory"
+                );
             }
-            
-            return Files.readAllBytes(resolvedPath);
-        } catch (PdfProcessingException e) {
-            throw e;
-        } catch (java.nio.file.NoSuchFileException e) {
-            throw new PdfProcessingException("File not found: " + filename, e);
-        } catch (Exception e) {
-            throw new PdfProcessingException("Failed to download file: " + e.getMessage(), e);
+            return resolvedPath;
+        } catch (PdfProcessingException exception) {
+            throw exception;
+        } catch (java.nio.file.NoSuchFileException exception) {
+            throw new PdfProcessingException("File not found: " + filename, exception);
+        } catch (IOException exception) {
+            throw new PdfProcessingException(
+                "Failed to resolve download: " + exception.getMessage(),
+                exception
+            );
         }
     }
 }

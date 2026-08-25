@@ -1,0 +1,49 @@
+.job-progress {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--gray-50);
+}
+
+.job-progress-header,
+.job-progress-header > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.job-progress-header > div {
+  flex: 1;
+}
+
+.job-progress-header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--error);
+  cursor: pointer;
+}
+
+.job-progress progress {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.job-progress-warning,
+.job-progress-error {
+  margin: 0;
+  font-size: 12px;
+}
+
+.job-progress-warning {
+  color: #92400e;
+}
+
+.job-progress-error {
+  color: var(--error);
+}

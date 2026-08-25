@@ -1,109 +1,221 @@
-import React, { useState, useCallback } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { ArrowLeft, Download, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ArrowLeft, Download } from 'lucide-react';
-import PdfViewer from '../components/PdfViewer';
-import FileUpload from '../components/FileUpload';
+import { Document, Page } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+import '../lib/pdfWorker';
 import Button from '../components/Button';
-import Input from '../components/Input';
+import FileUpload from '../components/FileUpload';
 import ToastContainer from '../components/Toast';
-import { pdfService, downloadBlob } from '../services/pdfService';
+import { parsePageExpression } from '../features/editor/pageExpression';
+import JobProgress from '../features/jobs/JobProgress';
+import { startBrowserDownload } from '../features/jobs/startBrowserDownload';
+import { usePdfJob } from '../features/jobs/usePdfJob';
+import { getApiErrorMessage, jobService } from '../services/jobService';
 import './OperationPage.css';
+import './RemovePage.css';
+
+const PREVIEW_PAGE_LIMIT = 100;
 
 const RemovePage = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
-  const [selectedPages, setSelectedPages] = useState([]);
+  const [fileUrl, setFileUrl] = useState(null);
+  const [numPages, setNumPages] = useState(null);
   const [pagesInput, setPagesInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const urlRef = useRef(null);
+  const handledJobRef = useRef(null);
+  const {
+    job,
+    running,
+    connectionError,
+    start,
+    cancel,
+    reset,
+  } = usePdfJob();
 
-  const addToast = (message, type = 'success', duration = 5000) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
-  };
-
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
-
-  const handleFilesChange = useCallback((files) => {
-    setFile(files[0] || null);
-    setSelectedPages([]);
-    setPagesInput('');
+  const addToast = useCallback((message, type = 'success', duration = 5000) => {
+    setToasts((current) => [
+      ...current,
+      { id: Date.now(), message, type, duration },
+    ]);
   }, []);
 
-  const handlePageSelect = (pageNum) => {
-    setSelectedPages((prev) => {
-      const newSelection = prev.includes(pageNum)
-        ? prev.filter((p) => p !== pageNum)
-        : [...prev, pageNum].sort((a, b) => a - b);
-      
-      setPagesInput(newSelection.join(','));
-      return newSelection;
-    });
-  };
+  const removeToast = useCallback((id) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
 
-  const handlePagesInputChange = (e) => {
-    const value = e.target.value;
-    setPagesInput(value);
-    
-    try {
-      const pages = [];
-      value.split(',').forEach((part) => {
-        const trimmed = part.trim();
-        if (trimmed.includes('-')) {
-          const [start, end] = trimmed.split('-').map((n) => parseInt(n.trim()));
-          if (!isNaN(start) && !isNaN(end)) {
-            for (let i = start; i <= end; i++) {
-              if (!pages.includes(i)) pages.push(i);
-            }
-          }
-        } else {
-          const num = parseInt(trimmed);
-          if (!isNaN(num) && !pages.includes(num)) {
-            pages.push(num);
-          }
-        }
-      });
-      setSelectedPages(pages.sort((a, b) => a - b));
-    } catch {
-      // Invalid input
+  const removalPlan = useMemo(() => {
+    if (!numPages || !pagesInput.trim()) {
+      return { pages: [], error: null };
     }
-  };
+    try {
+      const pages = parsePageExpression(pagesInput, numPages, {
+        duplicatePolicy: 'reject',
+      });
+      if (pages.length === numPages) {
+        return {
+          pages,
+          error: 'At least one page must remain in the PDF.',
+        };
+      }
+      return { pages, error: null };
+    } catch (error) {
+      return { pages: [], error: error.message };
+    }
+  }, [numPages, pagesInput]);
+
+  const selectedPages = useMemo(
+    () => new Set(removalPlan.pages),
+    [removalPlan.pages],
+  );
+
+  const downloadOutput = useCallback((output) => {
+    try {
+      startBrowserDownload(
+        jobService.getDownloadUrl(output),
+        output.filename,
+      );
+      addToast('Page removal download started!', 'success');
+    } catch (error) {
+      console.error('Remove Pages download error:', error);
+      addToast(
+        getApiErrorMessage(error, 'Failed to download the updated PDF'),
+        'error',
+      );
+    }
+  }, [addToast]);
+
+  useEffect(() => () => {
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!job || !['COMPLETED', 'FAILED', 'CANCELLED'].includes(job.status)) {
+      return;
+    }
+    const resultKey = `${job.id}:${job.status}`;
+    if (handledJobRef.current === resultKey) {
+      return undefined;
+    }
+    handledJobRef.current = resultKey;
+    let active = true;
+    const handleResult = async () => {
+      await Promise.resolve();
+      if (!active) return;
+      if (job.status === 'FAILED') {
+        addToast(job.errorMessage || 'Failed to remove pages', 'error');
+        return;
+      }
+      if (job.status === 'CANCELLED') {
+        addToast('Page removal cancelled', 'error');
+        return;
+      }
+      const output = job.outputs[0];
+      if (!output) {
+        addToast('The job completed without a PDF output.', 'error');
+        return;
+      }
+      downloadOutput(output);
+    };
+    handleResult();
+    return () => {
+      active = false;
+    };
+  }, [addToast, downloadOutput, job]);
+
+  const handleFilesChange = useCallback((files) => {
+    if (running) return;
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+    const nextFile = files[0] || null;
+    const nextUrl = nextFile ? URL.createObjectURL(nextFile) : null;
+    urlRef.current = nextUrl;
+    setFile(nextFile);
+    setFileUrl(nextUrl);
+    setNumPages(null);
+    setPagesInput('');
+    handledJobRef.current = null;
+    reset();
+  }, [reset, running]);
+
+  const handlePageToggle = useCallback((pageNumber) => {
+    if (!numPages || running) return;
+    const next = new Set(removalPlan.pages);
+    if (next.has(pageNumber)) {
+      next.delete(pageNumber);
+    } else if (next.size < numPages - 1) {
+      next.add(pageNumber);
+    } else {
+      addToast('At least one page must remain in the PDF.', 'error');
+      return;
+    }
+    setPagesInput([...next].sort((left, right) => left - right).join(','));
+  }, [
+    addToast,
+    numPages,
+    removalPlan.pages,
+    running,
+  ]);
 
   const handleRemove = async () => {
     if (!file) {
-      addToast('Please upload a PDF file', 'error');
+      addToast('Upload a PDF before removing pages.', 'error');
       return;
     }
-
-    if (selectedPages.length === 0 && !pagesInput) {
-      addToast('Please select pages to remove', 'error');
+    if (!numPages || !pagesInput.trim()) {
+      addToast('Enter at least one page or range to remove.', 'error');
       return;
     }
-
-    setLoading(true);
+    if (removalPlan.error) {
+      addToast(removalPlan.error, 'error');
+      return;
+    }
     try {
-      const pages = pagesInput || selectedPages.join(',');
-      const result = await pdfService.removePages(file, pages);
-      const baseName = file.name.replace(/\.[pP][dD][fF]$/, '');
-      downloadBlob(result, `${baseName}_removed.pdf`);
-      addToast('Pages removed successfully!', 'success');
+      await start('remove', [file], { pages: pagesInput.trim() });
     } catch (error) {
-      console.error('Remove error:', error);
+      console.error('Remove Pages job error:', error);
       addToast(
-        error.response?.data?.message || error.message || 'Failed to remove pages',
-        'error'
+        getApiErrorMessage(error, 'Failed to start page removal'),
+        'error',
       );
-    } finally {
-      setLoading(false);
     }
   };
+
+  const handleCancel = async () => {
+    try {
+      await cancel();
+    } catch (error) {
+      console.error('Remove Pages cancellation error:', error);
+      addToast(getApiErrorMessage(error, 'Failed to cancel job'), 'error');
+    }
+  };
+
+  const previewPages = Math.min(numPages || 0, PREVIEW_PAGE_LIMIT);
+  const canSubmit = Boolean(
+    file
+      && numPages
+      && pagesInput.trim()
+      && removalPlan.pages.length
+      && !removalPlan.error
+      && !running,
+  );
 
   return (
     <div className="operation-page">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-
       <header className="operation-header">
         <button className="back-button" onClick={() => navigate('/')}>
           <ArrowLeft size={20} />
@@ -114,7 +226,7 @@ const RemovePage = () => {
           <h1>Remove Pages</h1>
         </div>
         <p className="operation-description">
-          Select pages to remove from your PDF. Click on thumbnails or enter page numbers.
+          Delete page ranges while preserving the order of every page you keep.
         </p>
       </header>
 
@@ -126,40 +238,65 @@ const RemovePage = () => {
               onFilesChange={handleFilesChange}
               files={file ? [file] : []}
               multiple={false}
+              disabled={running}
             />
           </div>
 
           {file && (
-            <div className="sidebar-section">
-              <h3 className="sidebar-title">Pages to Remove</h3>
-              <Input
-                label="Page Numbers"
-                placeholder="e.g., 2,4,6-8"
-                value={pagesInput}
-                onChange={handlePagesInputChange}
-                helperText="These pages will be deleted"
-              />
-              {selectedPages.length > 0 && (
-                <div className="selected-pages-info warning">
-                  Will remove: {selectedPages.length} page(s)
-                </div>
-              )}
-            </div>
-          )}
+            <>
+              <div className="sidebar-section">
+                <label className="remove-pages-field">
+                  Pages to remove
+                  <textarea
+                    aria-label="Pages to remove"
+                    value={pagesInput}
+                    onChange={(event) => setPagesInput(event.target.value)}
+                    placeholder="2,4-6,9-"
+                    rows={4}
+                    disabled={running}
+                  />
+                  <span className={removalPlan.error ? 'is-error' : ''}>
+                    {removalPlan.error
+                      || `${removalPlan.pages.length} page(s) selected`}
+                  </span>
+                </label>
+                <p className="remove-pages-help">
+                  Use pages, ranges, <code>odd</code>, or <code>even</code>.
+                  Duplicate and all-page selections are rejected.
+                </p>
+              </div>
 
-          {file && (
-            <div className="sidebar-actions">
-              <Button
-                onClick={handleRemove}
-                loading={loading}
-                disabled={loading || (selectedPages.length === 0 && !pagesInput)}
-                icon={<Download size={20} />}
-                fullWidth
-                size="lg"
-              >
-                {loading ? 'Removing...' : 'Remove & Download'}
-              </Button>
-            </div>
+              <div className="sidebar-actions">
+                {job && (
+                  <JobProgress
+                    job={job}
+                    connectionError={connectionError}
+                    onCancel={handleCancel}
+                  />
+                )}
+                {job?.status === 'COMPLETED' && job.outputs[0] && (
+                  <Button
+                    onClick={() => downloadOutput(job.outputs[0])}
+                    variant="outline"
+                    icon={<Download size={20} />}
+                    fullWidth
+                  >
+                    Download result again
+                  </Button>
+                )}
+                <Button
+                  onClick={handleRemove}
+                  loading={running}
+                  disabled={!canSubmit}
+                  variant="danger"
+                  icon={<Trash2 size={20} />}
+                  fullWidth
+                  size="lg"
+                >
+                  {running ? 'Removing...' : 'Remove & Download'}
+                </Button>
+              </div>
+            </>
           )}
         </aside>
 
@@ -167,22 +304,71 @@ const RemovePage = () => {
           {file ? (
             <>
               <div className="preview-header">
-                <h3>Preview: {file.name}</h3>
-                <span className="preview-hint">Click thumbnails to select pages to remove</span>
+                <h3>
+                  Preview: {file.name} {numPages && `(${numPages} pages)`}
+                </h3>
+                <span className="preview-hint">
+                  Select a page card to toggle removal
+                </span>
               </div>
-              <PdfViewer 
-                file={file} 
-                showThumbnails={true}
-                selectable={true}
-                selectedPages={selectedPages}
-                onPageSelect={handlePageSelect}
-              />
+              <div className="remove-page-grid">
+                <Document
+                  file={fileUrl}
+                  onLoadSuccess={({ numPages: loadedPages }) => {
+                    setNumPages(loadedPages);
+                  }}
+                  loading={(
+                    <div className="loading-placeholder">Loading PDF...</div>
+                  )}
+                  error={(
+                    <div className="loading-placeholder">
+                      Failed to load PDF.
+                    </div>
+                  )}
+                >
+                  {Array.from(
+                    { length: previewPages },
+                    (_, index) => index + 1,
+                  ).map((pageNumber) => {
+                    const selected = selectedPages.has(pageNumber);
+                    return (
+                      <button
+                        className={`remove-page-card ${
+                          selected ? 'is-selected' : ''
+                        }`}
+                        key={pageNumber}
+                        type="button"
+                        aria-label={`Remove page ${pageNumber}`}
+                        aria-pressed={selected}
+                        onClick={() => handlePageToggle(pageNumber)}
+                        disabled={running}
+                      >
+                        <Page
+                          pageNumber={pageNumber}
+                          width={150}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                        />
+                        <span className="remove-page-card__label">
+                          Page {pageNumber}
+                          <strong>{selected ? 'Remove' : 'Keep'}</strong>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </Document>
+                {numPages > PREVIEW_PAGE_LIMIT && (
+                  <p className="remove-preview-limit">
+                    Showing the first {PREVIEW_PAGE_LIMIT} of {numPages} pages.
+                  </p>
+                )}
+              </div>
             </>
           ) : (
             <div className="preview-empty">
               <Trash2 size={64} />
               <h3>Upload a PDF to preview</h3>
-              <p>Select pages to remove from the document</p>
+              <p>Choose page cards or enter a precise page expression.</p>
             </div>
           )}
         </main>

@@ -1,0 +1,99 @@
+.office-security-note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.7rem;
+  color: var(--ink);
+  background: var(--iris-soft);
+  border: 1px solid color-mix(in srgb, var(--iris) 25%, transparent);
+}
+
+.office-security-note > svg {
+  color: var(--iris);
+}
+
+.office-security-note h3,
+.office-security-note p {
+  margin: 0;
+}
+
+.office-security-note h3 {
+  font-size: var(--text-sm);
+}
+
+.office-security-note p {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.office-convert-preview {
+  display: grid;
+  width: min(560px, calc(100% - 3rem));
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+}
+
+.office-convert-preview__icon {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  place-items: center;
+  color: var(--iris);
+  background: var(--iris-soft);
+  border-radius: var(--radius-lg);
+}
+
+.office-convert-preview h2,
+.office-convert-preview p {
+  margin: 0;
+}
+
+.office-convert-preview h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  letter-spacing: -0.04em;
+}
+
+.office-convert-preview p:not(.office-convert-preview__eyebrow) {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.office-convert-preview__eyebrow {
+  margin-bottom: 0.35rem;
+  color: var(--iris);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.office-convert-preview__limit {
+  padding-top: 1rem;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+@media (max-width: 1024px) {
+  .isolated-conversion-page {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .isolated-conversion-page .operation-content {
+    overflow: visible;
+  }
+
+  .isolated-conversion-page .operation-sidebar {
+    max-height: none;
+    overflow: visible;
+  }
+}

@@ -1,0 +1,144 @@
+.pdf-editor {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  min-height: 0;
+  height: 100%;
+}
+
+.pdf-editor > aside {
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--white);
+  border-right: 1px solid var(--gray-200);
+}
+
+.pdf-editor > main {
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.page-organizer {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.page-organizer-pagination {
+  display: grid;
+  margin-bottom: 12px;
+  align-items: center;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.page-organizer-pagination button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--iris);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+.page-organizer-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.page-organizer > li {
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--gray-50);
+}
+
+.page-organizer > li.selected {
+  border-color: var(--primary);
+}
+
+.page-organizer-preview {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--gray-700);
+  cursor: grab;
+}
+
+.page-organizer-preview .react-pdf__Page {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+.page-organizer-preview span {
+  grid-column: 1 / -1;
+}
+
+.page-organizer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.page-organizer-actions button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--gray-200);
+  color: var(--gray-700);
+  cursor: pointer;
+}
+
+.page-organizer-actions button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pdf-editor-page {
+  position: relative;
+  box-shadow: 0 4px 24px rgb(0 0 0 / 15%);
+}
+
+.pdf-editor-overlay {
+  position: absolute;
+  border: 2px solid var(--primary);
+  background: rgb(139 92 246 / 18%);
+  pointer-events: none;
+}
+
+.pdf-editor-empty {
+  margin: auto;
+  color: var(--gray-500);
+}
+
+@media (max-width: 1024px) {
+  .pdf-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .pdf-editor > aside {
+    border-right: 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  .page-organizer {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}

@@ -1,0 +1,41 @@
+.conversion-controls {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.conversion-controls label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.conversion-controls input:not([type='checkbox']),
+.conversion-controls select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.65rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+
+.conversion-toggle {
+  grid-template-columns: 1rem 1fr;
+  align-items: center;
+}
+
+.conversion-toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--iris);
+}
+
+.conversion-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--text-xs);
+}

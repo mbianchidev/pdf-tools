@@ -1,0 +1,105 @@
+.pdfa-profile-guide {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.pdfa-profile-guide > div {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 0.65rem;
+  color: var(--text-secondary);
+  background: var(--surface);
+}
+
+.pdfa-profile-guide > div.is-active {
+  border-color: color-mix(
+    in srgb,
+    var(--primary) 45%,
+    var(--border-primary)
+  );
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+
+.pdfa-profile-guide strong {
+  font-size: 15px;
+}
+
+.pdfa-profile-guide span {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.pdfa-result {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 0.8rem;
+  background: var(--surface);
+}
+
+.pdfa-result--loading {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.pdfa-result--success {
+  border-color: color-mix(
+    in srgb,
+    var(--success) 35%,
+    var(--border-primary)
+  );
+  background: var(--success-soft);
+}
+
+.pdfa-result--error {
+  border-color: color-mix(
+    in srgb,
+    var(--danger) 35%,
+    var(--border-primary)
+  );
+  background: var(--danger-soft);
+}
+
+.pdfa-result strong {
+  display: block;
+  font-size: 15px;
+}
+
+.pdfa-result p,
+.pdfa-result span {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.pdfa-report-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0;
+  border: 0;
+  color: var(--primary);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.pdfa-report-download:hover {
+  color: var(--iris-dark);
+}
+
+.pdfa-report-download:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 0.25rem;
+}

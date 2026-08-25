@@ -2,47 +2,43 @@
   width: 100%;
 }
 
-.dropzone {
-  border: 3px dashed var(--border-primary);
-  border-radius: var(--radius-2xl);
-  padding: var(--space-12);
-  text-align: center;
-  cursor: pointer;
-  transition: all var(--duration-normal) var(--ease-default);
-  background: var(--bg-secondary);
+.file-upload .dropzone {
   position: relative;
+  display: grid;
+  min-height: 190px;
+  align-items: center;
+  padding: 26px;
   overflow: hidden;
+  text-align: center;
+  background:
+    linear-gradient(135deg, rgb(79 70 229 / 4%) 25%, transparent 25%) 0 0 / 24px 24px,
+    var(--surface);
+  border: 2px dashed var(--line-strong);
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
-.dropzone::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-50) 0%,
-    var(--color-secondary-50) 100%
-  );
-  opacity: 0;
-  transition: opacity var(--duration-normal) var(--ease-default);
-  z-index: 0;
+.file-upload .dropzone:hover,
+.file-upload .dropzone-active {
+  border-color: var(--iris);
+  box-shadow: 8px 8px 0 var(--iris-soft);
+  transform: translate(-3px, -3px);
 }
 
-.dropzone:hover::before {
-  opacity: 0.5;
+.file-upload .dropzone-disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
-.dropzone-active {
-  border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
-  transform: scale(1.02);
-}
-
-.dropzone-active::before {
-  opacity: 0.8;
+.file-upload .dropzone-disabled:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
+  transform: none;
 }
 
 .dropzone-content {
@@ -51,147 +47,123 @@
 }
 
 .dropzone-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto var(--space-4);
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-secondary-500));
-  color: white;
-  border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-lg);
-  transition: all var(--duration-normal) var(--ease-default);
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  place-items: center;
+  color: var(--iris);
+  background: var(--iris-soft);
+  border: 1px solid #d2ceff;
 }
 
-.dropzone:hover .dropzone-icon {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: var(--shadow-primary);
+.dropzone-icon svg {
+  width: 26px;
+  height: 26px;
 }
 
 .dropzone-text {
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--space-2);
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 720;
+  letter-spacing: -0.025em;
+}
+
+.dropzone-subtext,
+.dropzone-hint {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .dropzone-subtext {
-  font-size: var(--text-base);
-  color: var(--text-secondary);
-  margin-bottom: var(--space-4);
+  margin: 0 0 10px;
 }
 
 .dropzone-hint {
-  font-size: var(--text-sm);
-  color: var(--text-tertiary);
   margin: 0;
 }
 
-/* File List */
 .file-list {
-  margin-top: var(--space-6);
-  padding: var(--space-6);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-primary);
+  margin-top: 18px;
+  padding: 16px;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
 }
 
 .file-list-title {
-  font-size: var(--text-lg);
-  font-weight: var(--font-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--space-4);
+  margin-bottom: 12px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .file-list-items {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  display: grid;
+  gap: 7px;
 }
 
 .file-item {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: white;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-primary);
-  transition: all var(--duration-fast) var(--ease-default);
-}
-
-.file-item:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateX(4px);
+  gap: 10px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 .file-item-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--color-primary-100), var(--color-secondary-100));
-  color: var(--color-primary-600);
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--iris);
+  background: var(--iris-soft);
 }
 
 .file-item-info {
-  flex: 1;
   min-width: 0;
+  flex: 1;
 }
 
 .file-item-name {
-  font-size: var(--text-base);
-  font-weight: var(--font-medium);
-  color: var(--text-primary);
-  margin: 0 0 var(--space-1) 0;
-  white-space: nowrap;
+  margin: 0;
   overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .file-item-size {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  margin: 0;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .file-item-remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
   width: 32px;
   height: 32px;
+  padding: 0;
+  place-items: center;
+  color: var(--muted);
   background: transparent;
-  color: var(--text-tertiary);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-default);
-  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
 }
 
 .file-item-remove:hover {
-  background: var(--color-error-bg);
-  color: var(--color-error);
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: #ffc5ce;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .dropzone {
-    padding: var(--space-8);
-  }
-
-  .dropzone-icon {
-    width: 64px;
-    height: 64px;
-  }
-
-  .dropzone-text {
-    font-size: var(--text-lg);
+@media (max-width: 560px) {
+  .file-upload .dropzone {
+    min-height: 170px;
+    padding: 22px;
   }
 }

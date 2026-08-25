@@ -8,12 +8,19 @@ const FileUpload = ({
   accept = { 'application/pdf': ['.pdf'] },
   multiple = false,
   files = [],
-  maxFiles = multiple ? 10 : 1
+  maxFiles = multiple ? 10 : 1,
+  disabled = false,
+  hint,
 }) => {
+  const remainingFiles = multiple
+    ? Math.max(maxFiles - files.length, 0)
+    : 1;
+  const dropDisabled = disabled || remainingFiles === 0;
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept,
     multiple,
-    maxFiles,
+    maxFiles: remainingFiles,
+    disabled: dropDisabled,
     onDrop: (acceptedFiles) => {
       onFilesChange(multiple ? [...files, ...acceptedFiles] : acceptedFiles);
     },
@@ -28,9 +35,9 @@ const FileUpload = ({
     <div className="file-upload">
       <div 
         {...getRootProps()} 
-        className={`dropzone ${isDragActive ? 'dropzone-active' : ''}`}
+        className={`dropzone ${isDragActive ? 'dropzone-active' : ''} ${dropDisabled ? 'dropzone-disabled' : ''}`}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps()} disabled={dropDisabled} />
         <div className="dropzone-content">
           <div className="dropzone-icon">
             <Upload size={48} />
@@ -46,9 +53,9 @@ const FileUpload = ({
             </>
           )}
           <p className="dropzone-hint">
-            {multiple 
-              ? `Supports up to ${maxFiles} PDF files` 
-              : 'Supports PDF files'}
+            {hint || (multiple
+              ? `Supports up to ${maxFiles} PDF files`
+              : 'Supports PDF files')}
           </p>
         </div>
       </div>
@@ -73,6 +80,7 @@ const FileUpload = ({
                   className="file-item-remove"
                   onClick={() => removeFile(index)}
                   aria-label="Remove file"
+                  disabled={disabled}
                 >
                   <X size={18} />
                 </button>

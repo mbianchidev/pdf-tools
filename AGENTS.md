@@ -9,8 +9,10 @@ This document provides comprehensive project information for AI agents to effici
 | Aspect | Details |
 |--------|---------|
 | **Type** | Full-stack web application |
-| **Frontend** | React 19 + Vite 7 |
-| **Backend** | Java 25 + Spring Boot 3.2.1 |
+| **Frontend** | React 19 + Vite 8 |
+| **Backend** | Java 25 + Spring Boot 4.1 |
+| **Persistence** | PostgreSQL 18 + Flyway |
+| **Storage** | Local streaming storage / SeaweedFS S3 |
 | **Deployment** | Docker Compose |
 | **Ports** | Frontend: 80, Backend: 8080 |
 
@@ -24,8 +26,11 @@ pdf-tools/
 │   ├── src/main/java/com/pdftools/
 │   │   ├── PdfToolsApplication.java    # Main application entry
 │   │   ├── config/                      # Spring configuration
+│   │   ├── jobs/                        # /api/v1/jobs lifecycle
+│   │   ├── operations/                  # Modular PDF operation contract
+│   │   ├── storage/                     # Local and S3 streaming adapters
 │   │   ├── controller/
-│   │   │   └── PdfController.java       # REST API endpoints
+│   │   │   └── PdfController.java       # Legacy REST API endpoints
 │   │   ├── dto/                         # Data transfer objects
 │   │   ├── exception/                   # Custom exceptions
 │   │   └── service/
@@ -54,8 +59,12 @@ pdf-tools/
 │   │   │   ├── SignaturePage.jsx        # Add signatures
 │   │   │   ├── WatermarkPage.jsx        # Add watermarks
 │   │   │   ├── RedactPage.jsx           # Redact content
-│   │   │   ├── ConvertDocxPage.jsx      # Convert to DOCX
-│   │   │   ├── ConvertMarkdownPage.jsx  # Convert to Markdown
+│   │   │   ├── PdfToWordPage.jsx        # PDF to Word
+│   │   │   ├── PdfToMarkdownPage.jsx    # Structured Markdown bundle
+│   │   │   ├── CompressPage.jsx         # PDF size reduction
+│   │   │   ├── RepairPage.jsx           # qpdf recovery reports
+│   │   │   ├── PdfAPage.jsx             # veraPDF archival profiles
+│   │   │   ├── ComparePage.jsx          # Text/layout/rendered diffs
 │   │   │   └── OperationPage.css        # Shared operation styles
 │   │   └── services/
 │   │       └── pdfService.js            # API client
@@ -76,7 +85,7 @@ pdf-tools/
 | Library | Version | Purpose |
 |---------|---------|---------|
 | React | 19.2 | UI framework |
-| Vite | 7.x | Build tool |
+| Vite | 8.x | Build tool |
 | react-pdf | latest | PDF rendering |
 | react-router-dom | 7.x | Routing |
 | axios | latest | HTTP client |
@@ -86,21 +95,52 @@ pdf-tools/
 ### Backend
 | Library | Version | Purpose |
 |---------|---------|---------|
-| Spring Boot | 3.2.1 | Application framework |
+| Spring Boot | 4.1 | Application framework |
 | Apache PDFBox | 3.x | PDF manipulation |
-| iText | 8.x | Advanced PDF operations |
 | Apache POI | 5.x | DOCX generation |
+| PostgreSQL | 18 | Job metadata |
+| Flyway | managed | Schema migrations |
 
 ---
 
 ## Key Files Reference
 
 ### When modifying PDF operations:
-- **Backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
-- **API endpoints**: `backend/src/main/java/com/pdftools/controller/PdfController.java`
-- **Frontend API calls**: `frontend/src/services/pdfService.js`
+- **Operation contract**: `backend/src/main/java/com/pdftools/operations/PdfOperation.java`
+- **Merge implementation**: `backend/src/main/java/com/pdftools/operations/merge/`
+- **Split implementation**: `backend/src/main/java/com/pdftools/operations/split/`
+- **Remove implementation**: `backend/src/main/java/com/pdftools/operations/remove/`
+- **Rotate implementation**: `backend/src/main/java/com/pdftools/operations/rotate/`
+- **Organize implementation**: `backend/src/main/java/com/pdftools/operations/organize/`
+- **Crop implementation**: `backend/src/main/java/com/pdftools/operations/crop/`
+- **Page number implementation**: `backend/src/main/java/com/pdftools/operations/pagenumbers/`
+- **Protect implementation**: `backend/src/main/java/com/pdftools/operations/protect/`
+- **Unlock implementation**: `backend/src/main/java/com/pdftools/operations/unlock/`
+- **PDF-to-JPG implementation**: `backend/src/main/java/com/pdftools/operations/pdfjpg/`
+- **JPG-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/jpgpdf/`
+- **Watermark implementation**: `backend/src/main/java/com/pdftools/operations/watermark/`
+- **Edit implementation**: `backend/src/main/java/com/pdftools/operations/edit/`
+- **Secure Redact implementation**: `backend/src/main/java/com/pdftools/operations/redact/`
+- **Office conversion sandbox**: `backend/src/main/java/com/pdftools/operations/office/`
+- **Word-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/wordpdf/`
+- **PowerPoint-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/pptpdf/`
+- **Excel-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/excelpdf/`
+- **HTML-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/htmlpdf/`
+- **HTML converter sidecar**: `html-converter/`
+- **PDF-to-Word implementation**: `backend/src/main/java/com/pdftools/operations/pdfword/`
+- **PDF-to-PowerPoint implementation**: `backend/src/main/java/com/pdftools/operations/pdfppt/`
+- **PDF-to-Excel implementation**: `backend/src/main/java/com/pdftools/operations/pdfexcel/`
+- **Office queue daemon**: `backend/src/main/java/com/pdftools/operations/office/OfficeConverterDaemonMain.java`
+- **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
+- **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
+- **Frontend job API**: `frontend/src/services/jobService.js`
+- **Legacy frontend API**: `frontend/src/services/pdfService.js`
 
 ### When modifying UI/styling:
+- **Visual authority**: `DESIGN.md`
+- **Product truth**: `PRODUCT.md`
+- **Global tokens and typography**: `frontend/src/index.css`
+- **Landing surface**: `frontend/src/App.jsx`, `frontend/src/App.css`
 - **Shared operation page styles**: `frontend/src/pages/OperationPage.css`
 - **Global styles**: `frontend/src/App.css`
 - **Page-specific styles**: `frontend/src/pages/[PageName].css`
@@ -115,11 +155,10 @@ pdf-tools/
 
 ### Adding PDF.js worker (required for react-pdf)
 ```javascript
-import { Document, Page, pdfjs } from 'react-pdf';
+import { Document, Page } from 'react-pdf';
+import '../lib/pdfWorker';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 ```
 
 ### File upload handling
@@ -178,7 +217,7 @@ docker compose down
 cd backend && mvn spring-boot:run
 
 # Frontend (requires Node.js)
-cd frontend && npm install && npm run dev
+cd frontend && npm ci && npm run dev
 ```
 
 ---
@@ -187,6 +226,11 @@ cd frontend && npm install && npm run dev
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| POST | `/api/v1/jobs` | Create an asynchronous operation |
+| GET | `/api/v1/jobs/{jobId}` | Read job status and outputs |
+| GET | `/api/v1/jobs/{jobId}/events` | Stream progress |
+| DELETE | `/api/v1/jobs/{jobId}` | Cancel a job |
+| GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an output |
 | POST | `/api/pdf/merge` | Merge multiple PDFs |
 | POST | `/api/pdf/split` | Split PDF into pages |
 | POST | `/api/pdf/extract` | Extract specific pages |
@@ -256,3 +300,31 @@ node test-script.js
 - `SPRING_PROFILES_ACTIVE`: Active profile (`docker` or `dev`)
 - `PDF_UPLOAD_DIR`: Temp file storage path
 - `CORS_ALLOWED_ORIGINS`: Allowed CORS origins
+- `PDF_OPTIONS_ENCRYPTION_KEY`: Base64 32-byte key for sensitive job options
+- `PDF_SECURITY_MAX_OUTPUT_BYTES`: Protect/Unlock output byte limit
+- `PDF_ENABLED_OPERATIONS`: Comma-separated submission feature flags
+- `PDF_TO_JPG_MAX_PIXELS_PER_PAGE`: Per-page raster allocation limit
+- `JPG_TO_PDF_MAX_PIXELS_PER_IMAGE`: JPEG input pixel limit
+- `WATERMARK_MAX_IMAGE_PIXELS`: Watermark image pixel limit
+- `WATERMARK_MAX_IMAGE_BYTES`: Watermark image byte limit
+- `WATERMARK_MAX_IMAGE_DIMENSION`: Watermark image side limit
+- `EDIT_MAX_ELEMENTS`: Maximum elements in one unified edit plan
+- `EDIT_MAX_IMAGE_BYTES`: Per-edit-image byte limit
+- `EDIT_MAX_TOTAL_DECODED_IMAGE_BYTES`: Decoded edit-image budget
+- `REDACT_MAX_AREAS`: Maximum secure redaction rectangles
+- `REDACT_RENDER_DPI`: Sanitized raster resolution
+- `REDACT_MAX_PIXELS_PER_PAGE`: Redaction page pixel limit
+- `REDACT_WORKER_HEAP_BYTES`: Isolated redaction heap cap
+- `REDACT_WORKER_TIMEOUT`: Isolated redaction wall-time cap
+- `OFFICE_LIBREOFFICE_BINARY`: LibreOffice executable
+- `OFFICE_CONVERSION_MODE`: `queue` sidecar or explicit local `direct`
+- `OFFICE_QUEUE_REQUEST_ROOT`: Backend-write/sidecar-read request queue
+- `OFFICE_QUEUE_RESPONSE_ROOT`: Sidecar-write/backend-read response queue
+- `OFFICE_QUEUE_SIGNAL_ROOT`: Backend-write/sidecar-read signal queue
+- `OFFICE_SIDECAR_WORK_ROOT`: Size-limited sidecar scratch mount
+- `OFFICE_WORKER_USER`: Non-root native converter identity
+- `OFFICE_MAX_INPUT_BYTES`: Office input byte limit
+- `OFFICE_MAX_EXPANDED_INPUT_BYTES`: Expanded OOXML limit
+- `OFFICE_MAX_ADDRESS_SPACE_BYTES`: Linux converter address-space cap
+- `OFFICE_CPU_TIME_SECONDS`: Converter CPU limit
+- `OFFICE_WALL_TIMEOUT`: Converter wall-time limit
