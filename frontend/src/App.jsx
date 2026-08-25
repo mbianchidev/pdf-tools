@@ -29,6 +29,7 @@ import {
   Presentation,
   Sheet,
   CodeXml,
+  Minimize2,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -62,6 +63,7 @@ const PowerPointToPdfPage = lazy(
 );
 const ExcelToPdfPage = lazy(() => import('./pages/ExcelToPdfPage'));
 const HtmlToPdfPage = lazy(() => import('./pages/HtmlToPdfPage'));
+const CompressPage = lazy(() => import('./pages/CompressPage'));
 
 const operations = [
   {
@@ -217,6 +219,13 @@ const operations = [
     group: 'Convert',
     title: 'PDF to Markdown',
     description: 'Recover structure, tables, images, and reading order',
+  },
+  {
+    id: 'compress',
+    icon: Minimize2,
+    group: 'Organize',
+    title: 'Compress PDF',
+    description: 'Choose lossless, balanced, or extreme compression',
   },
   {
     id: 'pdf-to-word',
@@ -504,6 +513,7 @@ function App() {
           element={<PdfToPowerPointPage />}
         />
         <Route path="/pdf-to-excel" element={<PdfToExcelPage />} />
+        <Route path="/compress" element={<CompressPage />} />
         <Route path="/convert-docx" element={<PdfToWordPage />} />
       </Routes>
     </Suspense>

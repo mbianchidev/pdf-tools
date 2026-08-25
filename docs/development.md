@@ -158,6 +158,15 @@ Important settings:
 | `PDF_MARKDOWN_MAX_OUTPUT_BYTES` | `314572800` | ZIP output byte limit |
 | `PDF_MARKDOWN_WORKER_HEAP_BYTES` | `536870912` | Isolated worker heap cap |
 | `PDF_MARKDOWN_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
+| `COMPRESS_MAX_INPUT_BYTES` | `104857600` | Compress PDF input byte limit |
+| `COMPRESS_MAX_PAGES` | `500` | PDF page limit |
+| `COMPRESS_MAX_IMAGES` | `500` | Unique image limit |
+| `COMPRESS_MAX_TOTAL_IMAGE_PIXELS` | `200000000` | Aggregate decoded image pixel budget |
+| `COMPRESS_RECOMMENDED_JPEG_QUALITY` | `82` | Balanced JPEG quality |
+| `COMPRESS_EXTREME_JPEG_QUALITY` | `60` | Extreme JPEG quality |
+| `COMPRESS_MAX_OUTPUT_BYTES` | `134217728` | Compressed PDF byte limit |
+| `COMPRESS_WORKER_HEAP_BYTES` | `536870912` | Isolated worker heap cap |
+| `COMPRESS_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

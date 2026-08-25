@@ -39,6 +39,7 @@ const OfficeToPdfPage = ({
   securityDescription = 'LibreOffice runs in a networkless sidecar under a separate non-root identity with private scratch and bounded resources.',
   options = {},
   renderControls,
+  renderResult,
   validationError,
 }) => {
   const navigate = useNavigate();
@@ -189,6 +190,7 @@ const OfficeToPdfPage = ({
           </div>
 
           {renderControls?.({ running })}
+          {renderResult?.({ job, file })}
 
           <div className="sidebar-actions">
             {job && (

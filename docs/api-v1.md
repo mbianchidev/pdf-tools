@@ -258,3 +258,11 @@ one ZIP containing `document.md` plus optional linked PNG images. Heading, list,
 table, image, and page-break recovery can be enabled independently. Documents
 without extractable text fail explicitly. See
 [PDF to Markdown](operations/pdf-to-markdown.md).
+
+## Compress PDF
+
+`operation=compress` accepts one unencrypted PDF and returns one PDF. `low`
+performs a lossless structural rewrite, while `recommended` and `extreme`
+recompress eligible opaque raster images at progressively stronger settings.
+The result falls back to the exact source whenever the candidate is not
+smaller. See [Compress PDF](operations/compress.md).

@@ -61,6 +61,7 @@ pdf-tools/
 │   │   │   ├── RedactPage.jsx           # Redact content
 │   │   │   ├── PdfToWordPage.jsx        # PDF to Word
 │   │   │   ├── PdfToMarkdownPage.jsx    # Structured Markdown bundle
+│   │   │   ├── CompressPage.jsx         # PDF size reduction
 │   │   │   └── OperationPage.css        # Shared operation styles
 │   │   └── services/
 │   │       └── pdfService.js            # API client

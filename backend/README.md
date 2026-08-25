@@ -42,6 +42,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **PDF to PowerPoint** - Bounded editable elements or visual page-to-slide conversion
 - **PDF to Excel** - Bounded table detection and typed workbook generation
 - **PDF to Markdown** - Recover structured Markdown and linked images in a ZIP
+- **Compress PDF** - Bounded lossless or image-aware size reduction
 - **Convert to DOCX** - Convert to Word document
 
 ## Getting Started
@@ -84,7 +85,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, and `pdf-to-markdown`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, and `compress`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -107,6 +108,7 @@ PDF-to-Word conversion is documented in [`docs/operations/pdf-to-word.md`](../do
 PDF-to-PowerPoint conversion is documented in [`docs/operations/pdf-to-powerpoint.md`](../docs/operations/pdf-to-powerpoint.md).
 PDF-to-Excel conversion is documented in [`docs/operations/pdf-to-excel.md`](../docs/operations/pdf-to-excel.md).
 PDF-to-Markdown conversion is documented in [`docs/operations/pdf-to-markdown.md`](../docs/operations/pdf-to-markdown.md).
+PDF compression is documented in [`docs/operations/compress.md`](../docs/operations/compress.md).
 
 The following legacy endpoints remain during migration:
 

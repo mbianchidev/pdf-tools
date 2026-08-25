@@ -49,6 +49,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **PDF to PowerPoint** - Create editable slide elements or preserve each page visually
 - **PDF to Excel** - Detect aligned tables into page or table worksheets
 - **PDF to Markdown** - Recover headings, lists, tables, images, page boundaries, and reading order
+- **Compress PDF** - Lossless, recommended, and extreme modes with before/after size comparison
 
 ### Technology Stack
 - **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, PostgreSQL, Flyway

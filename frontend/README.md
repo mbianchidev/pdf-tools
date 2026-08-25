@@ -30,6 +30,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **PDF to PowerPoint** - Choose editable slide elements or visual page slides
 - **PDF to Excel** - Build page worksheets or one sheet per detected table
 - **PDF to Markdown** - Recover structure and linked images in a portable ZIP
+- **Compress PDF** - Compare lossless, balanced, and extreme size reduction
 
 ### UI Features
 - Documentation-first self-hosting landing page
@@ -108,6 +109,7 @@ frontend/
 │   │   ├── RedactPage.jsx
 │   │   ├── PdfToWordPage.jsx
 │   │   ├── PdfToMarkdownPage.jsx
+│   │   ├── CompressPage.jsx
 │   │   └── OperationPage.css  # Shared operation styles
 │   ├── services/
 │   │   ├── jobService.js     # Versioned asynchronous jobs client

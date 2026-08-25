@@ -1,0 +1,84 @@
+.compression-mode-guide {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.compression-mode-guide > div {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 0.65rem;
+  color: var(--text-secondary);
+  background: var(--surface);
+}
+
+.compression-mode-guide > div.is-active {
+  border-color: color-mix(
+    in srgb,
+    var(--primary) 45%,
+    var(--border-primary)
+  );
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+
+.compression-mode-guide strong {
+  font-size: 15px;
+}
+
+.compression-mode-guide span {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.compression-result {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem;
+  border: 1px solid color-mix(
+    in srgb,
+    var(--success) 35%,
+    var(--border-primary)
+  );
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--success) 7%, var(--surface));
+}
+
+.compression-result__eyebrow {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.compression-result > strong {
+  color: var(--success);
+  font-size: 22px;
+}
+
+.compression-result dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.compression-result dl > div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.compression-result dt {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.compression-result dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+}
