@@ -70,6 +70,9 @@ qpdf runs as the backend's non-root user in a separate process with:
 
 macOS development uses Seatbelt network denial plus CPU, file-size, and
 descriptor limits; deploy through Docker for the Linux address-space boundary.
+Linux hosts whose `setpriv` lacks seccomp support fail closed. The explicit
+`REPAIR_ALLOW_UNSANDBOXED_LINUX=true` escape hatch is reserved for trusted
+synthetic tests; Docker always forces it off.
 
 The repaired output is additionally limited to 1,000 pages with bounded page
 tree depth, nodes, and content streams. Docker images include qpdf; local

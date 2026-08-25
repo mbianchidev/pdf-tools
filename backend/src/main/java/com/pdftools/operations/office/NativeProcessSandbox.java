@@ -2,6 +2,7 @@ package com.pdftools.operations.office;
 
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.shared.worker.NetworkDenyFilter;
+import com.pdftools.operations.shared.worker.NativeSandboxCapabilities;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -53,8 +54,6 @@ public class NativeProcessSandbox {
         "(version 1)(allow default)(deny network*)"
             + "(allow network-outbound (to unix-socket))"
             + "(allow network-bind (to unix-socket))";
-    private static volatile Boolean landlockAvailable;
-    private static volatile Boolean seccompFilterAvailable;
 
     public List<String> command(
             Path workspace,
@@ -335,58 +334,15 @@ public class NativeProcessSandbox {
     }
 
     public boolean isLandlockAvailable() {
-        Boolean available = landlockAvailable;
-        if (available != null) {
-            return available;
-        }
-        synchronized (NativeProcessSandbox.class) {
-            if (landlockAvailable == null) {
-                landlockAvailable = detectLandlock();
-            }
-            return landlockAvailable;
-        }
+        return NativeSandboxCapabilities.supportsSetprivOption(
+            "--landlock-access"
+        );
     }
 
     public boolean isSeccompFilterAvailable() {
-        Boolean available = seccompFilterAvailable;
-        if (available != null) {
-            return available;
-        }
-        synchronized (NativeProcessSandbox.class) {
-            if (seccompFilterAvailable == null) {
-                seccompFilterAvailable = detectSetprivOption(
-                    "--seccomp-filter"
-                );
-            }
-            return seccompFilterAvailable;
-        }
-    }
-
-    private boolean detectLandlock() {
-        return detectSetprivOption("--landlock-access");
-    }
-
-    private boolean detectSetprivOption(String option) {
-        try {
-            Process process = new ProcessBuilder(
-                "/usr/bin/setpriv",
-                "--help"
-            )
-                .redirectErrorStream(true)
-                .start();
-            String help = new String(
-                process.getInputStream().readNBytes(32 * 1024),
-                java.nio.charset.StandardCharsets.UTF_8
-            );
-            return process.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)
-                && process.exitValue() == 0
-                && help.contains(option);
-        } catch (IOException exception) {
-            return false;
-        } catch (InterruptedException exception) {
-            Thread.currentThread().interrupt();
-            return false;
-        }
+        return NativeSandboxCapabilities.supportsSetprivOption(
+            "--seccomp-filter"
+        );
     }
 
     private long processFileLimit(

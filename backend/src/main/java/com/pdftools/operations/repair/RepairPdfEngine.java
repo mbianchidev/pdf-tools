@@ -441,6 +441,11 @@ public class RepairPdfEngine {
             "\n",
             result.warnings()
         ).toLowerCase(Locale.ROOT);
+        logger.warn(
+            "qpdf rewrite failed with exit code {}: {}",
+            result.exitCode(),
+            diagnostics
+        );
         if (diagnostics.contains("invalid password")
                 || diagnostics.contains("requires a password")) {
             return new OperationException(

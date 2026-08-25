@@ -25,7 +25,10 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(properties = "pdf.jobs.enabled-operations=repair")
+@SpringBootTest(properties = {
+    "pdf.jobs.enabled-operations=repair",
+    "pdf.operations.repair.allow-unsandboxed-linux=true"
+})
 class RepairPdfJobIntegrationTest {
 
     @Autowired

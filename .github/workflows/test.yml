@@ -36,6 +36,10 @@ jobs:
             libreoffice-writer qpdf util-linux
 
       - name: Run tests
+        env:
+          # Ubuntu 24 compiles setpriv without seccomp-filter support. Production
+          # Docker remains fail-closed and exercises the network-denied path.
+          REPAIR_ALLOW_UNSANDBOXED_LINUX: 'true'
         run: mvn -B test
 
   frontend-checks:

@@ -45,7 +45,7 @@ class RepairPdfOperationTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RepairPdfProperties properties =
-        new RepairPdfProperties();
+        testProperties();
     private final RepairPdfOperation operation = new RepairPdfOperation(
         new RepairPdfEngine(properties),
         properties
@@ -224,5 +224,11 @@ class RepairPdfOperationTest {
             mediaType,
             size
         );
+    }
+
+    private RepairPdfProperties testProperties() {
+        RepairPdfProperties value = new RepairPdfProperties();
+        value.setAllowUnsandboxedLinux(true);
+        return value;
     }
 }

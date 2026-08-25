@@ -2,6 +2,9 @@ package com.pdftools.operations.repair;
 
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.shared.worker.NetworkDenyFilter;
+import com.pdftools.operations.shared.worker.NativeSandboxCapabilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +15,8 @@ import java.util.Map;
 
 final class RepairProcessSandbox {
 
+    private static final Logger logger =
+        LoggerFactory.getLogger(RepairProcessSandbox.class);
     private static final String MACOS_PROFILE =
         "(version 1)(allow default)(deny network*)";
 
@@ -57,7 +62,6 @@ final class RepairProcessSandbox {
         requireExecutable("/usr/bin/setsid");
         requireExecutable("/usr/bin/prlimit");
         requireExecutable("/usr/bin/setpriv");
-        NetworkDenyFilter.write(networkFilter);
         List<String> command = new ArrayList<>(List.of(
             "/usr/bin/setsid",
             "/usr/bin/prlimit",
@@ -69,12 +73,30 @@ final class RepairProcessSandbox {
             "/usr/bin/setpriv",
             "--no-new-privs",
             "--inh-caps=-all",
-            "--ambient-caps=-all",
-            "--seccomp-filter",
-            networkFilter.toAbsolutePath().toString(),
-            "--",
-            qpdf()
+            "--ambient-caps=-all"
         ));
+        boolean seccomp =
+            NativeSandboxCapabilities.supportsSetprivOption(
+                "--seccomp-filter"
+            );
+        if (!seccomp && !properties.isAllowUnsandboxedLinux()) {
+            throw new OperationException(
+                "REPAIR_SANDBOX_UNAVAILABLE",
+                "PDF repair requires setpriv seccomp support on Linux"
+            );
+        }
+        if (seccomp) {
+            NetworkDenyFilter.write(networkFilter);
+            command.add("--seccomp-filter");
+            command.add(networkFilter.toAbsolutePath().toString());
+        } else {
+            logger.warn(
+                "Running qpdf without network seccomp because "
+                    + "allow-unsandboxed-linux is enabled"
+            );
+        }
+        command.add("--");
+        command.add(qpdf());
         command.addAll(arguments);
         return List.copyOf(command);
     }

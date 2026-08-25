@@ -176,6 +176,7 @@ Important settings:
 | `REPAIR_CPU_TIME_SECONDS` | `120` | qpdf CPU-time cap per phase |
 | `REPAIR_REWRITE_TIMEOUT` | `2m` | Structural rewrite wall-time cap |
 | `REPAIR_CHECK_TIMEOUT` | `1m` | Post-repair check wall-time cap |
+| `REPAIR_ALLOW_UNSANDBOXED_LINUX` | `false` | Trusted-test-only escape hatch when host `setpriv` lacks seccomp |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

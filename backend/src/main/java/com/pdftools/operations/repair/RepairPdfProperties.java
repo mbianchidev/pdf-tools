@@ -18,6 +18,7 @@ public class RepairPdfProperties implements PdfPageTreeLimits {
     private long maxAddressSpaceBytes = 1024L * 1024L * 1024L;
     private int cpuTimeSeconds = 120;
     private int maxOpenFiles = 128;
+    private boolean allowUnsandboxedLinux;
     private Duration rewriteTimeout = Duration.ofMinutes(2);
     private Duration checkTimeout = Duration.ofMinutes(1);
     private int maxPages = 1_000;
@@ -103,6 +104,14 @@ public class RepairPdfProperties implements PdfPageTreeLimits {
 
     public void setMaxOpenFiles(int value) {
         maxOpenFiles = value;
+    }
+
+    public boolean isAllowUnsandboxedLinux() {
+        return allowUnsandboxedLinux;
+    }
+
+    public void setAllowUnsandboxedLinux(boolean value) {
+        allowUnsandboxedLinux = value;
     }
 
     public Duration getRewriteTimeout() {
