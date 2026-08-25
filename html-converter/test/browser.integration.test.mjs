@@ -15,7 +15,7 @@ import { convert } from '../src/converter.mjs';
 const execute = promisify(execFile);
 const enabled = process.env.HTML_BROWSER_INTEGRATION === '1';
 
-test('renders the isolated HTML fixture', {
+test('renders the HTML golden fixture', {
   skip: !enabled,
   timeout: 60_000,
 }, async () => {
@@ -57,6 +57,7 @@ test('renders the isolated HTML fixture', {
         marginMm: 12,
       },
       timeoutMs: 45_000,
+      chromiumSandbox: false,
     });
 
     const pdf = await readFile(output);

@@ -52,6 +52,7 @@ export const convert = async ({
   outputPath,
   plan,
   timeoutMs,
+  chromiumSandbox = true,
 }) => {
   const source = await readFile(sourcePath);
   const html = new TextDecoder('utf-8', { fatal: true }).decode(source);
@@ -66,7 +67,7 @@ export const convert = async ({
   try {
     browser = await chromium.launch({
       headless: true,
-      chromiumSandbox: true,
+      chromiumSandbox,
       args: [
         '--disable-background-networking',
         '--disable-breakpad',
