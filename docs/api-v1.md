@@ -242,3 +242,11 @@ See [PDF to Word](operations/pdf-to-word.md).
 with one slide per page. `editable` mode creates positioned text boxes, aligned
 tables, and picture shapes; `visual` mode creates page-image slides. See
 [PDF to PowerPoint](operations/pdf-to-powerpoint.md).
+
+## PDF to Excel
+
+`operation=pdf-to-excel` accepts one unencrypted PDF and returns one XLSX.
+`pages` mode creates one worksheet per PDF page with detected tables and
+optional surrounding text. `tables` mode creates one worksheet per detected
+table and rejects documents without tables. See
+[PDF to Excel](operations/pdf-to-excel.md).

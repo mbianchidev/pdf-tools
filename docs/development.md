@@ -138,6 +138,17 @@ Important settings:
 | `PDF_POWERPOINT_RENDER_DPI` | `144` | Visual-mode page resolution |
 | `PDF_POWERPOINT_WORKER_HEAP_BYTES` | `536870912` | Isolated conversion heap cap |
 | `PDF_POWERPOINT_WORKER_TIMEOUT` | `5m` | Isolated conversion wall-time cap |
+| `PDF_EXCEL_MAX_INPUT_BYTES` | `52428800` | PDF-to-Excel input byte limit |
+| `PDF_EXCEL_MAX_PAGES` | `200` | PDF page limit |
+| `PDF_EXCEL_MAX_TEXT_CHARACTERS` | `2000000` | Extracted text character limit |
+| `PDF_EXCEL_MAX_TABLES` | `200` | Detected table limit |
+| `PDF_EXCEL_MAX_SHEETS` | `200` | Workbook worksheet limit |
+| `PDF_EXCEL_MAX_ROWS_PER_SHEET` | `100000` | Per-worksheet row limit |
+| `PDF_EXCEL_MAX_COLUMNS` | `100` | Detected/generated column limit |
+| `PDF_EXCEL_MAX_CELLS` | `1000000` | Aggregate generated cell limit |
+| `PDF_EXCEL_MAX_OUTPUT_BYTES` | `104857600` | XLSX output byte limit |
+| `PDF_EXCEL_WORKER_HEAP_BYTES` | `536870912` | Isolated worker heap cap |
+| `PDF_EXCEL_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

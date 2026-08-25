@@ -9,3 +9,4 @@ export { default as RedactPage } from './RedactPage';
 export { default as ConvertMarkdownPage } from './ConvertMarkdownPage';
 export { default as PdfToWordPage } from './PdfToWordPage';
 export { default as PdfToPowerPointPage } from './PdfToPowerPointPage';
+export { default as PdfToExcelPage } from './PdfToExcelPage';

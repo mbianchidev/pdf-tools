@@ -34,6 +34,7 @@ scheduler isolated from storage cleanup.
 | `operations.shared.queue` | Durable one-way sidecar queue protocol and lifecycle |
 | `operations.pdfword` | Isolated best-effort PDF-to-DOCX extraction and visual fallback |
 | `operations.pdfppt` | Isolated page-to-slide extraction and visual fallback |
+| `operations.pdfexcel` | Isolated table detection and workbook generation |
 | `operations.shared.extraction` | Positioned text/images, table heuristics, budgets, and page rasterization |
 | `storage` | Local filesystem and S3-compatible streaming adapters |
 | `api` | Structured HTTP error contract |

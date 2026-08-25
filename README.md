@@ -47,6 +47,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **HTML to PDF** - Render self-contained HTML in a networkless Chromium sandbox
 - **PDF to Word** - Recover editable text, tables, images, and pagination or preserve pages visually
 - **PDF to PowerPoint** - Create editable slide elements or preserve each page visually
+- **PDF to Excel** - Detect aligned tables into page or table worksheets
 - **Convert to Markdown** - Export PDF content as Markdown
 
 ### Technology Stack

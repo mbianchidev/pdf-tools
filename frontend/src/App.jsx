@@ -55,6 +55,7 @@ const PdfToWordPage = lazy(() => import('./pages/PdfToWordPage'));
 const PdfToPowerPointPage = lazy(
   () => import('./pages/PdfToPowerPointPage'),
 );
+const PdfToExcelPage = lazy(() => import('./pages/PdfToExcelPage'));
 const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'));
 const PowerPointToPdfPage = lazy(
   () => import('./pages/PowerPointToPdfPage'),
@@ -230,6 +231,13 @@ const operations = [
     group: 'Convert',
     title: 'PDF to PowerPoint',
     description: 'Create editable elements or visual page slides',
+  },
+  {
+    id: 'pdf-to-excel',
+    icon: Sheet,
+    group: 'Convert',
+    title: 'PDF to Excel',
+    description: 'Detect tables into page or table worksheets',
   },
 ];
 
@@ -494,6 +502,7 @@ function App() {
           path="/pdf-to-powerpoint"
           element={<PdfToPowerPointPage />}
         />
+        <Route path="/pdf-to-excel" element={<PdfToExcelPage />} />
         <Route path="/convert-docx" element={<PdfToWordPage />} />
       </Routes>
     </Suspense>
