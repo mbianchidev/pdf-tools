@@ -177,6 +177,13 @@ Important settings:
 | `REPAIR_REWRITE_TIMEOUT` | `2m` | Structural rewrite wall-time cap |
 | `REPAIR_CHECK_TIMEOUT` | `1m` | Post-repair check wall-time cap |
 | `REPAIR_ALLOW_UNSANDBOXED_LINUX` | `false` | Trusted-test-only escape hatch when host `setpriv` lacks seccomp |
+| `PDFA_MAX_INPUT_BYTES` | `52428800` | PDF/A source byte limit |
+| `PDFA_MAX_OUTPUT_BYTES` | `134217728` | Converted PDF/A byte limit |
+| `PDFA_MAX_PAGES` | `200` | Source and output page limit |
+| `PDFA_MAX_RULE_FAILURES` | `100` | Maximum reported veraPDF rule failures |
+| `PDFA_MAX_REPORT_BYTES` | `262144` | Validation report byte limit |
+| `PDFA_VALIDATOR_HEAP_BYTES` | `536870912` | Isolated veraPDF heap cap |
+| `PDFA_VALIDATOR_TIMEOUT` | `5m` | Isolated veraPDF wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

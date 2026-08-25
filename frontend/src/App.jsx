@@ -31,6 +31,7 @@ import {
   CodeXml,
   Minimize2,
   Wrench,
+  Archive,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -66,6 +67,7 @@ const ExcelToPdfPage = lazy(() => import('./pages/ExcelToPdfPage'));
 const HtmlToPdfPage = lazy(() => import('./pages/HtmlToPdfPage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
 const RepairPage = lazy(() => import('./pages/RepairPage'));
+const PdfAPage = lazy(() => import('./pages/PdfAPage'));
 
 const operations = [
   {
@@ -235,6 +237,13 @@ const operations = [
     group: 'Organize',
     title: 'Repair PDF',
     description: 'Recover damaged structure with explicit warnings',
+  },
+  {
+    id: 'pdf-to-pdfa',
+    icon: Archive,
+    group: 'Convert',
+    title: 'PDF to PDF/A',
+    description: 'Create veraPDF-validated archival profiles',
   },
   {
     id: 'pdf-to-word',
@@ -524,6 +533,7 @@ function App() {
         <Route path="/pdf-to-excel" element={<PdfToExcelPage />} />
         <Route path="/compress" element={<CompressPage />} />
         <Route path="/repair" element={<RepairPage />} />
+        <Route path="/pdf-to-pdfa" element={<PdfAPage />} />
         <Route path="/convert-docx" element={<PdfToWordPage />} />
       </Routes>
     </Suspense>

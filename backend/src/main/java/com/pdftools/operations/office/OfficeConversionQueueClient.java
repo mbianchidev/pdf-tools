@@ -112,6 +112,22 @@ public class OfficeConversionQueueClient {
         );
     }
 
+    public Path convertPdfA(
+            OperationInput input,
+            Path workspace,
+            JsonNode options,
+            IntConsumer progress,
+            Runnable cancellationCheck) {
+        return convertQueued(
+            input,
+            workspace,
+            OfficeDocumentType.PDFA,
+            options.toString(),
+            progress,
+            cancellationCheck
+        );
+    }
+
     public Path convertQueued(
             OperationInput input,
             Path workspace,

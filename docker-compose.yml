@@ -42,7 +42,7 @@ services:
       - PDF_STORAGE_S3_CREATE_BUCKET=${PDF_STORAGE_S3_CREATE_BUCKET:-false}
       - PDF_OPTIONS_ENCRYPTION_KEY=${PDF_OPTIONS_ENCRYPTION_KEY:-}
       - PDF_SECURITY_MAX_OUTPUT_BYTES=${PDF_SECURITY_MAX_OUTPUT_BYTES:-134217728}
-      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact,word-to-pdf,powerpoint-to-pdf,excel-to-pdf,html-to-pdf,pdf-to-word,pdf-to-powerpoint,pdf-to-excel,pdf-to-markdown,compress,repair}
+      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact,word-to-pdf,powerpoint-to-pdf,excel-to-pdf,html-to-pdf,pdf-to-word,pdf-to-powerpoint,pdf-to-excel,pdf-to-markdown,compress,repair,pdf-to-pdfa}
       - PDF_TO_JPG_MAX_DOCUMENT_PAGES=${PDF_TO_JPG_MAX_DOCUMENT_PAGES:-1000}
       - PDF_TO_JPG_MAX_SELECTED_PAGES=${PDF_TO_JPG_MAX_SELECTED_PAGES:-500}
       - PDF_TO_JPG_MAX_DPI=${PDF_TO_JPG_MAX_DPI:-300}
@@ -219,6 +219,17 @@ services:
       - REPAIR_MAX_PAGE_TREE_NODES=${REPAIR_MAX_PAGE_TREE_NODES:-10000}
       - REPAIR_MAX_PAGE_TREE_DEPTH=${REPAIR_MAX_PAGE_TREE_DEPTH:-64}
       - REPAIR_MAX_CONTENT_STREAMS_PER_PAGE=${REPAIR_MAX_CONTENT_STREAMS_PER_PAGE:-1000}
+      - PDFA_MAX_INPUT_BYTES=${PDFA_MAX_INPUT_BYTES:-52428800}
+      - PDFA_MAX_OUTPUT_BYTES=${PDFA_MAX_OUTPUT_BYTES:-134217728}
+      - PDFA_MAX_PAGES=${PDFA_MAX_PAGES:-200}
+      - PDFA_MAX_RULE_FAILURES=${PDFA_MAX_RULE_FAILURES:-100}
+      - PDFA_MAX_FAILURE_CHARACTERS=${PDFA_MAX_FAILURE_CHARACTERS:-500}
+      - PDFA_MAX_REPORT_BYTES=${PDFA_MAX_REPORT_BYTES:-262144}
+      - PDFA_VALIDATOR_HEAP_BYTES=${PDFA_VALIDATOR_HEAP_BYTES:-536870912}
+      - PDFA_VALIDATOR_TIMEOUT=${PDFA_VALIDATOR_TIMEOUT:-5m}
+      - PDFA_MAX_PAGE_TREE_NODES=${PDFA_MAX_PAGE_TREE_NODES:-10000}
+      - PDFA_MAX_PAGE_TREE_DEPTH=${PDFA_MAX_PAGE_TREE_DEPTH:-64}
+      - PDFA_MAX_CONTENT_STREAMS_PER_PAGE=${PDFA_MAX_CONTENT_STREAMS_PER_PAGE:-1000}
       - CORS_ALLOWED_ORIGINS=http://localhost:80,http://localhost:3000
     volumes:
       - pdf-storage:/tmp/pdf-storage

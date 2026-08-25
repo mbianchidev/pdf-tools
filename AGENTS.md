@@ -63,6 +63,7 @@ pdf-tools/
 │   │   │   ├── PdfToMarkdownPage.jsx    # Structured Markdown bundle
 │   │   │   ├── CompressPage.jsx         # PDF size reduction
 │   │   │   ├── RepairPage.jsx           # qpdf recovery reports
+│   │   │   ├── PdfAPage.jsx             # veraPDF archival profiles
 │   │   │   └── OperationPage.css        # Shared operation styles
 │   │   └── services/
 │   │       └── pdfService.js            # API client

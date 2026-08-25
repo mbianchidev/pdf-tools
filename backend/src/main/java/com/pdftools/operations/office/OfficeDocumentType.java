@@ -34,6 +34,16 @@ public enum OfficeDocumentType implements QueuedDocumentType {
         "INVALID_EXCEL_PDF_OUTPUT",
         ".xlsx",
         ".xls"
+    ),
+    PDFA(
+        "pdfa",
+        "PDFA",
+        "PDF/A document",
+        "draw_pdf_Export",
+        "pdf-to-pdfa.pdf",
+        "INVALID_PDFA_OUTPUT",
+        ".pdf",
+        ".pdf"
     );
 
     private final String key;
@@ -78,6 +88,16 @@ public enum OfficeDocumentType implements QueuedDocumentType {
 
     public String exportFilter() {
         return exportFilter;
+    }
+
+    public boolean acceptsExportFilter(String value) {
+        if (this != PDFA) {
+            return exportFilter.equals(value);
+        }
+        return value.matches(
+            "draw_pdf_Export:\\{\"SelectPdfVersion\":"
+                + "\\{\"type\":\"long\",\"value\":\"[123]\"}}"
+        );
     }
 
     public String outputFilename() {

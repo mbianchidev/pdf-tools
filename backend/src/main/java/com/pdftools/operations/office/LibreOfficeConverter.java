@@ -76,6 +76,29 @@ public class LibreOfficeConverter {
             OfficeDocumentType documentType,
             IntConsumer progress,
             Runnable cancellationCheck) {
+        return convert(
+            input,
+            workspace,
+            documentType,
+            documentType.exportFilter(),
+            progress,
+            cancellationCheck
+        );
+    }
+
+    public Path convert(
+            OperationInput input,
+            Path workspace,
+            OfficeDocumentType documentType,
+            String exportFilter,
+            IntConsumer progress,
+            Runnable cancellationCheck) {
+        if (!documentType.acceptsExportFilter(exportFilter)) {
+            throw new OperationException(
+                documentType.code("INVALID_EXPORT_FILTER"),
+                "The LibreOffice export filter is invalid"
+            );
+        }
         cancellationCheck.run();
         progress.accept(3);
 
@@ -126,7 +149,7 @@ public class LibreOfficeConverter {
             "--nolockcheck",
             "--norestore",
             "--convert-to",
-            "pdf:" + documentType.exportFilter(),
+            "pdf:" + exportFilter,
             "--outdir",
             outputDirectory.toAbsolutePath().toString(),
             safeInput.toAbsolutePath().toString()

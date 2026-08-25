@@ -51,9 +51,10 @@ inside a deployed instance; the public landing does not upload or process docume
 - **PDF to Markdown** - Recover headings, lists, tables, images, page boundaries, and reading order
 - **Compress PDF** - Lossless, recommended, and extreme modes with before/after size comparison
 - **Repair PDF** - qpdf structural recovery with explicit partial-recovery reports
+- **PDF to PDF/A** - Selected archival profiles with independent veraPDF validation
 
 ### Technology Stack
-- **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, PostgreSQL, Flyway
+- **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, veraPDF, PostgreSQL, Flyway
 - **Frontend**: React 19, Vite 8, react-pdf, Framer Motion, Axios
 - **Storage**: Local streaming storage in development; SeaweedFS S3 in production
 - **Deployment**: Docker Compose, PostgreSQL, Nginx, networkless LibreOffice/Chromium/qpdf workers

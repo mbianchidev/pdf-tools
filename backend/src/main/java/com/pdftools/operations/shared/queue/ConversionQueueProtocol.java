@@ -39,8 +39,10 @@ public final class ConversionQueueProtocol {
         }
         try (DataOutputStream output = new DataOutputStream(
                 new BufferedOutputStream(Files.newOutputStream(path)))) {
-            boolean legacyLayout = !request.type().equals("excel")
-                && request.optionsJson().equals("{}");
+            boolean legacyLayout = (
+                request.type().equals("word")
+                    || request.type().equals("powerpoint")
+                ) && request.optionsJson().equals("{}");
             output.writeInt(legacyLayout ? VERSION_1 : VERSION_2);
             output.writeUTF(request.type());
             output.writeUTF(request.extension());
@@ -204,6 +206,8 @@ public final class ConversionQueueProtocol {
                     && validExcelOptions();
                 case "html" -> extension.matches("\\.html?")
                     && validHtmlOptions();
+                case "pdfa" -> extension.equals(".pdf")
+                    && validPdfAOptions();
                 default -> false;
             };
         }
@@ -227,6 +231,29 @@ public final class ConversionQueueProtocol {
                     && options.path("landscape").isBoolean()
                     && options.path("printBackground").isBoolean()
                     && options.path("marginMm").isInt();
+            } catch (RuntimeException exception) {
+                return false;
+            }
+        }
+
+        private boolean validPdfAOptions() {
+            try {
+                var options = new tools.jackson.databind.ObjectMapper()
+                    .readTree(optionsJson);
+                if (!options.isObject()) {
+                    return false;
+                }
+                var profile = options.get("profile");
+                return profile == null
+                    || (profile.isTextual()
+                        && java.util.Set.of(
+                            "pdfa-1b",
+                            "pdfa-2b",
+                            "pdfa-3b"
+                        ).contains(
+                            profile.asText().trim()
+                                .toLowerCase(java.util.Locale.ROOT)
+                        ));
             } catch (RuntimeException exception) {
                 return false;
             }

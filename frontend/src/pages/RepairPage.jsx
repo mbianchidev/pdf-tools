@@ -1,8 +1,4 @@
 import {
-  useEffect,
-  useState,
-} from 'react';
-import {
   AlertTriangle,
   CheckCircle2,
   FileJson,
@@ -10,6 +6,7 @@ import {
 } from 'lucide-react';
 import OfficeToPdfPage from '../features/office/OfficeToPdfPage';
 import { startBrowserDownload } from '../features/jobs/startBrowserDownload';
+import { useJobJsonReport } from '../features/jobs/useJobJsonReport';
 import { jobService } from '../services/jobService';
 import './RepairPage.css';
 
@@ -40,81 +37,39 @@ const RepairPage = () => (
 );
 
 const RepairResult = ({ job }) => {
-  const [state, setState] = useState({
-    outputId: null,
-    report: null,
-    error: '',
-  });
-  const reportOutput = job?.status === 'COMPLETED'
-    ? job.outputs?.find((output) => (
-      output.mediaType === 'application/json'
-    ))
-    : null;
+  const {
+    output,
+    loading,
+    report,
+    error,
+  } = useJobJsonReport(job, validateRepairReport, 'Repair');
 
-  useEffect(() => {
-    if (!reportOutput) {
-      return undefined;
-    }
-    let active = true;
-    const load = async () => {
-      try {
-        const blob = await jobService.download(reportOutput);
-        const report = JSON.parse(await blob.text());
-        if (!['repaired', 'partially-recovered'].includes(report.status)
-            || !Number.isInteger(report.recoveredPages)
-            || !Array.isArray(report.warnings)) {
-          throw new Error('The repair report is invalid.');
-        }
-        if (active) {
-          setState({
-            outputId: reportOutput.id,
-            report,
-            error: '',
-          });
-        }
-      } catch (error) {
-        console.error('Repair report error:', error);
-        if (active) {
-          setState({
-            outputId: reportOutput.id,
-            report: null,
-            error: error.message || 'The repair report could not be read.',
-          });
-        }
-      }
-    };
-    load();
-    return () => {
-      active = false;
-    };
-  }, [reportOutput]);
-
-  if (!reportOutput) {
+  if (!output) {
     return null;
   }
-  if (state.outputId !== reportOutput.id) {
+  if (loading) {
     return (
       <div className="repair-result repair-result--loading" aria-live="polite">
         Reading repair report...
       </div>
     );
   }
-  if (state.error) {
+  if (error) {
     return (
       <div className="repair-result repair-result--warning" role="alert">
         <AlertTriangle size={20} />
         <div>
           <strong>Repair report unavailable</strong>
-          <p>{state.error}</p>
+          <p>{error}</p>
         </div>
       </div>
     );
   }
-  if (!state.report) {
+  if (!report) {
     return null;
   }
 
-  const partial = state.report.status === 'partially-recovered';
+  const partial = report.status === 'partially-recovered';
   const Icon = partial ? AlertTriangle : CheckCircle2;
   return (
     <div
@@ -128,14 +83,14 @@ const RepairResult = ({ job }) => {
         <strong>
           {partial ? 'Partially recovered' : 'Structure repaired'}
         </strong>
-        <p>{state.report.summary}</p>
+        <p>{report.summary}</p>
         <span>
-          {state.report.recoveredPages}{' '}
-          {state.report.recoveredPages === 1 ? 'page' : 'pages'} recovered
+          {report.recoveredPages}{' '}
+          {report.recoveredPages === 1 ? 'page' : 'pages'} recovered
         </span>
-        {state.report.warnings.length > 0 && (
+        {report.warnings.length > 0 && (
           <ul>
-            {state.report.warnings.map((warning) => (
+            {report.warnings.map((warning) => (
               <li key={warning}>{warning}</li>
             ))}
           </ul>
@@ -144,8 +99,8 @@ const RepairResult = ({ job }) => {
           className="repair-report-download"
           type="button"
           onClick={() => startBrowserDownload(
-            jobService.getDownloadUrl(reportOutput),
-            reportOutput.filename,
+            jobService.getDownloadUrl(output),
+            output.filename,
           )}
         >
           <FileJson size={16} />
@@ -154,6 +109,14 @@ const RepairResult = ({ job }) => {
       </div>
     </div>
   );
+};
+
+const validateRepairReport = (report) => {
+  if (!['repaired', 'partially-recovered'].includes(report.status)
+      || !Number.isInteger(report.recoveredPages)
+      || !Array.isArray(report.warnings)) {
+    throw new Error('The repair report is invalid.');
+  }
 };
 
 export default RepairPage;

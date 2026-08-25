@@ -11,6 +11,8 @@ import com.pdftools.operations.excelpdf.ExcelProperties;
 import com.pdftools.operations.excelpdf.LibreOfficeExcelConverter;
 import com.pdftools.operations.pptpdf.LibreOfficePowerPointConverter;
 import com.pdftools.operations.pptpdf.PowerPointDocumentValidator;
+import com.pdftools.operations.pdfa.LibreOfficePdfAConverter;
+import com.pdftools.operations.pdfa.PdfAPlanFactory;
 import com.pdftools.operations.wordpdf.LibreOfficeWordConverter;
 import com.pdftools.operations.wordpdf.WordDocumentValidator;
 
@@ -90,11 +92,17 @@ public final class OfficeConverterDaemonMain {
                     ),
                     officeConverter
                 );
+            LibreOfficePdfAConverter pdfAConverter =
+                new LibreOfficePdfAConverter(
+                    new PdfAPlanFactory(),
+                    officeConverter
+                );
             run(
                 roots,
                 converter,
                 presentationConverter,
                 excelConverter,
+                pdfAConverter,
                 properties.getQueueRetention(),
                 workRoot
             );
@@ -109,6 +117,7 @@ public final class OfficeConverterDaemonMain {
             LibreOfficeWordConverter wordConverter,
             LibreOfficePowerPointConverter presentationConverter,
             LibreOfficeExcelConverter excelConverter,
+            LibreOfficePdfAConverter pdfAConverter,
             Duration retention,
             Path workRoot) {
         while (!Thread.currentThread().isInterrupted()) {
@@ -141,7 +150,8 @@ public final class OfficeConverterDaemonMain {
                             workRoot,
                             wordConverter,
                             presentationConverter,
-                            excelConverter
+                            excelConverter,
+                            pdfAConverter
                         );
                         processed = true;
                     }
@@ -201,7 +211,8 @@ public final class OfficeConverterDaemonMain {
             Path workRoot,
             LibreOfficeWordConverter wordConverter,
             LibreOfficePowerPointConverter presentationConverter,
-            LibreOfficeExcelConverter excelConverter) {
+            LibreOfficeExcelConverter excelConverter,
+            LibreOfficePdfAConverter pdfAConverter) {
         String requestId = requestDirectory.getFileName().toString();
         Path work = workRoot.resolve(requestId);
         try {
@@ -260,6 +271,15 @@ public final class OfficeConverterDaemonMain {
                     cancellation
                 );
                 case "excel" -> excelConverter.convert(
+                    operationInput,
+                    new tools.jackson.databind.ObjectMapper().readTree(
+                        request.optionsJson()
+                    ),
+                    work,
+                    progress,
+                    cancellation
+                );
+                case "pdfa" -> pdfAConverter.convert(
                     operationInput,
                     new tools.jackson.databind.ObjectMapper().readTree(
                         request.optionsJson()
@@ -382,6 +402,7 @@ public final class OfficeConverterDaemonMain {
                 ? "application/vnd.openxmlformats-officedocument."
                     + "spreadsheetml.sheet"
                 : "application/vnd.ms-excel";
+            case "pdfa" -> "application/pdf";
             default -> "application/octet-stream";
         };
     }

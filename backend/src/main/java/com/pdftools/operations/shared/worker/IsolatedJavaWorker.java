@@ -30,10 +30,25 @@ public final class IsolatedJavaWorker {
             List<String> arguments,
             Runnable cancellationCheck,
             Runnable poll) {
+        return run(
+            spec,
+            arguments,
+            null,
+            cancellationCheck,
+            poll
+        );
+    }
+
+    public static int run(
+            Spec spec,
+            List<String> arguments,
+            Path temporaryDirectory,
+            Runnable cancellationCheck,
+            Runnable poll) {
         return runCommand(
             spec,
-            command(spec, arguments, null),
-            null,
+            command(spec, arguments, temporaryDirectory),
+            temporaryDirectory,
             null,
             cancellationCheck,
             poll
@@ -222,6 +237,7 @@ public final class IsolatedJavaWorker {
         command.add("-XX:ReservedCodeCacheSize=67108864");
         command.add("-Xss524288");
         command.add("-Djava.awt.headless=true");
+        command.addAll(spec.jvmArguments());
         if (temporaryDirectory != null) {
             command.add(
                 "-Djava.io.tmpdir="
@@ -254,8 +270,29 @@ public final class IsolatedJavaWorker {
         String startCode,
         String startMessage,
         String timeoutCode,
-        String timeoutMessage
+        String timeoutMessage,
+        List<String> jvmArguments
     ) {
+        public Spec(
+                Class<?> mainClass,
+                long maxHeapBytes,
+                Duration timeout,
+                String startCode,
+                String startMessage,
+                String timeoutCode,
+                String timeoutMessage) {
+            this(
+                mainClass,
+                maxHeapBytes,
+                timeout,
+                startCode,
+                startMessage,
+                timeoutCode,
+                timeoutMessage,
+                List.of()
+            );
+        }
+
         public Spec {
             Objects.requireNonNull(mainClass);
             Objects.requireNonNull(timeout);
@@ -263,12 +300,23 @@ public final class IsolatedJavaWorker {
             Objects.requireNonNull(startMessage);
             Objects.requireNonNull(timeoutCode);
             Objects.requireNonNull(timeoutMessage);
+            jvmArguments = List.copyOf(jvmArguments);
             if (maxHeapBytes < MIN_HEAP_BYTES
                     || timeout.isZero()
                     || timeout.isNegative()
                     || timeout.compareTo(MAX_TIMEOUT) > 0) {
                 throw new IllegalStateException(
                     "Isolated worker limits are invalid"
+                );
+            }
+            if (jvmArguments.size() > 16
+                    || jvmArguments.stream().anyMatch(argument ->
+                        argument == null
+                            || argument.isBlank()
+                            || argument.length() > 256
+                            || !argument.startsWith("-"))) {
+                throw new IllegalStateException(
+                    "Isolated worker JVM arguments are invalid"
                 );
             }
         }

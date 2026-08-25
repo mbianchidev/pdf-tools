@@ -38,6 +38,7 @@ scheduler isolated from storage cleanup.
 | `operations.pdfmarkdown` | Isolated structured Markdown and linked-image bundle generation |
 | `operations.compress` | Isolated lossless or image-aware PDF size reduction |
 | `operations.repair` | Sandboxed qpdf structural recovery and warning reports |
+| `operations.pdfa` | Isolated LibreOffice PDF/A conversion and veraPDF conformance validation |
 | `operations.shared.extraction` | Positioned text/images, table heuristics, budgets, and page rasterization |
 | `storage` | Local filesystem and S3-compatible streaming adapters |
 | `api` | Structured HTTP error contract |
@@ -98,4 +99,7 @@ crop-box offsets and page rotations of 0, 90, 180, or 270 degrees.
 - qpdf repair runs as a bounded non-root native process with the shared
   architecture-pinned network-deny filter and emits a separate structured
   recovery report.
+- PDF/A uses two independent boundaries: profile-specific LibreOffice Draw
+  export in the Office sidecar followed by a heap/time-limited veraPDF
+  Greenfield worker. Non-conformant candidates are never published.
 - The backend container itself runs as an unprivileged user.

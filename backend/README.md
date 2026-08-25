@@ -13,6 +13,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 | AWS SDK S3 | 2.54 | SeaweedFS-compatible artifact storage |
 | Apache POI | 5.5 | Office document generation |
 | qpdf | 11+ | Structural PDF repair and rewriting |
+| veraPDF | 1.30 | PDF/A conformance validation |
 | Java | 25 | Runtime |
 
 ## Features
@@ -45,6 +46,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **PDF to Markdown** - Recover structured Markdown and linked images in a ZIP
 - **Compress PDF** - Bounded lossless or image-aware size reduction
 - **Repair PDF** - Sandboxed qpdf recovery with structured warning reports
+- **PDF to PDF/A** - Isolated LibreOffice conversion plus veraPDF validation
 - **Convert to DOCX** - Convert to Word document
 
 ## Getting Started
@@ -87,7 +89,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, `compress`, and `repair`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, `compress`, `repair`, and `pdf-to-pdfa`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -112,6 +114,7 @@ PDF-to-Excel conversion is documented in [`docs/operations/pdf-to-excel.md`](../
 PDF-to-Markdown conversion is documented in [`docs/operations/pdf-to-markdown.md`](../docs/operations/pdf-to-markdown.md).
 PDF compression is documented in [`docs/operations/compress.md`](../docs/operations/compress.md).
 PDF repair is documented in [`docs/operations/repair.md`](../docs/operations/repair.md).
+PDF/A conversion is documented in [`docs/operations/pdf-to-pdfa.md`](../docs/operations/pdf-to-pdfa.md).
 
 The following legacy endpoints remain during migration:
 

@@ -273,3 +273,11 @@ smaller. See [Compress PDF](operations/compress.md).
 PDF plus a JSON report. qpdf warning exits are successful but explicitly marked
 `partially-recovered`; clean rewrites are marked `repaired`. See
 [Repair PDF](operations/repair.md).
+
+## PDF to PDF/A
+
+`operation=pdf-to-pdfa` accepts one unencrypted PDF and `pdfa-1b`, `pdfa-2b`,
+or `pdfa-3b`. LibreOffice Draw performs the conversion in the isolated Office
+sidecar, and an isolated veraPDF worker must confirm the exact profile before
+the PDF and JSON validation report are published. See
+[PDF to PDF/A](operations/pdf-to-pdfa.md).

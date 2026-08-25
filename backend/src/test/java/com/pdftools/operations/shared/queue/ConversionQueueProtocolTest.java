@@ -87,4 +87,23 @@ class ConversionQueueProtocolTest {
         }
         assertEquals(expected, ConversionQueueProtocol.readRequest(request));
     }
+
+    @Test
+    void writesAndReadsVersionTwoPdfAOptions() throws Exception {
+        Path request = temporaryDirectory.resolve("pdfa.bin");
+        ConversionQueueProtocol.Request expected =
+            new ConversionQueueProtocol.Request(
+                "pdfa",
+                ".pdf",
+                "{\"profile\":\"pdfa-2b\"}"
+            );
+
+        ConversionQueueProtocol.writeRequest(request, expected);
+
+        try (DataInputStream input = new DataInputStream(
+                new BufferedInputStream(Files.newInputStream(request)))) {
+            assertEquals(2, input.readInt());
+        }
+        assertEquals(expected, ConversionQueueProtocol.readRequest(request));
+    }
 }
