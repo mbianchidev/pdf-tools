@@ -35,6 +35,7 @@ scheduler isolated from storage cleanup.
 | `operations.pdfword` | Isolated best-effort PDF-to-DOCX extraction and visual fallback |
 | `operations.pdfppt` | Isolated page-to-slide extraction and visual fallback |
 | `operations.pdfexcel` | Isolated table detection and workbook generation |
+| `operations.pdfmarkdown` | Isolated structured Markdown and linked-image bundle generation |
 | `operations.shared.extraction` | Positioned text/images, table heuristics, budgets, and page rasterization |
 | `storage` | Local filesystem and S3-compatible streaming adapters |
 | `api` | Structured HTTP error contract |

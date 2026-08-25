@@ -6,7 +6,7 @@ export { default as WatermarkPage } from './WatermarkPage';
 export { default as AddTextPage } from './AddTextPage';
 export { default as SignaturePage } from './SignaturePage';
 export { default as RedactPage } from './RedactPage';
-export { default as ConvertMarkdownPage } from './ConvertMarkdownPage';
+export { default as PdfToMarkdownPage } from './PdfToMarkdownPage';
 export { default as PdfToWordPage } from './PdfToWordPage';
 export { default as PdfToPowerPointPage } from './PdfToPowerPointPage';
 export { default as PdfToExcelPage } from './PdfToExcelPage';

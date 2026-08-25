@@ -29,7 +29,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **PDF to Word** - Choose editable extraction or visual page preservation
 - **PDF to PowerPoint** - Choose editable slide elements or visual page slides
 - **PDF to Excel** - Build page worksheets or one sheet per detected table
-- **Convert to Markdown** - Convert PDF to Markdown format
+- **PDF to Markdown** - Recover structure and linked images in a portable ZIP
 
 ### UI Features
 - Documentation-first self-hosting landing page
@@ -107,7 +107,7 @@ frontend/
 │   │   ├── WatermarkPage.jsx
 │   │   ├── RedactPage.jsx
 │   │   ├── PdfToWordPage.jsx
-│   │   ├── ConvertMarkdownPage.jsx
+│   │   ├── PdfToMarkdownPage.jsx
 │   │   └── OperationPage.css  # Shared operation styles
 │   ├── services/
 │   │   ├── jobService.js     # Versioned asynchronous jobs client

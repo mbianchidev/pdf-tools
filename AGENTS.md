@@ -60,7 +60,7 @@ pdf-tools/
 │   │   │   ├── WatermarkPage.jsx        # Add watermarks
 │   │   │   ├── RedactPage.jsx           # Redact content
 │   │   │   ├── PdfToWordPage.jsx        # PDF to Word
-│   │   │   ├── ConvertMarkdownPage.jsx  # Convert to Markdown
+│   │   │   ├── PdfToMarkdownPage.jsx    # Structured Markdown bundle
 │   │   │   └── OperationPage.css        # Shared operation styles
 │   │   └── services/
 │   │       └── pdfService.js            # API client

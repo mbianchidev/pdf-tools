@@ -112,13 +112,6 @@ export const pdfService = {
     return performOperationAndDownload('/add-signature', formData, file.name);
   },
 
-  // Convert to Markdown
-  convertToMarkdown: async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return performOperationAndDownload('/convert/markdown', formData, file.name);
-  },
-
   // Download file
   download: async (filename) => {
     const response = await api.get(`/download/${filename}`, {

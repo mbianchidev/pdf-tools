@@ -48,7 +48,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **PDF to Word** - Recover editable text, tables, images, and pagination or preserve pages visually
 - **PDF to PowerPoint** - Create editable slide elements or preserve each page visually
 - **PDF to Excel** - Detect aligned tables into page or table worksheets
-- **Convert to Markdown** - Export PDF content as Markdown
+- **PDF to Markdown** - Recover headings, lists, tables, images, page boundaries, and reading order
 
 ### Technology Stack
 - **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, PostgreSQL, Flyway
@@ -201,12 +201,19 @@ Parameters:
   - page (page number, default: 1)
 ```
 
-#### Convert to Markdown
+#### PDF to Markdown
 ```
-POST /api/pdf/convert/markdown
+POST /api/v1/jobs
 Content-Type: multipart/form-data
-Parameters: file (PDF file)
+Parts:
+  - operation: pdf-to-markdown
+  - options: {"detectHeadings":true,"detectLists":true,"detectTables":true,"includeImages":true,"preservePageBreaks":true}
+  - files: one text-based, unencrypted PDF
 ```
+
+The output is a ZIP containing `document.md` and optional linked PNG images.
+Image-only PDFs are rejected explicitly. See
+[`docs/operations/pdf-to-markdown.md`](docs/operations/pdf-to-markdown.md).
 
 #### Convert to DOCX
 ```

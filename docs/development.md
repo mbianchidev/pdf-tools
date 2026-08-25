@@ -149,6 +149,15 @@ Important settings:
 | `PDF_EXCEL_MAX_OUTPUT_BYTES` | `104857600` | XLSX output byte limit |
 | `PDF_EXCEL_WORKER_HEAP_BYTES` | `536870912` | Isolated worker heap cap |
 | `PDF_EXCEL_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
+| `PDF_MARKDOWN_MAX_INPUT_BYTES` | `52428800` | PDF-to-Markdown input byte limit |
+| `PDF_MARKDOWN_MAX_PAGES` | `200` | PDF page limit |
+| `PDF_MARKDOWN_MAX_TEXT_CHARACTERS` | `2000000` | Extracted text character limit |
+| `PDF_MARKDOWN_MAX_MARKDOWN_CHARACTERS` | `4000000` | Generated Markdown character limit |
+| `PDF_MARKDOWN_MAX_IMAGES` | `200` | Extracted image limit |
+| `PDF_MARKDOWN_MAX_TOTAL_IMAGE_PIXELS` | `200000000` | Aggregate image pixel budget |
+| `PDF_MARKDOWN_MAX_OUTPUT_BYTES` | `314572800` | ZIP output byte limit |
+| `PDF_MARKDOWN_WORKER_HEAP_BYTES` | `536870912` | Isolated worker heap cap |
+| `PDF_MARKDOWN_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

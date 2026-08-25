@@ -50,7 +50,7 @@ const WatermarkPage = lazy(() => import('./pages/WatermarkPage'));
 const AddTextPage = lazy(() => import('./pages/AddTextPage'));
 const SignaturePage = lazy(() => import('./pages/SignaturePage'));
 const RedactPage = lazy(() => import('./pages/RedactPage'));
-const ConvertMarkdownPage = lazy(() => import('./pages/ConvertMarkdownPage'));
+const PdfToMarkdownPage = lazy(() => import('./pages/PdfToMarkdownPage'));
 const PdfToWordPage = lazy(() => import('./pages/PdfToWordPage'));
 const PdfToPowerPointPage = lazy(
   () => import('./pages/PdfToPowerPointPage'),
@@ -212,11 +212,11 @@ const operations = [
     description: 'Render self-contained HTML with isolated Chromium',
   },
   {
-    id: 'convert-markdown',
+    id: 'pdf-to-markdown',
     icon: FileText,
     group: 'Convert',
-    title: 'Convert to Markdown',
-    description: 'Convert PDF to Markdown format',
+    title: 'PDF to Markdown',
+    description: 'Recover structure, tables, images, and reading order',
   },
   {
     id: 'pdf-to-word',
@@ -496,7 +496,8 @@ function App() {
         />
         <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
         <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
-        <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
+        <Route path="/pdf-to-markdown" element={<PdfToMarkdownPage />} />
+        <Route path="/convert-markdown" element={<PdfToMarkdownPage />} />
         <Route path="/pdf-to-word" element={<PdfToWordPage />} />
         <Route
           path="/pdf-to-powerpoint"

@@ -250,3 +250,11 @@ tables, and picture shapes; `visual` mode creates page-image slides. See
 optional surrounding text. `tables` mode creates one worksheet per detected
 table and rejects documents without tables. See
 [PDF to Excel](operations/pdf-to-excel.md).
+
+## PDF to Markdown
+
+`operation=pdf-to-markdown` accepts one unencrypted, text-based PDF and returns
+one ZIP containing `document.md` plus optional linked PNG images. Heading, list,
+table, image, and page-break recovery can be enabled independently. Documents
+without extractable text fail explicitly. See
+[PDF to Markdown](operations/pdf-to-markdown.md).
