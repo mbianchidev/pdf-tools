@@ -10,13 +10,18 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class ExcelPreparationService {
@@ -56,6 +61,8 @@ public class ExcelPreparationService {
         Path workerSource = workerRoot.resolve("source");
         Path request = workerRoot.resolve("request.bin");
         Path error = workerRoot.resolve("error.txt");
+        Path standardOutput = workerRoot.resolve("stdout.log");
+        Path standardError = workerRoot.resolve("stderr.log");
         Path networkFilter = workerRoot.resolve("network-filter.bpf");
         RuntimeException failure = null;
         try {
@@ -96,11 +103,14 @@ public class ExcelPreparationService {
                 ),
                 workerRoot,
                 workerEnvironment(workerRoot),
+                standardOutput,
+                standardError,
                 cancellationCheck,
                 () -> {
                 }
             );
             if (exitCode != 0) {
+                logWorkerFailure(exitCode, standardError);
                 throw IsolatedJavaWorker.readFailure(
                     exitCode,
                     error,
@@ -135,6 +145,8 @@ public class ExcelPreparationService {
         } finally {
             cleanup(request, failure);
             cleanup(error, failure);
+            cleanup(standardOutput, failure);
+            cleanup(standardError, failure);
             cleanup(networkFilter, failure);
             cleanup(workerSource, failure);
             cleanupTree(workerRoot, failure);
@@ -181,6 +193,43 @@ public class ExcelPreparationService {
             "LC_ALL", "C.UTF-8",
             "PATH", "/usr/local/bin:/usr/bin:/bin"
         );
+    }
+
+    private void logWorkerFailure(int exitCode, Path standardError) {
+        if (!Files.isRegularFile(
+                standardError,
+                LinkOption.NOFOLLOW_LINKS)) {
+            logger.error(
+                "Excel preparation worker exited with code {}; "
+                    + "stderr is unavailable",
+                exitCode
+            );
+            return;
+        }
+        try (SeekableByteChannel channel = Files.newByteChannel(
+                standardError,
+                Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS))) {
+            long size = channel.size();
+            channel.position(Math.max(size - 4096, 0));
+            ByteBuffer buffer = ByteBuffer.allocate(
+                (int) Math.min(size, 4096)
+            );
+            while (buffer.hasRemaining() && channel.read(buffer) >= 0) {
+            }
+            buffer.flip();
+            logger.error(
+                "Excel preparation worker exited with code {}: {}",
+                exitCode,
+                StandardCharsets.UTF_8.decode(buffer)
+            );
+        } catch (IOException exception) {
+            logger.error(
+                "Excel preparation worker exited with code {}; "
+                    + "stderr could not be read",
+                exitCode,
+                exception
+            );
+        }
     }
 
     private void cleanup(Path path, RuntimeException failure) {

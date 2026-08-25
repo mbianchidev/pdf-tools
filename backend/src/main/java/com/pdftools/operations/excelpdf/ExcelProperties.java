@@ -10,7 +10,7 @@ public class ExcelProperties {
     private long maxUsedCells = 1_000_000;
     private long maxPreparedBytes = 100L * 1024L * 1024L;
     private long workerHeapBytes = 512L * 1024L * 1024L;
-    private long workerAddressSpaceBytes = 2L * 1024L * 1024L * 1024L;
+    private long workerAddressSpaceBytes = 4L * 1024L * 1024L * 1024L;
     private Duration workerTimeout = Duration.ofMinutes(2);
 
     public int getMaxSheets() {

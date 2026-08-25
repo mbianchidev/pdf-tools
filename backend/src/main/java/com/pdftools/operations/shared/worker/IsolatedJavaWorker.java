@@ -47,11 +47,34 @@ public final class IsolatedJavaWorker {
             Map<String, String> environment,
             Runnable cancellationCheck,
             Runnable poll) {
+        return runCommand(
+            spec,
+            command,
+            workingDirectory,
+            environment,
+            null,
+            null,
+            cancellationCheck,
+            poll
+        );
+    }
+
+    public static int runCommand(
+            Spec spec,
+            List<String> command,
+            Path workingDirectory,
+            Map<String, String> environment,
+            Path standardOutput,
+            Path standardError,
+            Runnable cancellationCheck,
+            Runnable poll) {
         Process worker = start(
             spec,
             command,
             workingDirectory,
-            environment
+            environment,
+            standardOutput,
+            standardError
         );
         long started = System.nanoTime();
         try {
@@ -141,10 +164,19 @@ public final class IsolatedJavaWorker {
             Spec spec,
             List<String> command,
             Path workingDirectory,
-            Map<String, String> environment) {
-        ProcessBuilder builder = new ProcessBuilder(command)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .redirectError(ProcessBuilder.Redirect.INHERIT);
+            Map<String, String> environment,
+            Path standardOutput,
+            Path standardError) {
+        ProcessBuilder builder = new ProcessBuilder(command);
+        if (standardOutput == null || standardError == null) {
+            builder
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT);
+        } else {
+            builder
+                .redirectOutput(standardOutput.toFile())
+                .redirectError(standardError.toFile());
+        }
         if (workingDirectory != null) {
             builder.directory(workingDirectory.toFile());
         }

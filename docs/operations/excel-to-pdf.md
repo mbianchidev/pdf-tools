@@ -40,7 +40,7 @@ the sidecar's non-root worker identity. The same networkless, one-way-volume
 Office boundary used by Word and PowerPoint applies, including seccomp,
 Landlock, tmpfs scratch, native limits, PID headroom, process cleanup, output
 bounds, cancellation, and queue retention. The POI worker has a 512 MiB Java
-heap, bounded JVM native regions, and a 2 GiB virtual-address ceiling; the
+heap, bounded JVM native regions, and a 4 GiB virtual-address ceiling; the
 sidecar's 1.2 GiB cgroup remains the physical-memory ceiling.
 
 ## Fidelity
