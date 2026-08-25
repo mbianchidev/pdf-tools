@@ -34,6 +34,7 @@ class NativeProcessSandboxTest {
 
     @Test
     void deniesConverterNetworkAccess() throws Exception {
+        assumeTrue(!isLinux() || sandbox.isSeccompFilterAvailable());
         Path workspace = temporaryDirectory.resolve("workspace");
         Files.createDirectories(workspace);
         try (ServerSocket server = new ServerSocket(
@@ -63,7 +64,7 @@ class NativeProcessSandboxTest {
 
     @Test
     void deniesSiblingFileReadsOnLinux() throws Exception {
-        assumeTrue(isLinux());
+        assumeTrue(isLinux() && sandbox.isLandlockAvailable());
         Path workspace = temporaryDirectory.resolve("workspace");
         Files.createDirectories(workspace);
         Path sibling = temporaryDirectory.resolve("secret.txt");

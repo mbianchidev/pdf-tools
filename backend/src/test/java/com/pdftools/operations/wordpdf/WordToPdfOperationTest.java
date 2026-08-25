@@ -209,7 +209,7 @@ class WordToPdfOperationTest {
         Path executable = converterRoot.resolve("fake-soffice");
         Files.writeString(executable, """
             #!/bin/sh
-            sleep 30 &
+            /bin/sh -c 'sleep 30' word-test-background &
             exit 0
             """);
         Files.setPosixFilePermissions(
@@ -239,7 +239,13 @@ class WordToPdfOperationTest {
             )
         );
 
-        assertEquals("WORD_CONVERTER_PROCESS_LEAK", failure.getCode());
+        assertEquals("INVALID_WORD_PDF_OUTPUT", failure.getCode());
+        Thread.sleep(100);
+        assertFalse(ProcessHandle.allProcesses().anyMatch(process ->
+            process.info().commandLine()
+                .orElse("")
+                .contains("word-test-background")
+        ));
     }
 
     @Test

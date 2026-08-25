@@ -218,7 +218,11 @@ public class LibreOfficeWordConverter {
             observedDescendants.addAll(process.descendants().toList());
             cancellationCheck.run();
             requireDescendantsExited(observedDescendants);
-            requireProcessGroupExited(process.pid());
+            if (strictProcessIsolation()) {
+                requireProcessGroupExited(process.pid());
+            } else {
+                terminateResidualProcessGroup(process.pid());
+            }
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             terminate(process, observedDescendants);
@@ -336,6 +340,16 @@ public class LibreOfficeWordConverter {
         return signalProcessGroup(processGroupId, "0");
     }
 
+    private void terminateResidualProcessGroup(long processGroupId) {
+        OperationException failure = trySignalProcessGroup(
+            processGroupId,
+            "KILL"
+        );
+        if (failure != null) {
+            throw failure;
+        }
+    }
+
     private boolean signalProcessGroup(
             long processGroupId,
             String signal) {
@@ -384,6 +398,14 @@ public class LibreOfficeWordConverter {
         return System.getProperty("os.name")
             .toLowerCase(Locale.ROOT)
             .contains("linux");
+    }
+
+    private boolean strictProcessIsolation() {
+        return isLinux()
+            && properties.isIsolatedContainer()
+            && !properties.getWorkerUser().equals(
+                System.getProperty("user.name")
+            );
     }
 
     private OperationException processGroupFailure() {
