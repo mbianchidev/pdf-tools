@@ -99,6 +99,25 @@
   transform: translateX(4px);
 }
 
+.hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.hero__workspace-link {
+  color: white;
+  background: var(--iris);
+  border-color: var(--iris);
+  box-shadow: 5px 5px 0 var(--iris-soft);
+}
+
+.hero__workspace-link:not(:disabled):hover {
+  color: white;
+  background: var(--iris-dark);
+  border-color: var(--iris-dark);
+}
+
 .hero__trust {
   display: flex;
   align-items: center;

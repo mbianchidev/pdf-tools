@@ -168,7 +168,7 @@ components:
 
 **Creative North Star: "The Owned Document Workbench"**
 
-PDF Tools makes self-hosting visible as product proof. The landing surface is a docs-first Persuade experience, not a launchpad of generic tool cards: it leads with a clear ownership proposition, a concrete PDF workbench artifact, actual clone and Docker Compose commands, then a non-interactive inventory of what a deployed instance provides. The operation routes switch to Operate mode without changing worlds: controls live on light paper panels and documents are handled on a dark utility workbench.
+PDF Tools makes self-hosting visible as product proof. The landing surface is a docs-first Persuade experience with a direct bridge into the deployed workspace: it leads with a clear ownership proposition, a concrete PDF workbench artifact, a primary `/new` action, actual clone and Docker Compose commands, then a linked inventory of available workflows. The operation routes switch to Operate mode without changing worlds: a persistent paper topbar switches workflows, controls live on light paper panels, and documents are handled on a dark utility workbench.
 
 The visual language is pinned to the `img-tools` family through the `pinned-reference` seed key while retaining PDF Tools' indigo identity. Variable Bricolage Grotesque supplies compressed, assertive display shapes; DM Sans handles instructional copy and controls; paper-white surfaces sit against a cool page; ink panels and monospace status strips make processing feel observable; indigo appears as proof, focus, and offset geometry. Motion is short and physical—load-in fades, small translations, restrained rotations, and direct hover lifts—and always supports hierarchy or state.
 
@@ -176,12 +176,13 @@ The visual language is pinned to the `img-tools` family through the `pinned-refe
 
 - Self-hosting commands are evidence, not tertiary developer copy.
 - The first viewport pairs the ownership headline on the left with the PDF artifact on the right.
-- The landing reads like installation documentation with a persuasive thesis; capabilities remain non-interactive summaries.
-- Operation pages use a paper control rail beside an ink preview canvas.
+- The landing reads like installation documentation with a persuasive thesis while giving deployed users a clear path into `/new`.
+- Capability rows link to their workflows without replacing the deployment proof hierarchy.
+- Operation pages use a persistent workflow topbar above a paper control rail and ink preview canvas.
 - Square panels and indigo offset shadows form the family signature; rounded shapes are concentrated on controls.
 - The pinned `img-tools` family language is the visual authority, not a generic PDF SaaS template.
 
-**The Proof-Before-Capability Rule.** Show the real self-host path before the installed feature inventory; capability rows are evidence of the deployed product, not homepage launch controls.
+**The Proof-Before-Capability Rule.** Keep the real self-host path before the installed feature inventory; workflow links may activate the deployed product without displacing its ownership proof.
 
 **The Dual-Mode Rule.** The landing persuades through documentation and ownership evidence; operation routes switch to compact, task-first workbench behavior without changing the visual world.
 
@@ -244,7 +245,7 @@ The palette sets cool paper and dark ink in deliberate contrast, with indigo as 
 
 The landing uses a centered shell capped at 1180px with 48px total viewport inset. Its first viewport is a two-column split—slightly wider copy, slightly narrower artifact—with a minimum height of 670px, large fluid gap, and generous vertical breathing room. At 860px and below, the columns become a single stack while preserving copy before artifact. The three deployment steps and three capability columns also collapse to one column at that breakpoint; capability columns are staggered by 30px and 60px only on wide screens. At 768px and 560px, shell insets, type, artifact shadow, and header controls tighten without changing the story order.
 
-Operation pages fill the dynamic viewport (`100dvh`). A compact header spans the top; below it, a 360px paper sidebar holds files, settings, and actions while the flexible remainder becomes the dark PDF preview. The sidebar scrolls independently and keeps primary actions at its end. At 1024px and below, controls stack above the preview, the rail becomes full width, and its height is capped at half the viewport. At 560px, the back control becomes icon-only and header copy compacts.
+The workspace fills the dynamic viewport (`100dvh`). A persistent 64px paper topbar provides the compact brand, `/new`, current workflow, and a grouped tool switcher. Each operation retains its compact header; below it, a 360px paper sidebar holds files, settings, and actions while the flexible remainder becomes the dark PDF preview. The sidebar scrolls independently and keeps primary actions at its end. At 1024px and below, controls stack above the preview, the rail becomes full width, and its height is capped at half the viewport. At 560px, the topbar compacts to icon-first controls, the back control becomes icon-only, and header copy compacts.
 
 Spacing follows the shipped 4px-based scale, but the page rhythm is intentionally broad on Persuade surfaces and compact on Operate surfaces. Landing sections use 68–104px vertical intervals; workbench chrome and control groups commonly use 10–24px intervals.
 
@@ -284,7 +285,7 @@ Large surfaces are square or nearly square: the deployment terminal, capability 
 
 - **Brand lockup:** A 42px ink square with a white stacked-file glyph, 5px indigo offset, and -3-degree rotation precedes the lowercase Bricolage wordmark; “tools” is indigo.
 - **Compact lockup:** The footer uses a 34px mark, 3px offset, and reduced wordmark.
-- **Landing navigation:** A plain self-host anchor receives an indigo underline on hover; the GitHub action is a quiet bordered button. At 860px the text anchor hides, and at 560px the GitHub action becomes icon-only.
+- **Landing navigation:** A plain self-host anchor receives an indigo underline on hover; the GitHub action is a quiet bordered button. The hero adds an indigo `/new` workspace action. At 860px the text anchor hides, and at 560px the GitHub action becomes icon-only.
 - **Focus:** Every interactive element receives the global 3px sun outline with a 3px offset.
 
 ### Buttons
@@ -324,12 +325,13 @@ Large surfaces are square or nearly square: the deployment terminal, capability 
 
 ### Capability Columns
 
-- **Behavior:** These are non-interactive inventories, not launch cards. Three bordered white groups list Organize, Mark up, and Convert capabilities.
-- **Rhythm:** Each row uses an indigo icon, compact title, quiet description, and a dividing rule.
+- **Behavior:** The bordered groups inventory Organize, Mark up, Secure, and Convert capabilities; each full row is a workflow link.
+- **Rhythm:** Each row uses an indigo icon, compact title, quiet description, directional arrow, and a dividing rule.
 - **Composition:** Wide screens stagger the columns vertically; compact screens remove the stagger and stack them.
 
 ### Operation Workbench
 
+- **Workspace topbar:** A persistent paper bar exposes `/new` and a grouped tool switcher, marks the current workflow, and retains the active PDF between compatible tools. Its dropdown becomes a scrollable single-column list on narrow screens.
 - **Header:** A compact paper bar combines a bordered back control, Bricolage operation title, and right-aligned description.
 - **Control rail:** A 360px white sidebar uses uppercase labels, compact groups, clear dividers, and a pinned action region.
 - **Preview:** Ink canvas and darker preview chrome use white or lavender-gray status text; empty states remain subdued.
@@ -342,14 +344,14 @@ Large surfaces are square or nearly square: the deployment terminal, capability 
 - **Do** preserve the pinned `img-tools` family language: Bricolage display type, DM Sans utility copy, paper surfaces, ink workbenches, and indigo offsets.
 - **Do** lead the landing with the ownership proposition and PDF artifact, then show real self-host commands before installed capabilities.
 - **Do** use ink for terminals and document previews, and paper for instructions, controls, and uploaded-file structure.
-- **Do** keep capability presentation informational and visibly grouped rather than making every item a call to action.
+- **Do** keep workflow links informational, visibly grouped, and secondary to the landing's deployment proof.
 - **Do** retain the 360px desktop operation rail and the 1024px control-above-preview stack behavior.
 - **Do** keep motion quick, physical, and state-linked, with reduced-motion behavior respected globally.
 
 ### Don't:
 
-- **Don't** replace the landing with a generic grid of clickable PDF tool cards.
-- **Don't** put the capability inventory before the real deployment proof or turn it into the first-view action.
+- **Don't** replace the landing with a generic grid of undifferentiated PDF tool cards.
+- **Don't** put the capability inventory before the real deployment proof.
 - **Don't** swap the Bricolage/DM Sans pairing for a neutral system-only or conventional SaaS type stack.
 - **Don't** round every panel, add diffuse shadows to every surface, or dilute the hard-offset signature.
 - **Don't** use coral, aqua, or sun as competing CTA colors; indigo remains the sole brand authority.

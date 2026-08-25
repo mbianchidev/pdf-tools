@@ -24,10 +24,11 @@ server through explicit, inspectable jobs.
 
 ## Operating Context
 
-The public landing page explains how to self-host the stack and does not launch document
-workflows. In a deployed instance, users open tool routes, upload documents, configure
-an operation, monitor progress, and download expiring outputs. The React frontend
-communicates with a Java service backed by PostgreSQL and streaming object storage.
+The public landing page explains how to self-host the stack and links into the deployed
+workspace. Users can start at `/new`, load a PDF, and carry it between compatible PDF
+tools with the persistent workflow topbar. Tool routes configure an operation, monitor
+progress, and download expiring outputs. The React frontend communicates with a Java
+service backed by PostgreSQL and streaming object storage.
 
 ## Capabilities and Constraints
 

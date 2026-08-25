@@ -84,16 +84,23 @@
 
 @media (max-width: 1024px) {
   .isolated-conversion-page {
-    height: auto;
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .isolated-conversion-page .operation-content {
-    overflow: visible;
+    overflow-y: auto;
   }
 
   .isolated-conversion-page .operation-sidebar {
     max-height: none;
+    overflow: visible;
+  }
+
+  .isolated-conversion-page .operation-preview {
+    min-height: auto;
+    flex: none;
     overflow: visible;
   }
 }

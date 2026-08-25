@@ -9,6 +9,8 @@ test('explains how to self-host and launches tools from the landing page', async
 
   await expect(page.getByRole('heading', { name: 'Your PDFs. Your server.' })).toBeVisible();
   await expect(page.getByText('docker compose up --build')).toBeVisible();
+  await expect(page.getByRole('link', { name: /Open a PDF/ }))
+    .toHaveAttribute('href', '/new');
   await expect(page.getByText('Merge PDFs')).toBeVisible();
   await expect(page.getByText('Split PDF')).toBeVisible();
   const mergeLink = page.getByRole('link', { name: /Merge PDFs/ });

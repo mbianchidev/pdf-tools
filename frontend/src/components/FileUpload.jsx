@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useLocation } from 'react-router-dom';
 import { Upload, File, X } from 'lucide-react';
+import { useWorkspaceFile } from '../features/navigation/useWorkspaceFile';
 import './FileUpload.css';
 
 const FileUpload = ({ 
@@ -12,22 +14,53 @@ const FileUpload = ({
   disabled = false,
   hint,
 }) => {
+  const location = useLocation();
+  const workspaceFile = useWorkspaceFile();
+  const acceptsPdf = Object.prototype.hasOwnProperty.call(
+    accept,
+    'application/pdf',
+  );
   const remainingFiles = multiple
     ? Math.max(maxFiles - files.length, 0)
     : 1;
   const dropDisabled = disabled || remainingFiles === 0;
+
+  useEffect(() => {
+    if (!acceptsPdf || dropDisabled || files.length > 0) {
+      return;
+    }
+    const file = workspaceFile?.claimPdfFile(location.key);
+    if (file) {
+      onFilesChange([file]);
+    }
+  }, [
+    acceptsPdf,
+    dropDisabled,
+    files.length,
+    location.key,
+    onFilesChange,
+    workspaceFile,
+  ]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept,
     multiple,
     maxFiles: remainingFiles,
     disabled: dropDisabled,
     onDrop: (acceptedFiles) => {
-      onFilesChange(multiple ? [...files, ...acceptedFiles] : acceptedFiles);
+      const nextFiles = multiple ? [...files, ...acceptedFiles] : acceptedFiles;
+      if (acceptsPdf) {
+        workspaceFile?.rememberPdfFile(nextFiles[0] || null, location.key);
+      }
+      onFilesChange(nextFiles);
     },
   });
 
   const removeFile = (index) => {
     const newFiles = files.filter((_, i) => i !== index);
+    if (acceptsPdf) {
+      workspaceFile?.rememberPdfFile(newFiles[0] || null, location.key);
+    }
     onFilesChange(newFiles);
   };
 

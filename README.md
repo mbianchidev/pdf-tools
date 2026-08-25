@@ -7,8 +7,9 @@
 
 A comprehensive locally hostable PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
 
-The root landing page documents self-hosting only. PDF workflows run from tool routes
-inside a deployed instance; the public landing does not upload or process documents.
+The root landing page documents self-hosting and links into the deployed workspace.
+Use `/new` to load a PDF, then switch workflows from the persistent tool topbar.
+Documents are processed by the self-hosted backend, not in the browser.
 
 ## Documentation
 
@@ -82,7 +83,9 @@ docker compose up --build
 # Backend API: http://localhost:8080/api/v1
 ```
 
-The application will be available at `http://localhost`. The frontend automatically proxies API requests to the backend.
+The application will be available at `http://localhost`. Open
+`http://localhost/new` to load a PDF and choose a workflow from the topbar. The
+frontend automatically proxies API requests to the backend.
 
 ### Development Mode
 
