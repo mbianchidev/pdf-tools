@@ -32,12 +32,16 @@ RUN mkdir -p \
         /var/lib/pdf-tools-office/requests \
         /var/lib/pdf-tools-office/responses \
         /var/lib/pdf-tools-office/signals \
+        /var/lib/pdf-tools-html/requests \
+        /var/lib/pdf-tools-html/responses \
+        /var/lib/pdf-tools-html/signals \
     && chown -R pdftools:pdftools \
         /app \
         /tmp/pdf-storage \
         /tmp/pdf-work \
         /tmp/pdf-multipart \
         /var/lib/pdf-tools-office \
+        /var/lib/pdf-tools-html \
     && chmod 0700 /tmp/pdf-multipart \
     && chmod 0755 /usr/local/bin/pdf-tools-entrypoint
 EXPOSE 8080

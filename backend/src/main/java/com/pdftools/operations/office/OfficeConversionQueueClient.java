@@ -6,10 +6,14 @@ import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
 import com.pdftools.operations.OutputLimitExceededException;
 import com.pdftools.operations.shared.pdf.PdfInputValidator;
+import com.pdftools.operations.shared.queue.ConversionQueueProperties;
+import com.pdftools.operations.shared.queue.ConversionQueueProtocol;
+import com.pdftools.operations.shared.queue.QueuedDocumentType;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 
@@ -44,11 +48,22 @@ public class OfficeConversionQueueClient {
     private static final Duration ACKNOWLEDGEMENT_GRACE =
         Duration.ofSeconds(2);
 
-    private final OfficeConversionProperties properties;
+    private final ConversionQueueProperties properties;
 
+    @Autowired
     public OfficeConversionQueueClient(
             OfficeConversionProperties properties) {
         this.properties = properties;
+    }
+
+    private OfficeConversionQueueClient(
+            ConversionQueueProperties properties) {
+        this.properties = properties;
+    }
+
+    public static OfficeConversionQueueClient using(
+            ConversionQueueProperties properties) {
+        return new OfficeConversionQueueClient(properties);
     }
 
     public Path convertWord(
@@ -56,7 +71,7 @@ public class OfficeConversionQueueClient {
             Path workspace,
             IntConsumer progress,
             Runnable cancellationCheck) {
-        return convert(
+        return convertQueued(
             input,
             workspace,
             OfficeDocumentType.WORD,
@@ -71,7 +86,7 @@ public class OfficeConversionQueueClient {
             Path workspace,
             IntConsumer progress,
             Runnable cancellationCheck) {
-        return convert(
+        return convertQueued(
             input,
             workspace,
             OfficeDocumentType.POWERPOINT,
@@ -87,7 +102,7 @@ public class OfficeConversionQueueClient {
             JsonNode options,
             IntConsumer progress,
             Runnable cancellationCheck) {
-        return convert(
+        return convertQueued(
             input,
             workspace,
             OfficeDocumentType.EXCEL,
@@ -97,10 +112,10 @@ public class OfficeConversionQueueClient {
         );
     }
 
-    private Path convert(
+    public Path convertQueued(
             OperationInput input,
             Path workspace,
-            OfficeDocumentType documentType,
+            QueuedDocumentType documentType,
             String optionsJson,
             IntConsumer progress,
             Runnable cancellationCheck) {
@@ -116,18 +131,18 @@ public class OfficeConversionQueueClient {
             );
             Files.copy(
                 input.path(),
-                request.resolve(OfficeQueueProtocol.INPUT + extension)
+                request.resolve(ConversionQueueProtocol.INPUT + extension)
             );
-            OfficeQueueProtocol.writeRequest(
-                request.resolve(OfficeQueueProtocol.REQUEST),
-                new OfficeQueueProtocol.Request(
+            ConversionQueueProtocol.writeRequest(
+                request.resolve(ConversionQueueProtocol.REQUEST),
+                new ConversionQueueProtocol.Request(
                     documentType.key(),
                     extension,
                     optionsJson
                 )
             );
-            OfficeQueueProtocol.marker(
-                request.resolve(OfficeQueueProtocol.READY)
+            ConversionQueueProtocol.marker(
+                request.resolve(ConversionQueueProtocol.READY)
             );
             published = true;
             progress.accept(3);
@@ -155,7 +170,7 @@ public class OfficeConversionQueueClient {
         } catch (IOException exception) {
             cleanup(request);
             throw new OperationException(
-                "OFFICE_QUEUE_WRITE_FAILED",
+                queueCode("QUEUE_WRITE_FAILED"),
                 "The " + documentType.label()
                     + " could not be queued for conversion",
                 exception
@@ -168,7 +183,7 @@ public class OfficeConversionQueueClient {
             String requestId,
             Path request,
             Path destination,
-            OfficeDocumentType documentType,
+            QueuedDocumentType documentType,
             IntConsumer progress,
             Runnable cancellationCheck) {
         long queuedAt = System.nanoTime();
@@ -189,11 +204,13 @@ public class OfficeConversionQueueClient {
                         .plus(CONVERSION_GRACE)
                         .toNanos();
             }
-            Path completed = response.resolve(OfficeQueueProtocol.COMPLETED);
-            Path failed = response.resolve(OfficeQueueProtocol.FAILED);
+            Path completed = response.resolve(
+                ConversionQueueProtocol.COMPLETED
+            );
+            Path failed = response.resolve(ConversionQueueProtocol.FAILED);
             if (Files.isRegularFile(completed, LinkOption.NOFOLLOW_LINKS)) {
                 copyOutput(
-                    response.resolve(OfficeQueueProtocol.OUTPUT),
+                    response.resolve(ConversionQueueProtocol.OUTPUT),
                     destination,
                     cancellationCheck,
                     documentType
@@ -204,8 +221,8 @@ public class OfficeConversionQueueClient {
                 return destination;
             }
             if (Files.isRegularFile(failed, LinkOption.NOFOLLOW_LINKS)) {
-                OfficeQueueProtocol.Failure failure =
-                    OfficeQueueProtocol.readFailure(failed);
+                ConversionQueueProtocol.Failure failure =
+                    ConversionQueueProtocol.readFailure(failed);
                 acknowledge(roots, requestId, request, response);
                 throw new OperationException(
                     failure.code(),
@@ -213,12 +230,14 @@ public class OfficeConversionQueueClient {
                 );
             }
             Path progressFile = response.resolve(
-                OfficeQueueProtocol.PROGRESS
+                ConversionQueueProtocol.PROGRESS
             );
             if (Files.isRegularFile(
                     progressFile,
                     LinkOption.NOFOLLOW_LINKS)) {
-                int current = OfficeQueueProtocol.readProgress(progressFile);
+                int current = ConversionQueueProtocol.readProgress(
+                    progressFile
+                );
                 if (current > reported) {
                     reported = current;
                     progress.accept(current);
@@ -229,8 +248,9 @@ public class OfficeConversionQueueClient {
                     || (started && now >= conversionDeadline)) {
                 abandon(roots, requestId, request);
                 throw new OperationException(
-                    "OFFICE_QUEUE_TIMEOUT",
-                    "The isolated Office converter did not respond in time"
+                    queueCode("QUEUE_TIMEOUT"),
+                    "The isolated " + properties.getQueueLabel()
+                        + " converter did not respond in time"
                 );
             }
             sleep();
@@ -241,7 +261,7 @@ public class OfficeConversionQueueClient {
             Path source,
             Path destination,
             Runnable cancellationCheck,
-            OfficeDocumentType documentType) {
+            QueuedDocumentType documentType) {
         if (!Files.isRegularFile(source, LinkOption.NOFOLLOW_LINKS)) {
             throw invalidOutput(documentType);
         }
@@ -272,7 +292,7 @@ public class OfficeConversionQueueClient {
         } catch (IOException exception) {
             deleteDestination(destination);
             throw new OperationException(
-                "OFFICE_QUEUE_OUTPUT_FAILED",
+                queueCode("QUEUE_OUTPUT_FAILED"),
                 "The converted PDF could not be read safely",
                 exception
             );
@@ -281,12 +301,14 @@ public class OfficeConversionQueueClient {
 
     private void validatePdf(
             Path output,
-            OfficeDocumentType documentType) {
+            QueuedDocumentType documentType) {
         try {
             PdfInputValidator.requirePdfHeader(output);
             try (PDDocument document = Loader.loadPDF(output.toFile())) {
                 if (document.isEncrypted()
-                        || document.getNumberOfPages() < 1) {
+                        || document.getNumberOfPages() < 1
+                        || document.getNumberOfPages()
+                            > documentType.maxPages()) {
                     throw invalidOutput(documentType);
                 }
             }
@@ -325,8 +347,9 @@ public class OfficeConversionQueueClient {
                 }
             } catch (IOException exception) {
                 throw new OperationException(
-                    "OFFICE_QUEUE_UNAVAILABLE",
-                    "The isolated Office converter queue is unavailable",
+                    queueCode("QUEUE_UNAVAILABLE"),
+                    "The isolated " + properties.getQueueLabel()
+                        + " converter queue is unavailable",
                     exception
                 );
             }
@@ -345,16 +368,17 @@ public class OfficeConversionQueueClient {
             Roots roots,
             String requestId,
             Path request) {
-        signal(roots, requestId, OfficeQueueProtocol.CANCEL);
-        signal(roots, requestId, OfficeQueueProtocol.ABANDONED);
+        signal(roots, requestId, ConversionQueueProtocol.CANCEL);
+        signal(roots, requestId, ConversionQueueProtocol.ABANDONED);
         try {
             Files.deleteIfExists(
-                request.resolve(OfficeQueueProtocol.READY)
+                request.resolve(ConversionQueueProtocol.READY)
             );
         } catch (IOException exception) {
             throw new OperationException(
-                "OFFICE_QUEUE_CANCEL_FAILED",
-                "The Office request could not be cancelled safely",
+                queueCode("QUEUE_CANCEL_FAILED"),
+                "The " + properties.getQueueLabel()
+                    + " request could not be cancelled safely",
                 exception
             );
         }
@@ -378,7 +402,7 @@ public class OfficeConversionQueueClient {
             String requestId,
             Path request,
             Path response) {
-        signal(roots, requestId, OfficeQueueProtocol.ACKNOWLEDGED);
+        signal(roots, requestId, ConversionQueueProtocol.ACKNOWLEDGED);
         cleanup(request);
         long deadline = System.nanoTime()
             + ACKNOWLEDGEMENT_GRACE.toNanos();
@@ -413,13 +437,17 @@ public class OfficeConversionQueueClient {
                     signal(
                         roots,
                         requestId,
-                        OfficeQueueProtocol.ABANDONED
+                        ConversionQueueProtocol.ABANDONED
                     );
                     cleanup(request);
                 }
             }
         } catch (IOException exception) {
-            logger.error("Could not clean stale Office requests", exception);
+            logger.error(
+                "Could not clean stale {} requests",
+                properties.getQueueLabel(),
+                exception
+            );
         }
         cleanupConsumedSignals(roots);
     }
@@ -447,12 +475,16 @@ public class OfficeConversionQueueClient {
                 }
             }
         } catch (IOException exception) {
-            logger.error("Could not clean Office queue signals", exception);
+            logger.error(
+                "Could not clean {} queue signals",
+                properties.getQueueLabel(),
+                exception
+            );
         }
     }
 
     private void signal(Roots roots, String requestId, String suffix) {
-        OfficeQueueProtocol.marker(
+        ConversionQueueProtocol.marker(
             roots.signals().resolve(requestId + suffix)
         );
     }
@@ -465,7 +497,8 @@ public class OfficeConversionQueueClient {
             Files.deleteIfExists(roots.signals().resolve(requestId + suffix));
         } catch (IOException exception) {
             logger.error(
-                "Could not remove Office queue signal {}{}",
+                "Could not remove {} queue signal {}{}",
+                properties.getQueueLabel(),
                 requestId,
                 suffix,
                 exception
@@ -474,14 +507,19 @@ public class OfficeConversionQueueClient {
     }
 
     private void deleteSignals(Roots roots, String requestId) {
-        deleteSignal(roots, requestId, OfficeQueueProtocol.CANCEL);
-        deleteSignal(roots, requestId, OfficeQueueProtocol.ABANDONED);
-        deleteSignal(roots, requestId, OfficeQueueProtocol.ACKNOWLEDGED);
+        deleteSignal(roots, requestId, ConversionQueueProtocol.CANCEL);
+        deleteSignal(roots, requestId, ConversionQueueProtocol.ABANDONED);
+        deleteSignal(
+            roots,
+            requestId,
+            ConversionQueueProtocol.ACKNOWLEDGED
+        );
     }
 
     private boolean terminal(Path response) {
-        return Files.exists(response.resolve(OfficeQueueProtocol.COMPLETED))
-            || Files.exists(response.resolve(OfficeQueueProtocol.FAILED));
+        return Files.exists(
+            response.resolve(ConversionQueueProtocol.COMPLETED)
+        ) || Files.exists(response.resolve(ConversionQueueProtocol.FAILED));
     }
 
     private void cleanup(Path request) {
@@ -494,7 +532,8 @@ public class OfficeConversionQueueClient {
             }
         } catch (IOException exception) {
             logger.error(
-                "Could not remove Office queue request {}",
+                "Could not remove {} queue request {}",
+                properties.getQueueLabel(),
                 request,
                 exception
             );
@@ -506,7 +545,8 @@ public class OfficeConversionQueueClient {
             Files.deleteIfExists(destination);
         } catch (IOException exception) {
             logger.error(
-                "Could not remove partial Office output {}",
+                "Could not remove partial {} output {}",
+                properties.getQueueLabel(),
                 destination,
                 exception
             );
@@ -524,13 +564,18 @@ public class OfficeConversionQueueClient {
 
     private OperationException queueUnavailable() {
         return new OperationException(
-            "OFFICE_QUEUE_UNAVAILABLE",
-            "The isolated Office converter queue is unavailable"
+            queueCode("QUEUE_UNAVAILABLE"),
+            "The isolated " + properties.getQueueLabel()
+                + " converter queue is unavailable"
         );
     }
 
+    private String queueCode(String suffix) {
+        return properties.getQueueCodePrefix() + "_" + suffix;
+    }
+
     private OperationException invalidOutput(
-            OfficeDocumentType documentType) {
+            QueuedDocumentType documentType) {
         return new OperationException(
             documentType.invalidPdfCode(),
             "The isolated converter returned an unreadable PDF"

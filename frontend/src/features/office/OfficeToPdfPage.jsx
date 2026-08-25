@@ -35,6 +35,8 @@ const OfficeToPdfPage = ({
   previewTitle,
   previewDescription,
   fidelityWarning,
+  securityTitle = 'Isolated conversion',
+  securityDescription = 'LibreOffice runs in a networkless sidecar under a separate non-root identity with private scratch and bounded resources.',
   options = {},
   renderControls,
   validationError,
@@ -150,7 +152,7 @@ const OfficeToPdfPage = ({
   };
 
   return (
-    <div className="operation-page">
+    <div className="operation-page isolated-conversion-page">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       <header className="operation-header">
         <button className="back-button" onClick={() => navigate('/')}>
@@ -181,11 +183,8 @@ const OfficeToPdfPage = ({
           <div className="sidebar-section office-security-note">
             <ShieldCheck size={20} />
             <div>
-              <h3>Isolated conversion</h3>
-              <p>
-                LibreOffice runs in a networkless sidecar under a separate
-                non-root identity with private scratch and bounded resources.
-              </p>
+              <h3>{securityTitle}</h3>
+              <p>{securityDescription}</p>
             </div>
           </div>
 

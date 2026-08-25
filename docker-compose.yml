@@ -42,7 +42,7 @@ services:
       - PDF_STORAGE_S3_CREATE_BUCKET=${PDF_STORAGE_S3_CREATE_BUCKET:-false}
       - PDF_OPTIONS_ENCRYPTION_KEY=${PDF_OPTIONS_ENCRYPTION_KEY:-}
       - PDF_SECURITY_MAX_OUTPUT_BYTES=${PDF_SECURITY_MAX_OUTPUT_BYTES:-134217728}
-      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact,word-to-pdf,powerpoint-to-pdf,excel-to-pdf}
+      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact,word-to-pdf,powerpoint-to-pdf,excel-to-pdf,html-to-pdf}
       - PDF_TO_JPG_MAX_DOCUMENT_PAGES=${PDF_TO_JPG_MAX_DOCUMENT_PAGES:-1000}
       - PDF_TO_JPG_MAX_SELECTED_PAGES=${PDF_TO_JPG_MAX_SELECTED_PAGES:-500}
       - PDF_TO_JPG_MAX_DPI=${PDF_TO_JPG_MAX_DPI:-300}
@@ -103,18 +103,33 @@ services:
       - EXCEL_PREPARATION_WORKER_HEAP_BYTES=${EXCEL_PREPARATION_WORKER_HEAP_BYTES:-536870912}
       - EXCEL_PREPARATION_WORKER_ADDRESS_SPACE_BYTES=${EXCEL_PREPARATION_WORKER_ADDRESS_SPACE_BYTES:-4294967296}
       - EXCEL_PREPARATION_WORKER_TIMEOUT=${EXCEL_PREPARATION_WORKER_TIMEOUT:-2m}
+      - HTML_QUEUE_REQUEST_ROOT=/var/lib/pdf-tools-html/requests
+      - HTML_QUEUE_RESPONSE_ROOT=/var/lib/pdf-tools-html/responses
+      - HTML_QUEUE_SIGNAL_ROOT=/var/lib/pdf-tools-html/signals
+      - HTML_QUEUE_WAIT_TIMEOUT=${HTML_QUEUE_WAIT_TIMEOUT:-5m}
+      - HTML_QUEUE_RETENTION=${HTML_QUEUE_RETENTION:-1h}
+      - HTML_QUEUE_CLEANUP_INTERVAL=${HTML_QUEUE_CLEANUP_INTERVAL:-1m}
+      - HTML_WALL_TIMEOUT=${HTML_WALL_TIMEOUT:-1m}
+      - HTML_MAX_INPUT_BYTES=${HTML_MAX_INPUT_BYTES:-10485760}
+      - HTML_MAX_OUTPUT_BYTES=${HTML_MAX_OUTPUT_BYTES:-67108864}
+      - HTML_MAX_PAGES=${HTML_MAX_PAGES:-200}
       - CORS_ALLOWED_ORIGINS=http://localhost:80,http://localhost:3000
     volumes:
       - pdf-storage:/tmp/pdf-storage
       - office-requests:/var/lib/pdf-tools-office/requests
       - office-responses:/var/lib/pdf-tools-office/responses:ro
       - office-signals:/var/lib/pdf-tools-office/signals
+      - html-requests:/var/lib/pdf-tools-html/requests
+      - html-responses:/var/lib/pdf-tools-html/responses:ro
+      - html-signals:/var/lib/pdf-tools-html/signals
     networks:
       - pdf-tools-network
     depends_on:
       postgres:
         condition: service_healthy
       office-converter:
+        condition: service_healthy
+      html-converter:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/pdf/health"]
@@ -178,6 +193,49 @@ services:
       - /tmp/office-work:size=768m,mode=0711
     healthcheck:
       test: ["CMD", "test", "-f", "/var/lib/pdf-tools-office/responses/.daemon-ready"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 5s
+
+  html-converter:
+    image: pdf-tools-html-converter:local
+    build:
+      context: ./html-converter
+      dockerfile: Dockerfile
+    container_name: pdf-tools-html-converter
+    network_mode: none
+    environment:
+      - HTML_QUEUE_REQUEST_ROOT=/var/lib/pdf-tools-html/requests
+      - HTML_QUEUE_RESPONSE_ROOT=/var/lib/pdf-tools-html/responses
+      - HTML_QUEUE_SIGNAL_ROOT=/var/lib/pdf-tools-html/signals
+      - HTML_QUEUE_RETENTION=${HTML_QUEUE_RETENTION:-1h}
+      - HTML_SIDECAR_WORK_ROOT=/tmp/html-work
+      - HTML_MAX_INPUT_BYTES=${HTML_MAX_INPUT_BYTES:-10485760}
+      - HTML_MAX_OUTPUT_BYTES=${HTML_MAX_OUTPUT_BYTES:-67108864}
+      - HTML_MAX_LOG_BYTES=${HTML_MAX_LOG_BYTES:-1048576}
+      - HTML_WALL_TIMEOUT=${HTML_WALL_TIMEOUT:-1m}
+    volumes:
+      - html-requests:/var/lib/pdf-tools-html/requests:ro
+      - html-responses:/var/lib/pdf-tools-html/responses
+      - html-signals:/var/lib/pdf-tools-html/signals:ro
+    read_only: true
+    shm_size: 256m
+    mem_limit: 1024m
+    cpus: 2.0
+    pids_limit: 128
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_CHROOT
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=./html-converter/seccomp_profile.json
+    tmpfs:
+      - /tmp/html-work:size=512m,uid=10001,gid=10001,mode=0700
+      - /home/htmlworker:size=64m,uid=10001,gid=10001,mode=0700
+    healthcheck:
+      test: ["CMD", "test", "-f", "/var/lib/pdf-tools-html/responses/.daemon-ready"]
       interval: 2s
       timeout: 2s
       retries: 15
@@ -266,6 +324,12 @@ volumes:
   office-responses:
     driver: local
   office-signals:
+    driver: local
+  html-requests:
+    driver: local
+  html-responses:
+    driver: local
+  html-signals:
     driver: local
   postgres-data:
     driver: local

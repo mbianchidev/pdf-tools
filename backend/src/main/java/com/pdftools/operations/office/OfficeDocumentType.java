@@ -1,8 +1,9 @@
 package com.pdftools.operations.office;
 
+import com.pdftools.operations.shared.queue.QueuedDocumentType;
 import java.util.Locale;
 
-public enum OfficeDocumentType {
+public enum OfficeDocumentType implements QueuedDocumentType {
     WORD(
         "word",
         "WORD",

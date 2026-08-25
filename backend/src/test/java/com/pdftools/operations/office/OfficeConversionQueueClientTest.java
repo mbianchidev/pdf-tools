@@ -3,6 +3,7 @@ package com.pdftools.operations.office;
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
+import com.pdftools.operations.shared.queue.ConversionQueueProtocol;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
@@ -44,11 +45,13 @@ class OfficeConversionQueueClientTest {
             RequestState state = awaitRequest();
             try {
                 Files.write(
-                    state.response().resolve(OfficeQueueProtocol.OUTPUT),
+                    state.response().resolve(
+                        ConversionQueueProtocol.OUTPUT),
                     pdf
                 );
-                OfficeQueueProtocol.marker(
-                    state.response().resolve(OfficeQueueProtocol.COMPLETED)
+                ConversionQueueProtocol.marker(
+                    state.response().resolve(
+                        ConversionQueueProtocol.COMPLETED)
                 );
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
@@ -77,11 +80,13 @@ class OfficeConversionQueueClientTest {
             RequestState state = awaitRequest();
             try {
                 Files.createSymbolicLink(
-                    state.response().resolve(OfficeQueueProtocol.OUTPUT),
+                    state.response().resolve(
+                        ConversionQueueProtocol.OUTPUT),
                     outside
                 );
-                OfficeQueueProtocol.marker(
-                    state.response().resolve(OfficeQueueProtocol.COMPLETED)
+                ConversionQueueProtocol.marker(
+                    state.response().resolve(
+                        ConversionQueueProtocol.COMPLETED)
                 );
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
@@ -112,14 +117,15 @@ class OfficeConversionQueueClientTest {
                 Process fifo = new ProcessBuilder(
                     "/usr/bin/mkfifo",
                     state.response()
-                        .resolve(OfficeQueueProtocol.OUTPUT)
+                        .resolve(ConversionQueueProtocol.OUTPUT)
                         .toString()
                 ).start();
                 if (fifo.waitFor() != 0) {
                     throw new IllegalStateException("mkfifo failed");
                 }
-                OfficeQueueProtocol.marker(
-                    state.response().resolve(OfficeQueueProtocol.COMPLETED)
+                ConversionQueueProtocol.marker(
+                    state.response().resolve(
+                        ConversionQueueProtocol.COMPLETED)
                 );
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
@@ -149,15 +155,15 @@ class OfficeConversionQueueClientTest {
         CompletableFuture<Void> worker = CompletableFuture.runAsync(() -> {
             RequestState state = awaitRequest(false);
             Path cancel = properties.getQueueSignalRoot().resolve(
-                state.requestId() + OfficeQueueProtocol.CANCEL
+                state.requestId() + ConversionQueueProtocol.CANCEL
             );
             long deadline = System.nanoTime()
                 + Duration.ofSeconds(3).toNanos();
             while (!Files.exists(cancel) && System.nanoTime() < deadline) {
                 sleep();
             }
-            OfficeQueueProtocol.writeFailure(
-                state.response().resolve(OfficeQueueProtocol.FAILED),
+            ConversionQueueProtocol.writeFailure(
+                state.response().resolve(ConversionQueueProtocol.FAILED),
                 "OFFICE_CONVERSION_CANCELLED",
                 "Office conversion was cancelled"
             );
@@ -233,7 +239,7 @@ class OfficeConversionQueueClientTest {
                         if (request != null
                                 && (!requireReady || Files.exists(
                                     request.resolve(
-                                        OfficeQueueProtocol.READY)))) {
+                                        ConversionQueueProtocol.READY)))) {
                             String requestId =
                                 request.getFileName().toString();
                             Path response = properties

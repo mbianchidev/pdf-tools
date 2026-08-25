@@ -1,12 +1,13 @@
 package com.pdftools.operations.office;
 
+import com.pdftools.operations.shared.queue.ConversionQueueProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.nio.file.Path;
 import java.time.Duration;
 
 @ConfigurationProperties(prefix = "pdf.operations.office")
-public class OfficeConversionProperties {
+public class OfficeConversionProperties implements ConversionQueueProperties {
 
     private String mode = "queue";
     private Path queueRequestRoot =
@@ -31,6 +32,16 @@ public class OfficeConversionProperties {
     private int maxWorkerProcesses = 96;
     private Duration wallTimeout = Duration.ofMinutes(2);
     private boolean isolatedContainer;
+
+    @Override
+    public String getQueueCodePrefix() {
+        return "OFFICE";
+    }
+
+    @Override
+    public String getQueueLabel() {
+        return "Office";
+    }
 
     public String getMode() {
         return mode;

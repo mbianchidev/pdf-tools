@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Sheet } from 'lucide-react';
 import OfficeToPdfPage from '../features/office/OfficeToPdfPage';
-import './ExcelToPdfPage.css';
+import '../features/office/IsolatedConversionControls.css';
 
 const EXCEL_ACCEPT = {
   'application/vnd.ms-excel': ['.xls'],
@@ -47,7 +47,7 @@ const ExcelToPdfPage = () => {
       options={options}
       validationError={validationError}
       renderControls={({ running }) => (
-        <div className="sidebar-section excel-pdf-controls">
+        <div className="sidebar-section conversion-controls">
           <h3 className="sidebar-title">Print settings</h3>
           <label>
             Print area
@@ -88,7 +88,7 @@ const ExcelToPdfPage = () => {
             </select>
           </label>
           {validationError && (
-            <p className="excel-pdf-error" role="alert">
+            <p className="conversion-error" role="alert">
               {validationError}
             </p>
           )}

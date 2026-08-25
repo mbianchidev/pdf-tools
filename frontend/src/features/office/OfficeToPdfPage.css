@@ -81,3 +81,19 @@
   font-size: var(--text-sm);
   line-height: 1.5;
 }
+
+@media (max-width: 1024px) {
+  .isolated-conversion-page {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .isolated-conversion-page .operation-content {
+    overflow: visible;
+  }
+
+  .isolated-conversion-page .operation-sidebar {
+    max-height: none;
+    overflow: visible;
+  }
+}

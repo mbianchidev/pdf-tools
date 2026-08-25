@@ -221,3 +221,10 @@ tmpfs, non-root converter identity, and native resource limits. See
 `printAreaMode`, optional custom `printArea`, and `orientation`. A bounded
 workbook-preparation step applies print settings before LibreOffice Calc runs in
 the shared isolated Office sidecar. See [Excel to PDF](operations/excel-to-pdf.md).
+
+## HTML to PDF
+
+`operation=html-to-pdf` accepts one self-contained UTF-8 HTML or HTM document
+plus paper size, orientation, background, and margin controls. It returns one
+PDF from a dedicated networkless Playwright/Chromium sidecar. External URLs and
+local-file access are blocked. See [HTML to PDF](operations/html-to-pdf.md).

@@ -44,6 +44,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Word to PDF** - Convert DOCX/DOC with network-denied, resource-limited LibreOffice
 - **PowerPoint to PDF** - Convert PPTX/PPT slides in the isolated Office sidecar
 - **Excel to PDF** - Convert XLSX/XLS with print-area and orientation controls
+- **HTML to PDF** - Render self-contained HTML in a networkless Chromium sandbox
 - **Convert to Markdown** - Export PDF content as Markdown
 - **Convert to DOCX** - Export PDF content as Word documents
 

@@ -109,6 +109,15 @@ Important settings:
 | `EXCEL_MAX_SHEETS` | `100` | Workbook sheet limit |
 | `EXCEL_MAX_USED_CELLS` | `1000000` | Used-range scan cell limit |
 | `EXCEL_MAX_PREPARED_BYTES` | `104857600` | Prepared workbook byte limit |
+| `HTML_QUEUE_REQUEST_ROOT` | `/var/lib/pdf-tools-html/requests` | Backend-write/browser-read requests |
+| `HTML_QUEUE_RESPONSE_ROOT` | `/var/lib/pdf-tools-html/responses` | Browser-write/backend-read responses |
+| `HTML_QUEUE_SIGNAL_ROOT` | `/var/lib/pdf-tools-html/signals` | Backend-write/browser-read signals |
+| `HTML_QUEUE_WAIT_TIMEOUT` | `5m` | HTML queue wait before rendering starts |
+| `HTML_QUEUE_RETENTION` | `1h` | Stale HTML queue retention |
+| `HTML_WALL_TIMEOUT` | `1m` | Chromium render wall-time limit |
+| `HTML_MAX_INPUT_BYTES` | `10485760` | UTF-8 HTML input byte limit |
+| `HTML_MAX_OUTPUT_BYTES` | `67108864` | Rendered PDF byte limit |
+| `HTML_MAX_PAGES` | `200` | Rendered PDF page limit |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 
@@ -123,6 +132,12 @@ For local Maven development on macOS, set `OFFICE_CONVERSION_MODE=direct`;
 Seatbelt still denies IP networking and native limits remain active, but filesystem
 reads are not isolated and only trusted local fixtures should be used. Linux direct
 mode fails closed; use Docker Compose so conversion stays in the sidecar.
+
+HTML rendering uses a separate Playwright sidecar with no network, a read-only
+root filesystem, non-root Chromium sandboxing, the version-matched Playwright
+seccomp profile, private tmpfs, and one-way queue volumes. HTML inputs must
+contain required CSS, scripts, fonts, SVG, and images inline. Local paths and
+external requests are blocked.
 
 ## Local frontend
 
@@ -141,6 +156,7 @@ legacy operation pages migrate.
 cd backend && mvn test
 cd frontend && npm run lint && npm test && npm run build
 cd frontend && npx playwright install chromium && npm run test:e2e
+cd html-converter && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts && npm test
 docker compose build --no-cache
 ```
 

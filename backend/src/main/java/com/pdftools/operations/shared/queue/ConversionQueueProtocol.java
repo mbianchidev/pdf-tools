@@ -1,4 +1,4 @@
-package com.pdftools.operations.office;
+package com.pdftools.operations.shared.queue;
 
 import com.pdftools.operations.OperationException;
 
@@ -12,28 +12,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-final class OfficeQueueProtocol {
+public final class ConversionQueueProtocol {
 
-    static final String REQUEST = "request.bin";
-    static final String INPUT = "input";
-    static final String OUTPUT = "output.pdf";
-    static final String READY = ".ready";
-    static final String RUNNING = ".running";
-    static final String CANCEL = ".cancel";
-    static final String ACKNOWLEDGED = ".acknowledged";
-    static final String COMPLETED = ".completed";
-    static final String FAILED = ".failed";
-    static final String PROGRESS = ".progress";
-    static final String ABANDONED = ".abandoned";
-    static final String DAEMON_READY = ".daemon-ready";
+    public static final String REQUEST = "request.bin";
+    public static final String INPUT = "input";
+    public static final String OUTPUT = "output.pdf";
+    public static final String READY = ".ready";
+    public static final String RUNNING = ".running";
+    public static final String CANCEL = ".cancel";
+    public static final String ACKNOWLEDGED = ".acknowledged";
+    public static final String COMPLETED = ".completed";
+    public static final String FAILED = ".failed";
+    public static final String PROGRESS = ".progress";
+    public static final String ABANDONED = ".abandoned";
+    public static final String DAEMON_READY = ".daemon-ready";
 
     private static final int VERSION_1 = 1;
     private static final int VERSION_2 = 2;
 
-    private OfficeQueueProtocol() {
+    private ConversionQueueProtocol() {
     }
 
-    static void writeRequest(Path path, Request request) {
+    public static void writeRequest(Path path, Request request) {
         if (!request.valid()) {
             throw protocolFailure(null);
         }
@@ -52,7 +52,7 @@ final class OfficeQueueProtocol {
         }
     }
 
-    static Request readRequest(Path path) {
+    public static Request readRequest(Path path) {
         try (DataInputStream input = new DataInputStream(
                 new BufferedInputStream(Files.newInputStream(path)))) {
             int version = input.readInt();
@@ -75,7 +75,10 @@ final class OfficeQueueProtocol {
         }
     }
 
-    static void writeFailure(Path path, String code, String message) {
+    public static void writeFailure(
+            Path path,
+            String code,
+            String message) {
         Path temporary = temporary(path);
         try (DataOutputStream output = new DataOutputStream(
                 new BufferedOutputStream(
@@ -89,7 +92,7 @@ final class OfficeQueueProtocol {
         move(temporary, path);
     }
 
-    static Failure readFailure(Path path) {
+    public static Failure readFailure(Path path) {
         try (DataInputStream input = new DataInputStream(
                 new BufferedInputStream(Files.newInputStream(path)))) {
             if (input.readInt() != VERSION_1) {
@@ -113,7 +116,7 @@ final class OfficeQueueProtocol {
         }
     }
 
-    static void writeProgress(Path path, int progress) {
+    public static void writeProgress(Path path, int progress) {
         if (progress < 0 || progress > 99) {
             throw protocolFailure(null);
         }
@@ -126,7 +129,7 @@ final class OfficeQueueProtocol {
         move(temporary, path);
     }
 
-    static int readProgress(Path path) {
+    public static int readProgress(Path path) {
         try {
             int progress = Integer.parseInt(Files.readString(path).trim());
             if (progress < 0 || progress > 99) {
@@ -140,7 +143,7 @@ final class OfficeQueueProtocol {
         }
     }
 
-    static void marker(Path path) {
+    public static void marker(Path path) {
         Path temporary = temporary(path);
         try {
             Files.write(temporary, new byte[]{1});
@@ -150,7 +153,7 @@ final class OfficeQueueProtocol {
         move(temporary, path);
     }
 
-    static void move(Path source, Path destination) {
+    public static void move(Path source, Path destination) {
         try {
             try {
                 Files.move(
@@ -183,7 +186,7 @@ final class OfficeQueueProtocol {
         );
     }
 
-    record Request(
+    public record Request(
         String type,
         String extension,
         String optionsJson
@@ -199,6 +202,8 @@ final class OfficeQueueProtocol {
                     && optionsJson.equals("{}");
                 case "excel" -> extension.matches("\\.xlsx?")
                     && validExcelOptions();
+                case "html" -> extension.matches("\\.html?")
+                    && validHtmlOptions();
                 default -> false;
             };
         }
@@ -212,8 +217,22 @@ final class OfficeQueueProtocol {
                 return false;
             }
         }
+
+        private boolean validHtmlOptions() {
+            try {
+                var options = new tools.jackson.databind.ObjectMapper()
+                    .readTree(optionsJson);
+                return options.isObject()
+                    && options.path("pageSize").isTextual()
+                    && options.path("landscape").isBoolean()
+                    && options.path("printBackground").isBoolean()
+                    && options.path("marginMm").isInt();
+            } catch (RuntimeException exception) {
+                return false;
+            }
+        }
     }
 
-    record Failure(String code, String message) {
+    public record Failure(String code, String message) {
     }
 }

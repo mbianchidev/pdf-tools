@@ -1,9 +1,9 @@
-.excel-pdf-controls {
+.conversion-controls {
   display: grid;
   gap: 0.7rem;
 }
 
-.excel-pdf-controls label {
+.conversion-controls label {
   display: grid;
   gap: 0.35rem;
   color: var(--ink);
@@ -11,8 +11,8 @@
   font-weight: 700;
 }
 
-.excel-pdf-controls input,
-.excel-pdf-controls select {
+.conversion-controls input:not([type='checkbox']),
+.conversion-controls select {
   width: 100%;
   min-height: 40px;
   padding: 0 0.65rem;
@@ -23,7 +23,18 @@
   font: inherit;
 }
 
-.excel-pdf-error {
+.conversion-toggle {
+  grid-template-columns: 1rem 1fr;
+  align-items: center;
+}
+
+.conversion-toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--iris);
+}
+
+.conversion-error {
   margin: 0;
   color: var(--danger);
   font-size: var(--text-xs);

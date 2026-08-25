@@ -28,6 +28,7 @@ import {
   FileInput,
   Presentation,
   Sheet,
+  CodeXml,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -56,6 +57,7 @@ const PowerPointToPdfPage = lazy(
   () => import('./pages/PowerPointToPdfPage'),
 );
 const ExcelToPdfPage = lazy(() => import('./pages/ExcelToPdfPage'));
+const HtmlToPdfPage = lazy(() => import('./pages/HtmlToPdfPage'));
 
 const operations = [
   {
@@ -197,6 +199,13 @@ const operations = [
     group: 'Convert',
     title: 'Excel to PDF',
     description: 'Convert XLSX and XLS with print-area controls',
+  },
+  {
+    id: 'html-to-pdf',
+    icon: CodeXml,
+    group: 'Convert',
+    title: 'HTML to PDF',
+    description: 'Render self-contained HTML with isolated Chromium',
   },
   {
     id: 'convert-markdown',
@@ -468,6 +477,7 @@ function App() {
           element={<PowerPointToPdfPage />}
         />
         <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
+        <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
         <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
         <Route path="/convert-docx" element={<ConvertDocxPage />} />
       </Routes>

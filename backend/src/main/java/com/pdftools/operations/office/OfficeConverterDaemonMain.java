@@ -3,6 +3,7 @@ package com.pdftools.operations.office;
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
+import com.pdftools.operations.shared.queue.ConversionQueueProtocol;
 import com.pdftools.operations.excelpdf.ExcelDocumentValidator;
 import com.pdftools.operations.excelpdf.ExcelPlanFactory;
 import com.pdftools.operations.excelpdf.ExcelPreparationService;
@@ -48,11 +49,13 @@ public final class OfficeConverterDaemonMain {
                 }
             }
             Files.deleteIfExists(
-                roots.responses().resolve(OfficeQueueProtocol.DAEMON_READY)
+                roots.responses().resolve(
+                    ConversionQueueProtocol.DAEMON_READY)
             );
             recover(roots, properties.getQueueRetention());
-            OfficeQueueProtocol.marker(
-                roots.responses().resolve(OfficeQueueProtocol.DAEMON_READY)
+            ConversionQueueProtocol.marker(
+                roots.responses().resolve(
+                    ConversionQueueProtocol.DAEMON_READY)
             );
             WordDocumentValidator validator =
                 new WordDocumentValidator(properties);
@@ -165,7 +168,7 @@ public final class OfficeConverterDaemonMain {
             return false;
         }
         if (!Files.isRegularFile(
-                request.resolve(OfficeQueueProtocol.READY),
+                request.resolve(ConversionQueueProtocol.READY),
                 LinkOption.NOFOLLOW_LINKS)) {
             return false;
         }
@@ -182,8 +185,8 @@ public final class OfficeConverterDaemonMain {
                 cleanup(response);
                 return false;
             }
-            OfficeQueueProtocol.marker(
-                response.resolve(OfficeQueueProtocol.RUNNING)
+            ConversionQueueProtocol.marker(
+                response.resolve(ConversionQueueProtocol.RUNNING)
             );
             return true;
         } catch (IOException exception) {
@@ -202,12 +205,12 @@ public final class OfficeConverterDaemonMain {
         String requestId = requestDirectory.getFileName().toString();
         Path work = workRoot.resolve(requestId);
         try {
-            OfficeQueueProtocol.Request request =
-                OfficeQueueProtocol.readRequest(
-                    requestDirectory.resolve(OfficeQueueProtocol.REQUEST)
+            ConversionQueueProtocol.Request request =
+                ConversionQueueProtocol.readRequest(
+                    requestDirectory.resolve(ConversionQueueProtocol.REQUEST)
                 );
             Path input = requestDirectory.resolve(
-                OfficeQueueProtocol.INPUT + request.extension()
+                ConversionQueueProtocol.INPUT + request.extension()
             );
             if (Files.isSymbolicLink(input)
                     || !Files.isRegularFile(
@@ -230,15 +233,16 @@ public final class OfficeConverterDaemonMain {
                 "office-queue"
             );
             java.util.function.IntConsumer progress =
-                value -> OfficeQueueProtocol.writeProgress(
-                    responseDirectory.resolve(OfficeQueueProtocol.PROGRESS),
+                value -> ConversionQueueProtocol.writeProgress(
+                    responseDirectory.resolve(
+                        ConversionQueueProtocol.PROGRESS),
                     value
                 );
             Runnable cancellation = () -> {
                 if (Files.exists(signal(
                         signalRoot,
                         requestId,
-                        OfficeQueueProtocol.CANCEL))) {
+                        ConversionQueueProtocol.CANCEL))) {
                     throw new OperationCancelledException();
                 }
             };
@@ -269,12 +273,12 @@ public final class OfficeConverterDaemonMain {
                     "The Office queue type is invalid"
                 );
             };
-            OfficeQueueProtocol.move(
+            ConversionQueueProtocol.move(
                 output,
-                responseDirectory.resolve(OfficeQueueProtocol.OUTPUT)
+                responseDirectory.resolve(ConversionQueueProtocol.OUTPUT)
             );
-            OfficeQueueProtocol.marker(
-                responseDirectory.resolve(OfficeQueueProtocol.COMPLETED)
+            ConversionQueueProtocol.marker(
+                responseDirectory.resolve(ConversionQueueProtocol.COMPLETED)
             );
         } catch (OperationCancelledException exception) {
             fail(
@@ -338,7 +342,7 @@ public final class OfficeConverterDaemonMain {
                 boolean acknowledged = Files.exists(signal(
                     roots.signals(),
                     requestId,
-                    OfficeQueueProtocol.ACKNOWLEDGED
+                    ConversionQueueProtocol.ACKNOWLEDGED
                 ));
                 boolean expired = Files.getLastModifiedTime(response)
                     .toInstant()
@@ -356,14 +360,15 @@ public final class OfficeConverterDaemonMain {
             Path response,
             String code,
             String message) {
-        OfficeQueueProtocol.writeFailure(
-            response.resolve(OfficeQueueProtocol.FAILED),
+        ConversionQueueProtocol.writeFailure(
+            response.resolve(ConversionQueueProtocol.FAILED),
             code,
             message
         );
     }
 
-    private static String mediaType(OfficeQueueProtocol.Request request) {
+    private static String mediaType(
+            ConversionQueueProtocol.Request request) {
         return switch (request.type()) {
             case "word" -> request.extension().equals(".docx")
                 ? "application/vnd.openxmlformats-officedocument."
@@ -383,8 +388,10 @@ public final class OfficeConverterDaemonMain {
 
     private static boolean terminal(Path response) {
         return Files.isDirectory(response, LinkOption.NOFOLLOW_LINKS)
-            && (Files.exists(response.resolve(OfficeQueueProtocol.COMPLETED))
-                || Files.exists(response.resolve(OfficeQueueProtocol.FAILED)));
+            && (Files.exists(
+                    response.resolve(ConversionQueueProtocol.COMPLETED))
+                || Files.exists(
+                    response.resolve(ConversionQueueProtocol.FAILED)));
     }
 
     private static Path signal(
@@ -400,11 +407,11 @@ public final class OfficeConverterDaemonMain {
         return Files.exists(signal(
             signalRoot,
             requestId,
-            OfficeQueueProtocol.CANCEL
+            ConversionQueueProtocol.CANCEL
         )) || Files.exists(signal(
             signalRoot,
             requestId,
-            OfficeQueueProtocol.ABANDONED
+            ConversionQueueProtocol.ABANDONED
         ));
     }
 

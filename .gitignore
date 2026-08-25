@@ -29,6 +29,7 @@ frontend/.next/
 # Root node_modules (for playwright/testing tools)
 node_modules/
 package-lock.json
+!html-converter/package-lock.json
 
 # Temporary files and uploads
 *.tmp
@@ -80,6 +81,7 @@ logs/
 
 # Docker
 *.dockerignore
+!html-converter/.dockerignore
 
 # Test coverage
 coverage/

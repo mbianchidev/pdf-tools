@@ -1,4 +1,4 @@
-package com.pdftools.operations.office;
+package com.pdftools.operations.shared.queue;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -12,16 +12,16 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class OfficeQueueProtocolTest {
+class ConversionQueueProtocolTest {
 
     @TempDir
     Path temporaryDirectory;
 
     @Test
     void readsVersionOneWordAndPowerPointRequests() throws Exception {
-        for (OfficeQueueProtocol.Request expected : new OfficeQueueProtocol.Request[]{
-                new OfficeQueueProtocol.Request("word", ".docx", "{}"),
-                new OfficeQueueProtocol.Request(
+        for (ConversionQueueProtocol.Request expected : new ConversionQueueProtocol.Request[]{
+                new ConversionQueueProtocol.Request("word", ".docx", "{}"),
+                new ConversionQueueProtocol.Request(
                     "powerpoint",
                     ".ppt",
                     "{}"
@@ -37,15 +37,18 @@ class OfficeQueueProtocolTest {
                 output.writeUTF(expected.extension());
             }
 
-            assertEquals(expected, OfficeQueueProtocol.readRequest(request));
+            assertEquals(
+                expected,
+                ConversionQueueProtocol.readRequest(request)
+            );
         }
     }
 
     @Test
     void keepsWordAndPowerPointWritersOnVersionOne() throws Exception {
-        for (OfficeQueueProtocol.Request expected : new OfficeQueueProtocol.Request[]{
-                new OfficeQueueProtocol.Request("word", ".doc", "{}"),
-                new OfficeQueueProtocol.Request(
+        for (ConversionQueueProtocol.Request expected : new ConversionQueueProtocol.Request[]{
+                new ConversionQueueProtocol.Request("word", ".doc", "{}"),
+                new ConversionQueueProtocol.Request(
                     "powerpoint",
                     ".pptx",
                     "{}"
@@ -54,7 +57,7 @@ class OfficeQueueProtocolTest {
                 expected.type() + "-written.bin"
             );
 
-            OfficeQueueProtocol.writeRequest(request, expected);
+            ConversionQueueProtocol.writeRequest(request, expected);
 
             try (DataInputStream input = new DataInputStream(
                     new BufferedInputStream(Files.newInputStream(request)))) {
@@ -69,19 +72,19 @@ class OfficeQueueProtocolTest {
     @Test
     void writesAndReadsVersionTwoExcelOptions() throws Exception {
         Path request = temporaryDirectory.resolve("excel.bin");
-        OfficeQueueProtocol.Request expected =
-            new OfficeQueueProtocol.Request(
+        ConversionQueueProtocol.Request expected =
+            new ConversionQueueProtocol.Request(
                 "excel",
                 ".xlsx",
                 "{\"orientation\":\"landscape\"}"
             );
 
-        OfficeQueueProtocol.writeRequest(request, expected);
+        ConversionQueueProtocol.writeRequest(request, expected);
 
         try (DataInputStream input = new DataInputStream(
                 new BufferedInputStream(Files.newInputStream(request)))) {
             assertEquals(2, input.readInt());
         }
-        assertEquals(expected, OfficeQueueProtocol.readRequest(request));
+        assertEquals(expected, ConversionQueueProtocol.readRequest(request));
     }
 }
