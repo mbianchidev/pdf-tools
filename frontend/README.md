@@ -33,6 +33,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Compress PDF** - Compare lossless, balanced, and extreme size reduction
 - **Repair PDF** - Review explicit qpdf recovery reports and warnings
 - **PDF to PDF/A** - Choose archival profiles backed by veraPDF validation
+- **Compare PDF** - Review text, layout, and rendered-page differences
 
 ### UI Features
 - Documentation-first self-hosting landing page
@@ -114,6 +115,7 @@ frontend/
 │   │   ├── CompressPage.jsx
 │   │   ├── RepairPage.jsx
 │   │   ├── PdfAPage.jsx
+│   │   ├── ComparePage.jsx
 │   │   └── OperationPage.css  # Shared operation styles
 │   ├── services/
 │   │   ├── jobService.js     # Versioned asynchronous jobs client

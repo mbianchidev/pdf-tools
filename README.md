@@ -52,6 +52,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Compress PDF** - Lossless, recommended, and extreme modes with before/after size comparison
 - **Repair PDF** - qpdf structural recovery with explicit partial-recovery reports
 - **PDF to PDF/A** - Selected archival profiles with independent veraPDF validation
+- **Compare PDF** - Combined text, layout, and rendered-page differences
 
 ### Technology Stack
 - **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, veraPDF, PostgreSQL, Flyway

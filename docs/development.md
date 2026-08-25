@@ -184,6 +184,16 @@ Important settings:
 | `PDFA_MAX_REPORT_BYTES` | `262144` | Validation report byte limit |
 | `PDFA_VALIDATOR_HEAP_BYTES` | `536870912` | Isolated veraPDF heap cap |
 | `PDFA_VALIDATOR_TIMEOUT` | `5m` | Isolated veraPDF wall-time cap |
+| `COMPARE_MAX_INPUT_BYTES` | `52428800` | Per-PDF comparison input limit |
+| `COMPARE_MAX_TOTAL_INPUT_BYTES` | `104857600` | Aggregate comparison input limit |
+| `COMPARE_MAX_PAGES` | `200` | Page limit per document |
+| `COMPARE_MAX_DIFF_MATRIX_CELLS` | `1000000` | Per-page text diff complexity cap |
+| `COMPARE_MAX_PIXELS_PER_PAGE` | `10000000` | Per-page rendered pixel cap |
+| `COMPARE_MAX_TOTAL_RENDER_PIXELS` | `200000000` | Aggregate render/canvas pixel budget |
+| `COMPARE_MAX_REPORT_BYTES` | `4194304` | JSON report byte limit |
+| `COMPARE_MAX_ARCHIVE_BYTES` | `314572800` | ZIP artifact byte limit |
+| `COMPARE_WORKER_HEAP_BYTES` | `536870912` | Isolated comparison heap cap |
+| `COMPARE_WORKER_TIMEOUT` | `5m` | Isolated comparison wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

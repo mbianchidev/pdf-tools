@@ -64,6 +64,7 @@ pdf-tools/
 │   │   │   ├── CompressPage.jsx         # PDF size reduction
 │   │   │   ├── RepairPage.jsx           # qpdf recovery reports
 │   │   │   ├── PdfAPage.jsx             # veraPDF archival profiles
+│   │   │   ├── ComparePage.jsx          # Text/layout/rendered diffs
 │   │   │   └── OperationPage.css        # Shared operation styles
 │   │   └── services/
 │   │       └── pdfService.js            # API client

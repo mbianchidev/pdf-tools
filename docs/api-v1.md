@@ -281,3 +281,11 @@ or `pdfa-3b`. LibreOffice Draw performs the conversion in the isolated Office
 sidecar, and an isolated veraPDF worker must confirm the exact profile before
 the PDF and JSON validation report are published. See
 [PDF to PDF/A](operations/pdf-to-pdfa.md).
+
+## Compare PDF
+
+`operation=compare` accepts two ordered, unencrypted PDFs (baseline then
+candidate). It returns a deterministic ZIP of the JSON report and changed-page
+diff PNGs plus the same JSON as a separate output. Text, layout, and rendered
+pixel differences are combined per page. See
+[Compare PDF](operations/compare.md).

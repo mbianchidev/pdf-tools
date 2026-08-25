@@ -13,3 +13,4 @@ export { default as PdfToExcelPage } from './PdfToExcelPage';
 export { default as CompressPage } from './CompressPage';
 export { default as RepairPage } from './RepairPage';
 export { default as PdfAPage } from './PdfAPage';
+export { default as ComparePage } from './ComparePage';

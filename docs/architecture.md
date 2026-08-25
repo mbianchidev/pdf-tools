@@ -39,6 +39,7 @@ scheduler isolated from storage cleanup.
 | `operations.compress` | Isolated lossless or image-aware PDF size reduction |
 | `operations.repair` | Sandboxed qpdf structural recovery and warning reports |
 | `operations.pdfa` | Isolated LibreOffice PDF/A conversion and veraPDF conformance validation |
+| `operations.compare` | Isolated text, layout, and rendered-page PDF comparison |
 | `operations.shared.extraction` | Positioned text/images, table heuristics, budgets, and page rasterization |
 | `storage` | Local filesystem and S3-compatible streaming adapters |
 | `api` | Structured HTTP error contract |
@@ -102,4 +103,7 @@ crop-box offsets and page rotations of 0, 90, 180, or 270 degrees.
 - PDF/A uses two independent boundaries: profile-specific LibreOffice Draw
   export in the Office sidecar followed by a heap/time-limited veraPDF
   Greenfield worker. Non-conformant candidates are never published.
+- PDF comparison loads both documents through disk-backed PDFBox scratch in a
+  killable worker, bounds line-diff matrices and render pixels, and emits one
+  deterministic report/visual-diff bundle.
 - The backend container itself runs as an unprivileged user.

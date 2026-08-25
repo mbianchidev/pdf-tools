@@ -47,6 +47,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Compress PDF** - Bounded lossless or image-aware size reduction
 - **Repair PDF** - Sandboxed qpdf recovery with structured warning reports
 - **PDF to PDF/A** - Isolated LibreOffice conversion plus veraPDF validation
+- **Compare PDF** - Bounded text, layout, and rendered-page diff reports
 - **Convert to DOCX** - Convert to Word document
 
 ## Getting Started
@@ -89,7 +90,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, `compress`, `repair`, and `pdf-to-pdfa`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, `compress`, `repair`, `pdf-to-pdfa`, and `compare`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -115,6 +116,7 @@ PDF-to-Markdown conversion is documented in [`docs/operations/pdf-to-markdown.md
 PDF compression is documented in [`docs/operations/compress.md`](../docs/operations/compress.md).
 PDF repair is documented in [`docs/operations/repair.md`](../docs/operations/repair.md).
 PDF/A conversion is documented in [`docs/operations/pdf-to-pdfa.md`](../docs/operations/pdf-to-pdfa.md).
+PDF comparison is documented in [`docs/operations/compare.md`](../docs/operations/compare.md).
 
 The following legacy endpoints remain during migration:
 

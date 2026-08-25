@@ -32,6 +32,7 @@ import {
   Minimize2,
   Wrench,
   Archive,
+  GitCompareArrows,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -68,6 +69,7 @@ const HtmlToPdfPage = lazy(() => import('./pages/HtmlToPdfPage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
 const RepairPage = lazy(() => import('./pages/RepairPage'));
 const PdfAPage = lazy(() => import('./pages/PdfAPage'));
+const ComparePage = lazy(() => import('./pages/ComparePage'));
 
 const operations = [
   {
@@ -244,6 +246,13 @@ const operations = [
     group: 'Convert',
     title: 'PDF to PDF/A',
     description: 'Create veraPDF-validated archival profiles',
+  },
+  {
+    id: 'compare',
+    icon: GitCompareArrows,
+    group: 'Organize',
+    title: 'Compare PDFs',
+    description: 'Inspect text, layout, and rendered-page differences',
   },
   {
     id: 'pdf-to-word',
@@ -534,6 +543,7 @@ function App() {
         <Route path="/compress" element={<CompressPage />} />
         <Route path="/repair" element={<RepairPage />} />
         <Route path="/pdf-to-pdfa" element={<PdfAPage />} />
+        <Route path="/compare" element={<ComparePage />} />
         <Route path="/convert-docx" element={<PdfToWordPage />} />
       </Routes>
     </Suspense>
