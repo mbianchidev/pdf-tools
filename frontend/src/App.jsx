@@ -52,6 +52,9 @@ const SignaturePage = lazy(() => import('./pages/SignaturePage'));
 const RedactPage = lazy(() => import('./pages/RedactPage'));
 const ConvertMarkdownPage = lazy(() => import('./pages/ConvertMarkdownPage'));
 const PdfToWordPage = lazy(() => import('./pages/PdfToWordPage'));
+const PdfToPowerPointPage = lazy(
+  () => import('./pages/PdfToPowerPointPage'),
+);
 const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'));
 const PowerPointToPdfPage = lazy(
   () => import('./pages/PowerPointToPdfPage'),
@@ -220,6 +223,13 @@ const operations = [
     group: 'Convert',
     title: 'PDF to Word',
     description: 'Recover editable structure or preserve pages visually',
+  },
+  {
+    id: 'pdf-to-powerpoint',
+    icon: Presentation,
+    group: 'Convert',
+    title: 'PDF to PowerPoint',
+    description: 'Create editable elements or visual page slides',
   },
 ];
 
@@ -480,6 +490,10 @@ function App() {
         <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
         <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
         <Route path="/pdf-to-word" element={<PdfToWordPage />} />
+        <Route
+          path="/pdf-to-powerpoint"
+          element={<PdfToPowerPointPage />}
+        />
         <Route path="/convert-docx" element={<PdfToWordPage />} />
       </Routes>
     </Suspense>

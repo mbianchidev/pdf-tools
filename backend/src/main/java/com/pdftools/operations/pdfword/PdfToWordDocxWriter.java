@@ -3,6 +3,9 @@ package com.pdftools.operations.pdfword;
 import com.pdftools.operations.BoundedOutputStream;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OutputLimitExceededException;
+import com.pdftools.operations.shared.extraction.PdfPageContent;
+import com.pdftools.operations.shared.extraction.AlignedTableDetector;
+import com.pdftools.operations.shared.extraction.AlignedTableDetector.TableCandidate;
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.Document;
 import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
@@ -27,7 +30,6 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 final class PdfToWordDocxWriter {
@@ -36,13 +38,17 @@ final class PdfToWordDocxWriter {
     private static final float MAX_WORD_PAGE_POINTS = 22 * 72;
 
     private final PdfToWordProperties properties;
+    private final AlignedTableDetector tableDetector;
 
     PdfToWordDocxWriter(PdfToWordProperties properties) {
         this.properties = properties;
+        this.tableDetector = new AlignedTableDetector(
+            properties.getMaxTableColumns()
+        );
     }
 
     void write(
-            List<PdfToWordPage> pages,
+            List<PdfPageContent> pages,
             PdfToWordPlanFactory.PdfToWordPlan plan,
             Path output,
             Runnable progress) {
@@ -55,7 +61,7 @@ final class PdfToWordDocxWriter {
             for (int pageIndex = 0;
                     pageIndex < pages.size();
                     pageIndex++) {
-                PdfToWordPage page = pages.get(pageIndex);
+                PdfPageContent page = pages.get(pageIndex);
                 if (plan.mode().equals("editable")) {
                     writeEditablePage(document, page, plan, pageIndex);
                 } else {
@@ -92,14 +98,14 @@ final class PdfToWordDocxWriter {
 
     private void writeEditablePage(
             XWPFDocument document,
-            PdfToWordPage page,
+            PdfPageContent page,
             PdfToWordPlanFactory.PdfToWordPlan plan,
             int pageIndex) throws Exception {
         float medianFont = medianFont(page.lines());
-        List<PdfToWordPage.PageImage> images = plan.includeImages()
+        List<PdfPageContent.PageImage> images = plan.includeImages()
             ? page.images().stream()
                 .sorted(java.util.Comparator.comparing(
-                    PdfToWordPage.PageImage::top))
+                    PdfPageContent.PageImage::top))
                 .toList()
             : List.of();
         int imageIndex = 0;
@@ -119,7 +125,7 @@ final class PdfToWordDocxWriter {
                 imageIndex++;
             }
             TableCandidate table = plan.detectTables()
-                ? tableAt(page.lines(), index)
+                ? tableDetector.tableAt(page.lines(), index)
                 : null;
             if (table != null) {
                 writeTable(document, table, page);
@@ -154,8 +160,8 @@ final class PdfToWordDocxWriter {
 
     private void writeLine(
             XWPFDocument document,
-            PdfToWordPage.TextLine line,
-            PdfToWordPage page,
+            PdfPageContent.TextLine line,
+            PdfPageContent page,
             float medianFont) {
         XWPFParagraph paragraph = document.createParagraph();
         paragraph.setIndentationLeft(indentTwips(line.left(), page));
@@ -165,7 +171,7 @@ final class PdfToWordDocxWriter {
             paragraph.setStyle("Heading1");
         }
         for (int index = 0; index < line.words().size(); index++) {
-            PdfToWordPage.TextWord word = line.words().get(index);
+            PdfPageContent.TextWord word = line.words().get(index);
             XWPFRun run = paragraph.createRun();
             run.setText((index == 0 ? "" : " ") + word.text());
             run.setFontSize(Math.max(
@@ -183,75 +189,10 @@ final class PdfToWordDocxWriter {
         }
     }
 
-    private TableCandidate tableAt(
-            List<PdfToWordPage.TextLine> lines,
-            int start) {
-        List<Cell> first = cells(lines.get(start));
-        if (first.size() < 2
-                || first.size() > properties.getMaxTableColumns()) {
-            return null;
-        }
-        List<List<Cell>> rows = new ArrayList<>();
-        rows.add(first);
-        for (int index = start + 1; index < lines.size(); index++) {
-            List<Cell> candidate = cells(lines.get(index));
-            if (!aligned(first, candidate)) {
-                break;
-            }
-            rows.add(candidate);
-        }
-        return rows.size() >= 2
-            ? new TableCandidate(List.copyOf(rows))
-            : null;
-    }
-
-    private List<Cell> cells(PdfToWordPage.TextLine line) {
-        List<Cell> cells = new ArrayList<>();
-        List<PdfToWordPage.TextWord> current = new ArrayList<>();
-        PdfToWordPage.TextWord previous = null;
-        for (PdfToWordPage.TextWord word : line.words()) {
-            float gap = previous == null ? 0 : word.left() - previous.right();
-            float threshold = Math.max(10, line.fontSize() * 0.65f);
-            if (previous != null && gap > threshold) {
-                cells.add(cell(current));
-                current.clear();
-            }
-            current.add(word);
-            previous = word;
-        }
-        if (!current.isEmpty()) {
-            cells.add(cell(current));
-        }
-        return List.copyOf(cells);
-    }
-
-    private Cell cell(List<PdfToWordPage.TextWord> words) {
-        return new Cell(
-            words.getFirst().left(),
-            words.stream().map(PdfToWordPage.TextWord::text)
-                .reduce((left, right) -> left + " " + right)
-                .orElse("")
-        );
-    }
-
-    private boolean aligned(List<Cell> expected, List<Cell> actual) {
-        if (expected.size() != actual.size()) {
-            return false;
-        }
-        for (int index = 0; index < expected.size(); index++) {
-            if (Math.abs(
-                    expected.get(index).left()
-                        - actual.get(index).left()) > 18) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void writeTable(
             XWPFDocument document,
             TableCandidate candidate,
-            PdfToWordPage page) {
+            PdfPageContent page) {
         int rowCount = candidate.rows().size();
         int columnCount = candidate.rows().getFirst().size();
         XWPFTable table = document.createTable();
@@ -331,7 +272,7 @@ final class PdfToWordDocxWriter {
 
     private void writeImages(
             XWPFDocument document,
-            PdfToWordPage page,
+            PdfPageContent page,
             int pageIndex) throws Exception {
         for (int index = 0; index < page.images().size(); index++) {
             writeImage(
@@ -347,8 +288,8 @@ final class PdfToWordDocxWriter {
 
     private void writeImage(
             XWPFDocument document,
-            PdfToWordPage page,
-            PdfToWordPage.PageImage image,
+            PdfPageContent page,
+            PdfPageContent.PageImage image,
             int pageIndex,
             int imageIndex,
             boolean visual) throws Exception {
@@ -415,7 +356,7 @@ final class PdfToWordDocxWriter {
 
     private void addSectionBreak(
             XWPFDocument document,
-            PdfToWordPage page,
+            PdfPageContent page,
             boolean visual) {
         XWPFParagraph paragraph = document.createParagraph();
         var paragraphProperties = paragraph.getCTP().isSetPPr()
@@ -434,7 +375,7 @@ final class PdfToWordDocxWriter {
 
     private void configureSection(
             CTSectPr section,
-            PdfToWordPage page,
+            PdfPageContent page,
             boolean visual) {
         CTPageSz size = section.isSetPgSz()
             ? section.getPgSz()
@@ -483,7 +424,7 @@ final class PdfToWordDocxWriter {
         styles.addStyle(new XWPFStyle(heading));
     }
 
-    private int indentTwips(float left, PdfToWordPage page) {
+    private int indentTwips(float left, PdfPageContent page) {
         int maximum = Math.max(contentWidthTwips(page) - 720, 0);
         return Math.max(
             0,
@@ -499,7 +440,7 @@ final class PdfToWordDocxWriter {
         );
     }
 
-    private int contentWidthTwips(PdfToWordPage page) {
+    private int contentWidthTwips(PdfPageContent page) {
         return Math.max(
             Math.round(
                 page.width()
@@ -516,7 +457,7 @@ final class PdfToWordDocxWriter {
         return visual ? 0 : DEFAULT_MARGIN_TWIPS / 20;
     }
 
-    private float documentScale(PdfToWordPage page) {
+    private float documentScale(PdfPageContent page) {
         float physicalWidth = page.width() * page.userUnit();
         float physicalHeight = page.height() * page.userUnit();
         float longest = Math.max(physicalWidth, physicalHeight);
@@ -525,12 +466,12 @@ final class PdfToWordDocxWriter {
             : 1f;
     }
 
-    private float medianFont(List<PdfToWordPage.TextLine> lines) {
+    private float medianFont(List<PdfPageContent.TextLine> lines) {
         if (lines.isEmpty()) {
             return 11;
         }
         List<Float> sizes = lines.stream()
-            .map(PdfToWordPage.TextLine::fontSize)
+            .map(PdfPageContent.TextLine::fontSize)
             .sorted()
             .toList();
         return sizes.get(sizes.size() / 2);
@@ -555,9 +496,4 @@ final class PdfToWordDocxWriter {
         }
     }
 
-    private record Cell(float left, String text) {
-    }
-
-    private record TableCandidate(List<List<Cell>> rows) {
-    }
 }

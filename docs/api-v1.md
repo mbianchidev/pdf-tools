@@ -235,3 +235,10 @@ local-file access are blocked. See [HTML to PDF](operations/html-to-pdf.md).
 `editable` mode reconstructs positioned text, headings, aligned tables,
 embedded images, and pagination. `visual` mode preserves each page as an image.
 See [PDF to Word](operations/pdf-to-word.md).
+
+## PDF to PowerPoint
+
+`operation=pdf-to-powerpoint` accepts one unencrypted PDF and returns one PPTX
+with one slide per page. `editable` mode creates positioned text boxes, aligned
+tables, and picture shapes; `visual` mode creates page-image slides. See
+[PDF to PowerPoint](operations/pdf-to-powerpoint.md).

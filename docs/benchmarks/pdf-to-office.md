@@ -29,7 +29,7 @@ No customer or personal document may be added to the benchmark corpus.
 
 | Engine | Status | Decision |
 | --- | --- | --- |
-| PDFBox + Apache POI baseline | Implemented and fixture-tested | Ship as best effort with editable and visual modes |
+| PDFBox + Apache POI Word/PowerPoint baseline | Implemented and fixture-tested | Ship as best effort with editable and visual modes |
 | Commercial high-fidelity SDK | Not run; evaluation license unavailable | Do not claim parity; retain adapter/benchmark requirement before adoption |
 
 Any commercial candidate must run the same corpus in an isolated,

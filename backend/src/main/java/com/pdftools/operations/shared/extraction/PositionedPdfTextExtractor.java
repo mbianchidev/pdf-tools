@@ -1,4 +1,4 @@
-package com.pdftools.operations.pdfword;
+package com.pdftools.operations.shared.extraction;
 
 import com.pdftools.operations.OperationException;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -11,19 +11,27 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-final class PdfToWordTextExtractor extends PDFTextStripper {
+public final class PositionedPdfTextExtractor extends PDFTextStripper {
 
     private final int maxCharacters;
+    private final String codePrefix;
+    private final String documentLabel;
     private final List<Glyph> glyphs = new ArrayList<>();
     private int characters;
 
-    PdfToWordTextExtractor(int maxCharacters) throws IOException {
+    public PositionedPdfTextExtractor(
+            int maxCharacters,
+            String codePrefix,
+            String documentLabel)
+            throws IOException {
         this.maxCharacters = maxCharacters;
+        this.codePrefix = codePrefix;
+        this.documentLabel = documentLabel;
         setSortByPosition(true);
         setSuppressDuplicateOverlappingText(true);
     }
 
-    List<PdfToWordPage.TextLine> extract(
+    public List<PdfPageContent.TextLine> extract(
             PDDocument document,
             int pageIndex) throws IOException {
         glyphs.clear();
@@ -73,7 +81,7 @@ final class PdfToWordTextExtractor extends PDFTextStripper {
         }
     }
 
-    private List<PdfToWordPage.TextLine> lines() {
+    private List<PdfPageContent.TextLine> lines() {
         List<Glyph> ordered = glyphs.stream()
             .sorted(Comparator.comparing(Glyph::logicalTop)
                 .thenComparing(Glyph::logicalLeft))
@@ -106,11 +114,11 @@ final class PdfToWordTextExtractor extends PDFTextStripper {
         ) <= tolerance;
     }
 
-    private PdfToWordPage.TextLine line(List<Glyph> source) {
+    private PdfPageContent.TextLine line(List<Glyph> source) {
         List<Glyph> ordered = source.stream()
             .sorted(Comparator.comparing(Glyph::logicalLeft))
             .toList();
-        List<PdfToWordPage.TextWord> words = new ArrayList<>();
+        List<PdfPageContent.TextWord> words = new ArrayList<>();
         List<Glyph> current = new ArrayList<>();
         Glyph previous = null;
         for (Glyph glyph : ordered) {
@@ -131,7 +139,7 @@ final class PdfToWordTextExtractor extends PDFTextStripper {
             }
         }
         addWord(words, current);
-        return new PdfToWordPage.TextLine(
+        return new PdfPageContent.TextLine(
             words.isEmpty() ? 0 : words.getFirst().left(),
             ordered.stream().map(Glyph::visualTop)
                 .min(Float::compare)
@@ -144,7 +152,7 @@ final class PdfToWordTextExtractor extends PDFTextStripper {
     }
 
     private void addWord(
-            List<PdfToWordPage.TextWord> words,
+            List<PdfPageContent.TextWord> words,
             List<Glyph> glyphs) {
         if (glyphs.isEmpty()) {
             return;
@@ -158,7 +166,7 @@ final class PdfToWordTextExtractor extends PDFTextStripper {
         float right = glyphs.stream().map(Glyph::visualRight)
             .max(Float::compare)
             .orElse(left);
-        words.add(new PdfToWordPage.TextWord(
+        words.add(new PdfPageContent.TextWord(
             text,
             left,
             glyphs.stream().map(Glyph::visualTop)
@@ -177,8 +185,9 @@ final class PdfToWordTextExtractor extends PDFTextStripper {
 
     private OperationException textLimit() {
         return new OperationException(
-            "PDF_WORD_TEXT_LIMIT_EXCEEDED",
-            "The PDF contains too much extractable text"
+            codePrefix + "_TEXT_LIMIT_EXCEEDED",
+            "The PDF contains too much extractable text for "
+                + documentLabel
         );
     }
 

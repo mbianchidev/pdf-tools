@@ -1,4 +1,4 @@
-package com.pdftools.operations.pdfword;
+package com.pdftools.operations.pdfppt;
 
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.shared.coordinates.VisualPageSpace;
@@ -23,24 +23,26 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-final class PdfToWordWorker {
+final class PdfToPowerPointWorker {
 
-    void convert(PdfToWordRequest request, Path progressFile) {
-        PdfToWordProperties properties = request.properties();
-        Path scratchDirectory = request.workspace().resolve(
-            ".pdf-word-scratch"
+    void convert(
+            PdfToPowerPointRequest request,
+            Path progressFile) {
+        PdfToPowerPointProperties properties = request.properties();
+        Path scratch = request.workspace().resolve(
+            ".pdf-powerpoint-scratch"
         );
         try {
-            Files.createDirectories(scratchDirectory);
+            Files.createDirectories(scratch);
         } catch (IOException exception) {
             throw new OperationException(
-                "PDF_WORD_SCRATCH_FAILED",
-                "PDF-to-Word scratch could not be created",
+                "PDF_POWERPOINT_SCRATCH_FAILED",
+                "PDF-to-PowerPoint scratch could not be created",
                 exception
             );
         }
         RandomAccessStreamCache.StreamCacheCreateFunction scratchCache =
-            () -> new ScratchFile(scratchDirectory.toFile());
+            () -> new ScratchFile(scratch.toFile());
         try (RandomAccessReadBufferedFile randomAccess =
                  new RandomAccessReadBufferedFile(request.source());
              PDDocument document = Loader.loadPDF(
@@ -59,34 +61,35 @@ final class PdfToWordWorker {
             PositionedPdfTextExtractor textExtractor =
                 new PositionedPdfTextExtractor(
                     properties.getMaxTextCharacters(),
-                    "PDF_WORD",
-                    "Word"
+                    "PDF_POWERPOINT",
+                    "PowerPoint"
                 );
             PdfImageExtractionBudget imageBudget =
                 new PdfImageExtractionBudget(
                     properties,
-                    "PDF_WORD",
-                    "Word"
+                    "PDF_POWERPOINT",
+                    "PowerPoint"
                 );
             PositionedPdfPageRasterizer rasterizer =
                 new PositionedPdfPageRasterizer(
                     document,
                     properties,
                     imageBudget,
-                    "PDF_WORD",
-                    "Word"
+                    "PDF_POWERPOINT",
+                    "PowerPoint"
                 );
             List<PdfPageContent> extracted = new ArrayList<>(
                 pages.size()
             );
             for (int index = 0; index < pages.size(); index++) {
                 var page = pages.get(index);
-                VisualPageSpace pageSpace = VisualPageSpace.from(page);
+                VisualPageSpace space = VisualPageSpace.from(page);
                 List<PdfPageContent.TextLine> lines;
                 List<PdfPageContent.PageImage> images;
-                if (request.plan().mode().equals("visual")) {
+                if (request.plan().mode().equals("visual")
+                        || space.rotation() != 0) {
                     lines = List.of();
-                    images = List.of(rasterizer.render(index, pageSpace));
+                    images = List.of(rasterizer.render(index, space));
                 } else {
                     lines = textExtractor.extract(document, index);
                     images = request.plan().includeImages()
@@ -94,28 +97,26 @@ final class PdfToWordWorker {
                             page,
                             properties,
                             imageBudget,
-                            "PDF_WORD",
-                            "Word"
+                            "PDF_POWERPOINT",
+                            "PowerPoint"
                         ).extract()
                         : List.of();
                     if (lines.isEmpty()
                             && images.isEmpty()
                             && request.plan().includeImages()) {
-                        images = List.of(
-                            rasterizer.render(index, pageSpace)
-                        );
+                        images = List.of(rasterizer.render(index, space));
                     }
                 }
                 extracted.add(new PdfPageContent(
-                    pageSpace.width(),
-                    pageSpace.height(),
-                    pageSpace.userUnit(),
+                    space.width(),
+                    space.height(),
+                    space.userUnit(),
                     lines,
                     images
                 ));
                 writeProgress(progressFile, index + 1);
             }
-            new PdfToWordDocxWriter(properties).write(
+            new PdfToPowerPointWriter(properties).write(
                 extracted,
                 request.plan(),
                 request.output(),
@@ -128,17 +129,15 @@ final class PdfToWordWorker {
             throw exception;
         } catch (IOException | RuntimeException exception) {
             throw new OperationException(
-                "PDF_WORD_CONVERSION_FAILED",
-                "The PDF could not be converted to Word",
+                "PDF_POWERPOINT_CONVERSION_FAILED",
+                "The PDF could not be converted to PowerPoint",
                 exception
             );
         }
     }
 
     private void writeProgress(Path path, int completed) {
-        Path temporary = path.resolveSibling(
-            path.getFileName() + ".tmp"
-        );
+        Path temporary = path.resolveSibling(path.getFileName() + ".tmp");
         try {
             Files.writeString(temporary, Integer.toString(completed));
             try {
@@ -157,8 +156,8 @@ final class PdfToWordWorker {
             }
         } catch (IOException exception) {
             throw new OperationException(
-                "PDF_WORD_WORKER_PROTOCOL_ERROR",
-                "PDF-to-Word progress could not be written",
+                "PDF_POWERPOINT_WORKER_PROTOCOL_ERROR",
+                "PDF-to-PowerPoint progress could not be written",
                 exception
             );
         }
@@ -167,7 +166,7 @@ final class PdfToWordWorker {
     private OperationException encryptedPdf(Throwable cause) {
         return new OperationException(
             "ENCRYPTED_PDF_NOT_SUPPORTED",
-            "PDF to Word requires an unencrypted PDF",
+            "PDF to PowerPoint requires an unencrypted PDF",
             cause
         );
     }

@@ -46,6 +46,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Excel to PDF** - Convert XLSX/XLS with print-area and orientation controls
 - **HTML to PDF** - Render self-contained HTML in a networkless Chromium sandbox
 - **PDF to Word** - Recover editable text, tables, images, and pagination or preserve pages visually
+- **PDF to PowerPoint** - Create editable slide elements or preserve each page visually
 - **Convert to Markdown** - Export PDF content as Markdown
 
 ### Technology Stack

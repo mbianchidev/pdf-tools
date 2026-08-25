@@ -128,6 +128,16 @@ Important settings:
 | `PDF_WORD_RENDER_DPI` | `144` | Visual-mode page resolution |
 | `PDF_WORD_WORKER_HEAP_BYTES` | `536870912` | Isolated conversion heap cap |
 | `PDF_WORD_WORKER_TIMEOUT` | `5m` | Isolated conversion wall-time cap |
+| `PDF_POWERPOINT_MAX_INPUT_BYTES` | `52428800` | PDF-to-PowerPoint input byte limit |
+| `PDF_POWERPOINT_MAX_PAGES` | `200` | Slide/page limit |
+| `PDF_POWERPOINT_MAX_TEXT_CHARACTERS` | `2000000` | Extracted text character limit |
+| `PDF_POWERPOINT_MAX_TEXT_BOXES` | `5000` | Editable text box limit |
+| `PDF_POWERPOINT_MAX_IMAGES` | `200` | Editable or visual image limit |
+| `PDF_POWERPOINT_MAX_TOTAL_IMAGE_BYTES` | `268435456` | Aggregate encoded image budget |
+| `PDF_POWERPOINT_MAX_OUTPUT_BYTES` | `134217728` | PPTX output byte limit |
+| `PDF_POWERPOINT_RENDER_DPI` | `144` | Visual-mode page resolution |
+| `PDF_POWERPOINT_WORKER_HEAP_BYTES` | `536870912` | Isolated conversion heap cap |
+| `PDF_POWERPOINT_WORKER_TIMEOUT` | `5m` | Isolated conversion wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

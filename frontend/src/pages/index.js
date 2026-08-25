@@ -8,3 +8,4 @@ export { default as SignaturePage } from './SignaturePage';
 export { default as RedactPage } from './RedactPage';
 export { default as ConvertMarkdownPage } from './ConvertMarkdownPage';
 export { default as PdfToWordPage } from './PdfToWordPage';
+export { default as PdfToPowerPointPage } from './PdfToPowerPointPage';

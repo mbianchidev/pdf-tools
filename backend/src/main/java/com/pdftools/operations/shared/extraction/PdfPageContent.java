@@ -1,21 +1,21 @@
-package com.pdftools.operations.pdfword;
+package com.pdftools.operations.shared.extraction;
 
 import java.util.List;
 
-record PdfToWordPage(
+public record PdfPageContent(
     float width,
     float height,
     float userUnit,
     List<TextLine> lines,
     List<PageImage> images
 ) {
-    record TextLine(
+    public record TextLine(
         float left,
         float top,
         float fontSize,
         List<TextWord> words
     ) {
-        String text() {
+        public String text() {
             return words.stream()
                 .map(TextWord::text)
                 .reduce((left, right) -> left + " " + right)
@@ -23,7 +23,7 @@ record PdfToWordPage(
         }
     }
 
-    record TextWord(
+    public record TextWord(
         String text,
         float left,
         float top,
@@ -32,12 +32,12 @@ record PdfToWordPage(
         float fontSize,
         boolean bold
     ) {
-        float right() {
+        public float right() {
             return left + width;
         }
     }
 
-    record PageImage(
+    public record PageImage(
         byte[] png,
         float left,
         float top,

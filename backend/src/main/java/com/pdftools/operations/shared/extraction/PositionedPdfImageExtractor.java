@@ -1,4 +1,4 @@
-package com.pdftools.operations.pdfword;
+package com.pdftools.operations.shared.extraction;
 
 import com.pdftools.operations.BoundedOutputStream;
 import com.pdftools.operations.OperationException;
@@ -18,26 +18,34 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-final class PdfToWordImageExtractor extends PDFGraphicsStreamEngine {
+public final class PositionedPdfImageExtractor
+        extends PDFGraphicsStreamEngine {
 
-    private final PdfToWordProperties properties;
-    private final PdfToWordImageBudget budget;
+    private final PdfImageExtractionLimits properties;
+    private final PdfImageExtractionBudget budget;
+    private final String codePrefix;
+    private final String documentLabel;
     private final VisualPageSpace pageSpace;
-    private final List<PdfToWordPage.PageImage> images =
+    private final List<PdfPageContent.PageImage> images =
         new ArrayList<>();
     private Point2D currentPoint;
 
-    PdfToWordImageExtractor(
+    public PositionedPdfImageExtractor(
             PDPage page,
-            PdfToWordProperties properties,
-            PdfToWordImageBudget budget) {
+            PdfImageExtractionLimits properties,
+            PdfImageExtractionBudget budget,
+            String codePrefix,
+            String documentLabel) {
         super(page);
         this.properties = properties;
         this.budget = budget;
+        this.codePrefix = codePrefix;
+        this.documentLabel = documentLabel;
         this.pageSpace = VisualPageSpace.from(page);
     }
 
-    List<PdfToWordPage.PageImage> extract() throws IOException {
+    public List<PdfPageContent.PageImage> extract()
+            throws IOException {
         processPage(getPage());
         return List.copyOf(images);
     }
@@ -58,7 +66,7 @@ final class PdfToWordImageExtractor extends PDFGraphicsStreamEngine {
             }
             byte[] png = bytes.toByteArray();
             budget.claimBytes(png.length);
-            images.add(new PdfToWordPage.PageImage(
+            images.add(new PdfPageContent.PageImage(
                 png,
                 bounds.left(),
                 bounds.top(),
@@ -66,7 +74,7 @@ final class PdfToWordImageExtractor extends PDFGraphicsStreamEngine {
                 bounds.height()
             ));
         } catch (OutputLimitExceededException exception) {
-            throw imageLimit();
+            throw budget.exceeded();
         } catch (RuntimeException exception) {
             throw exception;
         } catch (IOException exception) {
@@ -114,16 +122,10 @@ final class PdfToWordImageExtractor extends PDFGraphicsStreamEngine {
 
     private OperationException invalidImage(Throwable cause) {
         return new OperationException(
-            "INVALID_PDF_IMAGE",
-            "An embedded PDF image could not be decoded",
+            codePrefix + "_INVALID_IMAGE",
+            "An embedded PDF image could not be decoded for "
+                + documentLabel,
             cause
-        );
-    }
-
-    private OperationException imageLimit() {
-        return new OperationException(
-            "PDF_WORD_IMAGE_LIMIT_EXCEEDED",
-            "The PDF exceeds the configured image limit"
         );
     }
 

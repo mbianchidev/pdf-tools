@@ -1,18 +1,19 @@
-package com.pdftools.operations.pdfword;
+package com.pdftools.operations.pdfppt;
 
-import com.pdftools.operations.shared.pdf.PdfPageTreeLimits;
 import com.pdftools.operations.shared.extraction.PdfPageRasterizationLimits;
+import com.pdftools.operations.shared.pdf.PdfPageTreeLimits;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
 
-@ConfigurationProperties(prefix = "pdf.operations.pdf-word")
-public class PdfToWordProperties
+@ConfigurationProperties(prefix = "pdf.operations.pdf-powerpoint")
+public class PdfToPowerPointProperties
         implements PdfPageTreeLimits, PdfPageRasterizationLimits {
 
     private long maxInputBytes = 50L * 1024L * 1024L;
     private int maxPages = 200;
     private int maxTextCharacters = 2_000_000;
+    private int maxTextBoxes = 5_000;
     private int maxImages = 200;
     private long maxPixelsPerImage = 20_000_000;
     private long maxTotalImagePixels = 200_000_000;
@@ -33,16 +34,16 @@ public class PdfToWordProperties
         return maxInputBytes;
     }
 
-    public void setMaxInputBytes(long maxInputBytes) {
-        this.maxInputBytes = maxInputBytes;
+    public void setMaxInputBytes(long value) {
+        maxInputBytes = value;
     }
 
     public int getMaxPages() {
         return maxPages;
     }
 
-    public void setMaxPages(int maxPages) {
-        this.maxPages = maxPages;
+    public void setMaxPages(int value) {
+        maxPages = value;
     }
 
     @Override
@@ -54,112 +55,128 @@ public class PdfToWordProperties
         return maxTextCharacters;
     }
 
-    public void setMaxTextCharacters(int maxTextCharacters) {
-        this.maxTextCharacters = maxTextCharacters;
+    public void setMaxTextCharacters(int value) {
+        maxTextCharacters = value;
     }
 
+    public int getMaxTextBoxes() {
+        return maxTextBoxes;
+    }
+
+    public void setMaxTextBoxes(int value) {
+        maxTextBoxes = value;
+    }
+
+    @Override
     public int getMaxImages() {
         return maxImages;
     }
 
-    public void setMaxImages(int maxImages) {
-        this.maxImages = maxImages;
+    public void setMaxImages(int value) {
+        maxImages = value;
     }
 
+    @Override
     public long getMaxPixelsPerImage() {
         return maxPixelsPerImage;
     }
 
-    public void setMaxPixelsPerImage(long maxPixelsPerImage) {
-        this.maxPixelsPerImage = maxPixelsPerImage;
+    public void setMaxPixelsPerImage(long value) {
+        maxPixelsPerImage = value;
     }
 
+    @Override
     public long getMaxTotalImagePixels() {
         return maxTotalImagePixels;
     }
 
-    public void setMaxTotalImagePixels(long maxTotalImagePixels) {
-        this.maxTotalImagePixels = maxTotalImagePixels;
+    public void setMaxTotalImagePixels(long value) {
+        maxTotalImagePixels = value;
     }
 
+    @Override
     public long getMaxImageBytes() {
         return maxImageBytes;
     }
 
-    public void setMaxImageBytes(long maxImageBytes) {
-        this.maxImageBytes = maxImageBytes;
+    public void setMaxImageBytes(long value) {
+        maxImageBytes = value;
     }
 
+    @Override
     public long getMaxTotalImageBytes() {
         return maxTotalImageBytes;
     }
 
-    public void setMaxTotalImageBytes(long maxTotalImageBytes) {
-        this.maxTotalImageBytes = maxTotalImageBytes;
+    public void setMaxTotalImageBytes(long value) {
+        maxTotalImageBytes = value;
     }
 
     public long getMaxOutputBytes() {
         return maxOutputBytes;
     }
 
-    public void setMaxOutputBytes(long maxOutputBytes) {
-        this.maxOutputBytes = maxOutputBytes;
+    public void setMaxOutputBytes(long value) {
+        maxOutputBytes = value;
     }
 
+    @Override
     public int getRenderDpi() {
         return renderDpi;
     }
 
-    public void setRenderDpi(int renderDpi) {
-        this.renderDpi = renderDpi;
+    public void setRenderDpi(int value) {
+        renderDpi = value;
     }
 
+    @Override
     public long getMaxRenderPixelsPerPage() {
         return maxRenderPixelsPerPage;
     }
 
-    public void setMaxRenderPixelsPerPage(long maxRenderPixelsPerPage) {
-        this.maxRenderPixelsPerPage = maxRenderPixelsPerPage;
+    public void setMaxRenderPixelsPerPage(long value) {
+        maxRenderPixelsPerPage = value;
     }
 
+    @Override
     public int getMaxImageDimension() {
         return maxImageDimension;
     }
 
-    public void setMaxImageDimension(int maxImageDimension) {
-        this.maxImageDimension = maxImageDimension;
+    public void setMaxImageDimension(int value) {
+        maxImageDimension = value;
     }
 
     public int getMaxTableColumns() {
         return maxTableColumns;
     }
 
-    public void setMaxTableColumns(int maxTableColumns) {
-        this.maxTableColumns = maxTableColumns;
+    public void setMaxTableColumns(int value) {
+        maxTableColumns = value;
     }
 
     public long getWorkerHeapBytes() {
         return workerHeapBytes;
     }
 
-    public void setWorkerHeapBytes(long workerHeapBytes) {
-        this.workerHeapBytes = workerHeapBytes;
+    public void setWorkerHeapBytes(long value) {
+        workerHeapBytes = value;
     }
 
     public Duration getWorkerTimeout() {
         return workerTimeout;
     }
 
-    public void setWorkerTimeout(Duration workerTimeout) {
-        this.workerTimeout = workerTimeout;
+    public void setWorkerTimeout(Duration value) {
+        workerTimeout = value;
     }
 
     public int getMaxPageTreeNodes() {
         return maxPageTreeNodes;
     }
 
-    public void setMaxPageTreeNodes(int maxPageTreeNodes) {
-        this.maxPageTreeNodes = maxPageTreeNodes;
+    public void setMaxPageTreeNodes(int value) {
+        maxPageTreeNodes = value;
     }
 
     @Override
@@ -171,8 +188,8 @@ public class PdfToWordProperties
         return maxPageTreeDepth;
     }
 
-    public void setMaxPageTreeDepth(int maxPageTreeDepth) {
-        this.maxPageTreeDepth = maxPageTreeDepth;
+    public void setMaxPageTreeDepth(int value) {
+        maxPageTreeDepth = value;
     }
 
     @Override
@@ -184,9 +201,8 @@ public class PdfToWordProperties
         return maxContentStreamsPerPage;
     }
 
-    public void setMaxContentStreamsPerPage(
-            int maxContentStreamsPerPage) {
-        this.maxContentStreamsPerPage = maxContentStreamsPerPage;
+    public void setMaxContentStreamsPerPage(int value) {
+        maxContentStreamsPerPage = value;
     }
 
     @Override

@@ -1,19 +1,26 @@
-package com.pdftools.operations.pdfword;
+package com.pdftools.operations.shared.extraction;
 
 import com.pdftools.operations.OperationException;
 
-final class PdfToWordImageBudget {
+public final class PdfImageExtractionBudget {
 
-    private final PdfToWordProperties properties;
+    private final PdfImageExtractionLimits properties;
+    private final String codePrefix;
+    private final String documentLabel;
     private int images;
     private long pixels;
     private long bytes;
 
-    PdfToWordImageBudget(PdfToWordProperties properties) {
+    public PdfImageExtractionBudget(
+            PdfImageExtractionLimits properties,
+            String codePrefix,
+            String documentLabel) {
         this.properties = properties;
+        this.codePrefix = codePrefix;
+        this.documentLabel = documentLabel;
     }
 
-    void claimBytes(long imageBytes) {
+    public void claimBytes(long imageBytes) {
         try {
             bytes = Math.addExact(bytes, imageBytes);
         } catch (ArithmeticException exception) {
@@ -26,7 +33,7 @@ final class PdfToWordImageBudget {
         }
     }
 
-    void claim(int width, int height) {
+    public void claim(int width, int height) {
         long nextPixels;
         try {
             nextPixels = Math.multiplyExact((long) width, height);
@@ -46,10 +53,11 @@ final class PdfToWordImageBudget {
         }
     }
 
-    private OperationException exceeded() {
+    public OperationException exceeded() {
         return new OperationException(
-            "PDF_WORD_IMAGE_LIMIT_EXCEEDED",
-            "The PDF exceeds the configured image limit"
+            codePrefix + "_IMAGE_LIMIT_EXCEEDED",
+            "The PDF exceeds the configured " + documentLabel
+                + " image limit"
         );
     }
 }

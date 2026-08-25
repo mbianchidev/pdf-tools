@@ -27,6 +27,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **Excel to PDF** - Configure workbook print areas and page orientation
 - **HTML to PDF** - Render self-contained HTML with isolated Chromium
 - **PDF to Word** - Choose editable extraction or visual page preservation
+- **PDF to PowerPoint** - Choose editable slide elements or visual page slides
 - **Convert to Markdown** - Convert PDF to Markdown format
 
 ### UI Features

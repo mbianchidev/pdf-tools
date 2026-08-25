@@ -124,6 +124,7 @@ pdf-tools/
 - **HTML-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/htmlpdf/`
 - **HTML converter sidecar**: `html-converter/`
 - **PDF-to-Word implementation**: `backend/src/main/java/com/pdftools/operations/pdfword/`
+- **PDF-to-PowerPoint implementation**: `backend/src/main/java/com/pdftools/operations/pdfppt/`
 - **Office queue daemon**: `backend/src/main/java/com/pdftools/operations/office/OfficeConverterDaemonMain.java`
 - **Job lifecycle**: `backend/src/main/java/com/pdftools/jobs/`
 - **Legacy backend logic**: `backend/src/main/java/com/pdftools/service/PdfService.java`
