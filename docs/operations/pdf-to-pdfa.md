@@ -55,9 +55,20 @@ Successful jobs return two ordered artifacts:
   "compliant": true,
   "totalAssertions": 142,
   "failedChecks": 0,
-  "failures": []
+  "failures": [],
+  "metadataNormalized": true,
+  "metadataChanges": [
+    "Removed document Info creation and modification dates before conformance validation"
+  ]
 }
 ```
+
+Before validation, the isolated worker removes only the optional document Info
+creation/modification dates. LibreOffice versions differ in how those Info
+values are synchronized with XMP; the archival XMP packet remains authoritative.
+PDF/A-1 normalization disables object streams to retain PDF 1.4 eligibility;
+PDF/A-2/3 retain compressed object streams. veraPDF then validates the exact
+rewritten bytes.
 
 ## Fidelity
 

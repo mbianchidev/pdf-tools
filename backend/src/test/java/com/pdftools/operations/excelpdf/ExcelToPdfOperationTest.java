@@ -164,6 +164,7 @@ class ExcelToPdfOperationTest {
         configured.setIsolatedContainer(true);
         configured.setWorkerUser(System.getProperty("user.name"));
         configured.setMaxWorkerProcesses(4096);
+        configured.setMaxOpenFiles(4096);
         configured.setLibreOfficeBinary(localSoffice());
         configured.setWallTimeout(Duration.ofMinutes(1));
         configured.setCpuTimeSeconds(60);

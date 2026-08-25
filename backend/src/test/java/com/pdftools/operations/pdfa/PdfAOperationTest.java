@@ -10,6 +10,7 @@ import com.pdftools.operations.office.NativeProcessSandbox;
 import com.pdftools.operations.office.OfficeConversionProperties;
 import com.pdftools.operations.office.OfficeConversionQueueClient;
 import com.pdftools.operations.shared.worker.IsolatedJavaWorker;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -26,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.Calendar;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
@@ -113,23 +115,7 @@ class PdfAOperationTest {
             properties
         );
 
-        int exitCode = IsolatedJavaWorker.run(
-            new IsolatedJavaWorker.Spec(
-                PdfAValidationWorkerMain.class,
-                properties.getValidatorHeapBytes(),
-                properties.getValidatorTimeout(),
-                "START_FAILED",
-                "start failed",
-                "TIMEOUT",
-                "timeout",
-                PdfAEngine.validatorJvmArguments()
-            ),
-            List.of(request.toString(), error.toString()),
-            () -> {
-            },
-            () -> {
-            }
-        );
+        int exitCode = runValidator(request, error);
 
         assertEquals(2, exitCode);
         assertEquals(
@@ -139,6 +125,46 @@ class PdfAOperationTest {
         JsonNode result = objectMapper.readTree(report.toFile());
         assertEquals("non-compliant", result.path("status").asText());
         assertTrue(result.path("failedChecks").asLong() > 0);
+    }
+
+    @Test
+    void fixesMetadataAndRevalidatesTheExactOutput() throws Exception {
+        Path source = textPdf(null);
+        Path compliant = operation.execute(context(
+            source,
+            "{\"profile\":\"pdfa-1b\"}"
+        )).getFirst().path();
+        Path mismatched = temporaryDirectory.resolve("mismatched.pdf");
+        try (PDDocument document = Loader.loadPDF(compliant.toFile())) {
+            Calendar date = Calendar.getInstance();
+            date.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
+            document.getDocumentInformation().setCreationDate(date);
+            document.save(mismatched.toFile());
+        }
+        Path report = temporaryDirectory.resolve("fixed-report.json");
+        Path request = temporaryDirectory.resolve("fixed-request.bin");
+        Path error = temporaryDirectory.resolve("fixed-error");
+        PdfAValidationRequest.write(
+            request,
+            mismatched,
+            report,
+            PdfAPlanFactory.PdfAProfile.PDFA_1_B,
+            properties
+        );
+
+        int exitCode = runValidator(request, error);
+        assertEquals(
+            0,
+            exitCode,
+            () -> Files.exists(error)
+                ? read(error) + "\nreport="
+                    + (Files.exists(report) ? read(report) : "missing")
+                : "veraPDF worker produced no error file"
+        );
+        JsonNode result = objectMapper.readTree(report.toFile());
+        assertTrue(result.path("compliant").asBoolean());
+        assertTrue(result.path("metadataNormalized").asBoolean());
+        assertTrue(result.path("metadataChanges").size() > 0);
     }
 
     @Test
@@ -257,6 +283,34 @@ class PdfAOperationTest {
             MessageDigest.getInstance("SHA-256")
                 .digest(Files.readAllBytes(source))
         );
+    }
+
+    private int runValidator(Path request, Path error) {
+        return IsolatedJavaWorker.run(
+            new IsolatedJavaWorker.Spec(
+                PdfAValidationWorkerMain.class,
+                properties.getValidatorHeapBytes(),
+                properties.getValidatorTimeout(),
+                "START_FAILED",
+                "start failed",
+                "TIMEOUT",
+                "timeout",
+                PdfAEngine.validatorJvmArguments()
+            ),
+            List.of(request.toString(), error.toString()),
+            () -> {
+            },
+            () -> {
+            }
+        );
+    }
+
+    private String read(Path path) {
+        try {
+            return Files.readString(path);
+        } catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
     }
 
     private OperationSubmission.UploadDescriptor descriptor(

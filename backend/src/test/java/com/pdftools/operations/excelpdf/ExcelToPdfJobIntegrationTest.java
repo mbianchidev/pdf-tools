@@ -42,6 +42,10 @@ class ExcelToPdfJobIntegrationTest {
             "pdf.operations.office.max-worker-processes",
             () -> 4096
         );
+        registry.add(
+            "pdf.operations.office.max-open-files",
+            () -> 4096
+        );
     }
 
     @Autowired
