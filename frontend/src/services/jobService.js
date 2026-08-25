@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const JOB_API_BASE_URL = import.meta.env.VITE_JOB_API_URL || '/api/v1';
+export const normalizeJobApiBaseUrl = (baseUrl) => baseUrl.replace(/\/+$/, '');
+
+const JOB_API_BASE_URL = normalizeJobApiBaseUrl(
+  import.meta.env.VITE_JOB_API_URL || '/api/v1',
+);
 
 const jobsApi = axios.create({
   baseURL: JOB_API_BASE_URL,
