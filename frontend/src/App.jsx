@@ -30,6 +30,7 @@ import {
   Sheet,
   CodeXml,
   Minimize2,
+  Wrench,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -64,6 +65,7 @@ const PowerPointToPdfPage = lazy(
 const ExcelToPdfPage = lazy(() => import('./pages/ExcelToPdfPage'));
 const HtmlToPdfPage = lazy(() => import('./pages/HtmlToPdfPage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
+const RepairPage = lazy(() => import('./pages/RepairPage'));
 
 const operations = [
   {
@@ -226,6 +228,13 @@ const operations = [
     group: 'Organize',
     title: 'Compress PDF',
     description: 'Choose lossless, balanced, or extreme compression',
+  },
+  {
+    id: 'repair',
+    icon: Wrench,
+    group: 'Organize',
+    title: 'Repair PDF',
+    description: 'Recover damaged structure with explicit warnings',
   },
   {
     id: 'pdf-to-word',
@@ -514,6 +523,7 @@ function App() {
         />
         <Route path="/pdf-to-excel" element={<PdfToExcelPage />} />
         <Route path="/compress" element={<CompressPage />} />
+        <Route path="/repair" element={<RepairPage />} />
         <Route path="/convert-docx" element={<PdfToWordPage />} />
       </Routes>
     </Suspense>

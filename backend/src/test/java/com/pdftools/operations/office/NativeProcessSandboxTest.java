@@ -1,5 +1,6 @@
 package com.pdftools.operations.office;
 
+import com.pdftools.operations.shared.worker.NetworkDenyFilter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

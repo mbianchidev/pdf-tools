@@ -27,13 +27,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Install LibreOffice
+      - name: Install native document tools
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             fonts-dejavu-core fonts-liberation \
             libreoffice-calc libreoffice-impress \
-            libreoffice-writer util-linux
+            libreoffice-writer qpdf util-linux
 
       - name: Run tests
         run: mvn -B test

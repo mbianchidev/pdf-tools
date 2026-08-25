@@ -62,6 +62,7 @@ pdf-tools/
 │   │   │   ├── PdfToWordPage.jsx        # PDF to Word
 │   │   │   ├── PdfToMarkdownPage.jsx    # Structured Markdown bundle
 │   │   │   ├── CompressPage.jsx         # PDF size reduction
+│   │   │   ├── RepairPage.jsx           # qpdf recovery reports
 │   │   │   └── OperationPage.css        # Shared operation styles
 │   │   └── services/
 │   │       └── pdfService.js            # API client

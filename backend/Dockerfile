@@ -16,6 +16,7 @@ RUN apt-get update \
         libreoffice-calc \
         libreoffice-impress \
         libreoffice-writer \
+        qpdf \
         util-linux \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 pdftools \

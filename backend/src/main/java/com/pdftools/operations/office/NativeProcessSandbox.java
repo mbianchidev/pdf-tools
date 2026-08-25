@@ -1,6 +1,7 @@
 package com.pdftools.operations.office;
 
 import com.pdftools.operations.OperationException;
+import com.pdftools.operations.shared.worker.NetworkDenyFilter;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

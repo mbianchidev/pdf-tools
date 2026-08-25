@@ -1,4 +1,4 @@
-package com.pdftools.operations.office;
+package com.pdftools.operations.shared.worker;
 
 import com.pdftools.operations.OperationException;
 
@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 
-final class NetworkDenyFilter {
+public final class NetworkDenyFilter {
 
     private static final short LOAD_WORD_ABSOLUTE = 0x20;
     private static final short JUMP_EQUAL = 0x15;
@@ -25,7 +25,7 @@ final class NetworkDenyFilter {
     private NetworkDenyFilter() {
     }
 
-    static void write(Path path) {
+    public static void write(Path path) {
         Syscalls syscalls = syscalls();
         ByteBuffer filter = ByteBuffer
             .allocate(14 * 8)
@@ -90,8 +90,8 @@ final class NetworkDenyFilter {
             Files.write(path, filter.array());
         } catch (IOException exception) {
             throw new OperationException(
-                "OFFICE_SANDBOX_SETUP_FAILED",
-                "The Office converter network filter could not be created",
+                "NATIVE_SANDBOX_SETUP_FAILED",
+                "The native process network filter could not be created",
                 exception
             );
         }
@@ -130,8 +130,8 @@ final class NetworkDenyFilter {
                 157
             );
             default -> throw new OperationException(
-                "OFFICE_SANDBOX_UNAVAILABLE",
-                "Office conversion is unavailable on this CPU architecture"
+                "NATIVE_SANDBOX_UNAVAILABLE",
+                "Native process isolation is unavailable on this CPU"
             );
         };
     }

@@ -266,3 +266,10 @@ performs a lossless structural rewrite, while `recommended` and `extreme`
 recompress eligible opaque raster images at progressively stronger settings.
 The result falls back to the exact source whenever the candidate is not
 smaller. See [Compress PDF](operations/compress.md).
+
+## Repair PDF
+
+`operation=repair` accepts one damaged, unencrypted PDF and returns a repaired
+PDF plus a JSON report. qpdf warning exits are successful but explicitly marked
+`partially-recovered`; clean rewrites are marked `repaired`. See
+[Repair PDF](operations/repair.md).

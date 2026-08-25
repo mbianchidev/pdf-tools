@@ -6,6 +6,7 @@
 - Maven 3.9+
 - Node.js 22+
 - Docker with Compose
+- qpdf 11+ for local Repair PDF development
 
 ## Docker Compose
 
@@ -167,6 +168,14 @@ Important settings:
 | `COMPRESS_MAX_OUTPUT_BYTES` | `134217728` | Compressed PDF byte limit |
 | `COMPRESS_WORKER_HEAP_BYTES` | `536870912` | Isolated worker heap cap |
 | `COMPRESS_WORKER_TIMEOUT` | `5m` | Isolated worker wall-time cap |
+| `QPDF_BINARY` | `qpdf` | qpdf executable used for structural repair |
+| `REPAIR_MAX_INPUT_BYTES` | `104857600` | Repair input byte limit |
+| `REPAIR_MAX_OUTPUT_BYTES` | `134217728` | Repaired PDF byte limit |
+| `REPAIR_MAX_LOG_BYTES` | `1048576` | Aggregate qpdf diagnostic limit |
+| `REPAIR_MAX_ADDRESS_SPACE_BYTES` | `1073741824` | qpdf virtual-address cap |
+| `REPAIR_CPU_TIME_SECONDS` | `120` | qpdf CPU-time cap per phase |
+| `REPAIR_REWRITE_TIMEOUT` | `2m` | Structural rewrite wall-time cap |
+| `REPAIR_CHECK_TIMEOUT` | `1m` | Post-repair check wall-time cap |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

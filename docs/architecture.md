@@ -37,6 +37,7 @@ scheduler isolated from storage cleanup.
 | `operations.pdfexcel` | Isolated table detection and workbook generation |
 | `operations.pdfmarkdown` | Isolated structured Markdown and linked-image bundle generation |
 | `operations.compress` | Isolated lossless or image-aware PDF size reduction |
+| `operations.repair` | Sandboxed qpdf structural recovery and warning reports |
 | `operations.shared.extraction` | Positioned text/images, table heuristics, budgets, and page rasterization |
 | `storage` | Local filesystem and S3-compatible streaming adapters |
 | `api` | Structured HTTP error contract |
@@ -94,4 +95,7 @@ crop-box offsets and page rotations of 0, 90, 180, or 270 degrees.
 - HTML conversion uses a separate networkless, read-only Playwright sidecar with
   a non-root Chromium sandbox, version-matched seccomp policy, tmpfs, and cgroup
   limits.
+- qpdf repair runs as a bounded non-root native process with the shared
+  architecture-pinned network-deny filter and emits a separate structured
+  recovery report.
 - The backend container itself runs as an unprivileged user.

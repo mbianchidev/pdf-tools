@@ -31,6 +31,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **PDF to Excel** - Build page worksheets or one sheet per detected table
 - **PDF to Markdown** - Recover structure and linked images in a portable ZIP
 - **Compress PDF** - Compare lossless, balanced, and extreme size reduction
+- **Repair PDF** - Review explicit qpdf recovery reports and warnings
 
 ### UI Features
 - Documentation-first self-hosting landing page
@@ -110,6 +111,7 @@ frontend/
 │   │   ├── PdfToWordPage.jsx
 │   │   ├── PdfToMarkdownPage.jsx
 │   │   ├── CompressPage.jsx
+│   │   ├── RepairPage.jsx
 │   │   └── OperationPage.css  # Shared operation styles
 │   ├── services/
 │   │   ├── jobService.js     # Versioned asynchronous jobs client

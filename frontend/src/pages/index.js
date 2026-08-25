@@ -11,3 +11,4 @@ export { default as PdfToWordPage } from './PdfToWordPage';
 export { default as PdfToPowerPointPage } from './PdfToPowerPointPage';
 export { default as PdfToExcelPage } from './PdfToExcelPage';
 export { default as CompressPage } from './CompressPage';
+export { default as RepairPage } from './RepairPage';
