@@ -20,6 +20,16 @@ import javax.xml.stream.XMLStreamReader;
 
 public class OfficeDocumentValidator {
 
+    private static final byte[] OLE_HEADER = {
+        (byte) 0xD0,
+        (byte) 0xCF,
+        0x11,
+        (byte) 0xE0,
+        (byte) 0xA1,
+        (byte) 0xB1,
+        0x1A,
+        (byte) 0xE1
+    };
     private static final int MAX_DECLARATION_BYTES = 1024 * 1024;
 
     private final OfficeConversionProperties properties;
@@ -113,9 +123,8 @@ public class OfficeDocumentValidator {
     public void validateOle(Path source, Profile profile) {
         try (InputStream input = Files.newInputStream(source);
              POIFSFileSystem filesystem = new POIFSFileSystem(input)) {
-            if (!filesystem.getRoot().hasEntry(
-                        profile.legacyStream()
-                    )) {
+            if (profile.legacyStreams().stream().noneMatch(
+                    filesystem.getRoot()::hasEntry)) {
                 throw invalid(profile);
             }
         } catch (OperationException exception) {
@@ -124,6 +133,32 @@ public class OfficeDocumentValidator {
             throw new OperationException(
                 profile.invalidCode(),
                 "The file is not a readable " + profile.label(),
+                exception
+            );
+        }
+    }
+
+    public boolean isEncryptedOoxml(Path source) {
+        try (InputStream input = Files.newInputStream(source)) {
+            byte[] header = input.readNBytes(OLE_HEADER.length);
+            if (!java.util.Arrays.equals(header, OLE_HEADER)) {
+                return false;
+            }
+        } catch (IOException exception) {
+            throw new OperationException(
+                "INVALID_OFFICE_DOCUMENT",
+                "The Office document could not be inspected",
+                exception
+            );
+        }
+        try (InputStream input = Files.newInputStream(source);
+             POIFSFileSystem filesystem = new POIFSFileSystem(input)) {
+            return filesystem.getRoot().hasEntry("EncryptionInfo")
+                && filesystem.getRoot().hasEntry("EncryptedPackage");
+        } catch (IOException exception) {
+            throw new OperationException(
+                "INVALID_OFFICE_DOCUMENT",
+                "The Office document could not be inspected",
                 exception
             );
         }
@@ -242,7 +277,7 @@ public class OfficeDocumentValidator {
         String label,
         String requiredPart,
         String macroPart,
-        String legacyStream,
+        java.util.List<String> legacyStreams,
         String invalidCode,
         String expandedCode,
         String macrosCode

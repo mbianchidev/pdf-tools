@@ -11,6 +11,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,6 +60,7 @@ public class OfficeConversionQueueClient {
             input,
             workspace,
             OfficeDocumentType.WORD,
+            "{}",
             progress,
             cancellationCheck
         );
@@ -73,6 +75,23 @@ public class OfficeConversionQueueClient {
             input,
             workspace,
             OfficeDocumentType.POWERPOINT,
+            "{}",
+            progress,
+            cancellationCheck
+        );
+    }
+
+    public Path convertExcel(
+            OperationInput input,
+            Path workspace,
+            JsonNode options,
+            IntConsumer progress,
+            Runnable cancellationCheck) {
+        return convert(
+            input,
+            workspace,
+            OfficeDocumentType.EXCEL,
+            options.toString(),
             progress,
             cancellationCheck
         );
@@ -82,6 +101,7 @@ public class OfficeConversionQueueClient {
             OperationInput input,
             Path workspace,
             OfficeDocumentType documentType,
+            String optionsJson,
             IntConsumer progress,
             Runnable cancellationCheck) {
         Roots roots = requireRoots();
@@ -102,7 +122,8 @@ public class OfficeConversionQueueClient {
                 request.resolve(OfficeQueueProtocol.REQUEST),
                 new OfficeQueueProtocol.Request(
                     documentType.key(),
-                    extension
+                    extension,
+                    optionsJson
                 )
             );
             OfficeQueueProtocol.marker(

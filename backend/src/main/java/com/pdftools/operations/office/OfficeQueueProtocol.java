@@ -27,17 +27,26 @@ final class OfficeQueueProtocol {
     static final String ABANDONED = ".abandoned";
     static final String DAEMON_READY = ".daemon-ready";
 
-    private static final int VERSION = 1;
+    private static final int VERSION_1 = 1;
+    private static final int VERSION_2 = 2;
 
     private OfficeQueueProtocol() {
     }
 
     static void writeRequest(Path path, Request request) {
+        if (!request.valid()) {
+            throw protocolFailure(null);
+        }
         try (DataOutputStream output = new DataOutputStream(
                 new BufferedOutputStream(Files.newOutputStream(path)))) {
-            output.writeInt(VERSION);
+            boolean legacyLayout = !request.type().equals("excel")
+                && request.optionsJson().equals("{}");
+            output.writeInt(legacyLayout ? VERSION_1 : VERSION_2);
             output.writeUTF(request.type());
             output.writeUTF(request.extension());
+            if (!legacyLayout) {
+                output.writeUTF(request.optionsJson());
+            }
         } catch (IOException exception) {
             throw protocolFailure(exception);
         }
@@ -46,10 +55,15 @@ final class OfficeQueueProtocol {
     static Request readRequest(Path path) {
         try (DataInputStream input = new DataInputStream(
                 new BufferedInputStream(Files.newInputStream(path)))) {
-            if (input.readInt() != VERSION) {
+            int version = input.readInt();
+            if (version != VERSION_1 && version != VERSION_2) {
                 throw protocolFailure(null);
             }
-            Request request = new Request(input.readUTF(), input.readUTF());
+            Request request = new Request(
+                input.readUTF(),
+                input.readUTF(),
+                version == VERSION_2 ? input.readUTF() : "{}"
+            );
             if (input.read() != -1 || !request.valid()) {
                 throw protocolFailure(null);
             }
@@ -66,7 +80,7 @@ final class OfficeQueueProtocol {
         try (DataOutputStream output = new DataOutputStream(
                 new BufferedOutputStream(
                     Files.newOutputStream(temporary)))) {
-            output.writeInt(VERSION);
+            output.writeInt(VERSION_1);
             output.writeUTF(code);
             output.writeUTF(message);
         } catch (IOException exception) {
@@ -78,7 +92,7 @@ final class OfficeQueueProtocol {
     static Failure readFailure(Path path) {
         try (DataInputStream input = new DataInputStream(
                 new BufferedInputStream(Files.newInputStream(path)))) {
-            if (input.readInt() != VERSION) {
+            if (input.readInt() != VERSION_1) {
                 throw protocolFailure(null);
             }
             Failure failure = new Failure(
@@ -169,13 +183,34 @@ final class OfficeQueueProtocol {
         );
     }
 
-    record Request(String type, String extension) {
+    record Request(
+        String type,
+        String extension,
+        String optionsJson
+    ) {
         private boolean valid() {
-            return switch (type) {
-                case "word" -> extension.matches("\\.docx?");
-                case "powerpoint" -> extension.matches("\\.pptx?");
+            return optionsJson != null
+                && !optionsJson.isBlank()
+                && optionsJson.length() <= 16_384
+                && switch (type) {
+                case "word" -> extension.matches("\\.docx?")
+                    && optionsJson.equals("{}");
+                case "powerpoint" -> extension.matches("\\.pptx?")
+                    && optionsJson.equals("{}");
+                case "excel" -> extension.matches("\\.xlsx?")
+                    && validExcelOptions();
                 default -> false;
             };
+        }
+
+        private boolean validExcelOptions() {
+            try {
+                return new tools.jackson.databind.ObjectMapper()
+                    .readTree(optionsJson)
+                    .isObject();
+            } catch (RuntimeException exception) {
+                return false;
+            }
         }
     }
 

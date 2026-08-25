@@ -97,6 +97,25 @@ class NativeProcessSandboxTest {
     }
 
     @Test
+    void permitsExplicitReadOnlyFileOnLinux() throws Exception {
+        assumeTrue(isLinux() && sandbox.isLandlockAvailable());
+        Path workspace = temporaryDirectory.resolve("workspace");
+        Files.createDirectories(workspace);
+        Path readable = temporaryDirectory.resolve("readable.txt");
+        Files.writeString(readable, "allowed");
+
+        Process process = process(
+            workspace,
+            Path.of("/usr/bin/cat"),
+            List.of(readable.toString()),
+            List.of(readable)
+        );
+
+        assertTrue(process.waitFor(10, TimeUnit.SECONDS));
+        assertEquals(0, process.exitValue());
+    }
+
+    @Test
     void pinsFilterToNativeAuditArchitecture() throws Exception {
         Path filter = temporaryDirectory.resolve("network.bpf");
         NetworkDenyFilter.write(filter);
@@ -119,6 +138,14 @@ class NativeProcessSandboxTest {
             Path workspace,
             Path executable,
             List<String> arguments) throws IOException {
+        return process(workspace, executable, arguments, List.of());
+    }
+
+    private Process process(
+            Path workspace,
+            Path executable,
+            List<String> arguments,
+            List<Path> additionalReadRoots) throws IOException {
         properties.setWallTimeout(Duration.ofSeconds(10));
         properties.setIsolatedContainer(true);
         properties.setWorkerUser(System.getProperty("user.name"));
@@ -128,7 +155,8 @@ class NativeProcessSandboxTest {
             workspace.resolve(".network-filter.bpf"),
             executable,
             arguments,
-            properties
+            properties,
+            additionalReadRoots
         );
         ProcessBuilder builder = new ProcessBuilder(command)
             .directory(workspace.toFile())

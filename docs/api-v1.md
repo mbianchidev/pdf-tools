@@ -214,3 +214,10 @@ mounts. Native process limits and a private profile apply inside that boundary. 
 page per slide. It reuses the networkless Office sidecar, one-way queue, private
 tmpfs, non-root converter identity, and native resource limits. See
 [PowerPoint to PDF](operations/powerpoint-to-pdf.md).
+
+## Excel to PDF
+
+`operation=excel-to-pdf` accepts one XLSX or XLS workbook plus
+`printAreaMode`, optional custom `printArea`, and `orientation`. A bounded
+workbook-preparation step applies print settings before LibreOffice Calc runs in
+the shared isolated Office sidecar. See [Excel to PDF](operations/excel-to-pdf.md).

@@ -27,6 +27,7 @@ import {
   PencilRuler,
   FileInput,
   Presentation,
+  Sheet,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -54,6 +55,7 @@ const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'));
 const PowerPointToPdfPage = lazy(
   () => import('./pages/PowerPointToPdfPage'),
 );
+const ExcelToPdfPage = lazy(() => import('./pages/ExcelToPdfPage'));
 
 const operations = [
   {
@@ -188,6 +190,13 @@ const operations = [
     group: 'Convert',
     title: 'PowerPoint to PDF',
     description: 'Convert PPTX and PPT slides with isolated LibreOffice',
+  },
+  {
+    id: 'excel-to-pdf',
+    icon: Sheet,
+    group: 'Convert',
+    title: 'Excel to PDF',
+    description: 'Convert XLSX and XLS with print-area controls',
   },
   {
     id: 'convert-markdown',
@@ -458,6 +467,7 @@ function App() {
           path="/powerpoint-to-pdf"
           element={<PowerPointToPdfPage />}
         />
+        <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
         <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
         <Route path="/convert-docx" element={<ConvertDocxPage />} />
       </Routes>

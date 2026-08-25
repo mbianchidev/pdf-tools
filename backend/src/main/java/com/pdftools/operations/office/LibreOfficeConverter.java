@@ -106,7 +106,7 @@ public class LibreOfficeConverter {
         String extension = documentType.extension(input.originalFilename());
         Path safeInput = converterRoot.resolve("source" + extension);
         copyInput(input.path(), safeInput, documentType);
-        prepareWorkerOwnership(converterRoot);
+        sandbox.prepareWorkspace(converterRoot, properties);
         Path generated = outputDirectory.resolve("source.pdf");
         Path finalOutput = workspace.resolve(documentType.outputFilename());
         Path stdout = workspace.resolve(
@@ -715,31 +715,6 @@ public class LibreOfficeConverter {
                 documentType.code("INPUT_PREPARATION_FAILED"),
                 "The " + documentType.label()
                     + " could not be prepared for conversion",
-                exception
-            );
-        }
-    }
-
-    private void prepareWorkerOwnership(Path converterRoot) {
-        if (!isLinux()
-                || !properties.isIsolatedContainer()
-                || System.getProperty("user.name").equals(
-                    properties.getWorkerUser())) {
-            return;
-        }
-        try {
-            var owner = converterRoot.getFileSystem()
-                .getUserPrincipalLookupService()
-                .lookupPrincipalByName(properties.getWorkerUser());
-            try (var paths = Files.walk(converterRoot)) {
-                for (Path path : paths.toList()) {
-                    Files.setOwner(path, owner);
-                }
-            }
-        } catch (IOException exception) {
-            throw new OperationException(
-                "OFFICE_WORKER_IDENTITY_FAILED",
-                "The Office worker identity could not be prepared",
                 exception
             );
         }

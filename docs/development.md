@@ -106,6 +106,9 @@ Important settings:
 | `OFFICE_MAX_OPEN_FILES` | `256` | Native-process file-descriptor limit |
 | `OFFICE_MAX_WORKER_PROCESSES` | `96` | Worker-UID process limit |
 | `OFFICE_WALL_TIMEOUT` | `2m` | Conversion wall-time cap |
+| `EXCEL_MAX_SHEETS` | `100` | Workbook sheet limit |
+| `EXCEL_MAX_USED_CELLS` | `1000000` | Used-range scan cell limit |
+| `EXCEL_MAX_PREPARED_BYTES` | `104857600` | Prepared workbook byte limit |
 | `PDF_STORAGE_S3_ENDPOINT` | none | SeaweedFS/S3 endpoint |
 | `PDF_STORAGE_S3_BUCKET` | `pdf-tools` | Artifact bucket |
 

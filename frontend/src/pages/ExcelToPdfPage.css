@@ -1,0 +1,30 @@
+.excel-pdf-controls {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.excel-pdf-controls label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.excel-pdf-controls input,
+.excel-pdf-controls select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.65rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+
+.excel-pdf-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--text-xs);
+}

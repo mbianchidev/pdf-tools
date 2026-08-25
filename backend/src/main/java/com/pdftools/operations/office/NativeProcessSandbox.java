@@ -61,7 +61,43 @@ public class NativeProcessSandbox {
             Path executable,
             List<String> arguments,
             OfficeConversionProperties properties) {
-        validate(properties);
+        return command(
+            workspace,
+            networkFilter,
+            executable,
+            arguments,
+            properties,
+            List.of()
+        );
+    }
+
+    public List<String> command(
+            Path workspace,
+            Path networkFilter,
+            Path executable,
+            List<String> arguments,
+            OfficeConversionProperties properties,
+            List<Path> additionalReadRoots) {
+        return command(
+            workspace,
+            networkFilter,
+            executable,
+            arguments,
+            properties,
+            additionalReadRoots,
+            properties.getMaxAddressSpaceBytes()
+        );
+    }
+
+    public List<String> command(
+            Path workspace,
+            Path networkFilter,
+            Path executable,
+            List<String> arguments,
+            OfficeConversionProperties properties,
+            List<Path> additionalReadRoots,
+            long maxAddressSpaceBytes) {
+        validate(properties, maxAddressSpaceBytes);
         String os = System.getProperty("os.name")
             .toLowerCase(Locale.ROOT);
         if (os.contains("linux")) {
@@ -70,7 +106,9 @@ public class NativeProcessSandbox {
                 networkFilter,
                 executable,
                 arguments,
-                properties
+                properties,
+                additionalReadRoots,
+                maxAddressSpaceBytes
             );
         }
         if (os.contains("mac")) {
@@ -87,7 +125,9 @@ public class NativeProcessSandbox {
             Path networkFilter,
             Path executable,
             List<String> arguments,
-            OfficeConversionProperties properties) {
+            OfficeConversionProperties properties,
+            List<Path> additionalReadRoots,
+            long maxAddressSpaceBytes) {
         if (!properties.isIsolatedContainer()) {
             throw new OperationException(
                 "OFFICE_DIRECT_LINUX_UNSUPPORTED",
@@ -100,7 +140,7 @@ public class NativeProcessSandbox {
         requireExecutable("/usr/bin/setsid");
         command.add("/usr/bin/setsid");
         command.add("/usr/bin/prlimit");
-        command.add("--as=" + properties.getMaxAddressSpaceBytes());
+        command.add("--as=" + maxAddressSpaceBytes);
         command.add("--cpu=" + properties.getCpuTimeSeconds());
         command.add("--fsize=" + processFileLimit(properties));
         command.add("--nofile=" + properties.getMaxOpenFiles());
@@ -136,7 +176,7 @@ public class NativeProcessSandbox {
         if (landlock) {
             command.add("--landlock-access");
             command.add("fs:" + HANDLED_FILESYSTEM_ACCESS);
-            addReadRules(command);
+            addReadRules(command, additionalReadRoots);
             command.add("--landlock-rule");
             command.add(
                 "path-beneath:" + WORKSPACE_ACCESS + ":"
@@ -162,7 +202,9 @@ public class NativeProcessSandbox {
         return List.copyOf(command);
     }
 
-    private void addReadRules(List<String> command) {
+    private void addReadRules(
+            List<String> command,
+            List<Path> additionalReadRoots) {
         for (String candidate : List.of(
                 "/usr",
                 "/lib",
@@ -189,6 +231,48 @@ public class NativeProcessSandbox {
                 "/dev/random",
                 "/dev/urandom")) {
             addRule(command, DEVICE_ACCESS, device);
+        }
+        for (Path path : additionalReadRoots.stream()
+                .map(Path::toAbsolutePath)
+                .map(Path::normalize)
+                .distinct()
+                .toList()) {
+            if (Files.exists(path)) {
+                addRule(
+                    command,
+                    Files.isDirectory(path) ? READ_ACCESS : "read-file",
+                    path.toString()
+                );
+            }
+        }
+    }
+
+    public void prepareWorkspace(
+            Path workspace,
+            OfficeConversionProperties properties) {
+        if (!System.getProperty("os.name")
+                    .toLowerCase(Locale.ROOT)
+                    .contains("linux")
+                || !properties.isIsolatedContainer()
+                || System.getProperty("user.name").equals(
+                    properties.getWorkerUser())) {
+            return;
+        }
+        try {
+            var owner = workspace.getFileSystem()
+                .getUserPrincipalLookupService()
+                .lookupPrincipalByName(properties.getWorkerUser());
+            try (var paths = Files.walk(workspace)) {
+                for (Path path : paths.toList()) {
+                    Files.setOwner(path, owner);
+                }
+            }
+        } catch (IOException exception) {
+            throw new OperationException(
+                "OFFICE_WORKER_IDENTITY_FAILED",
+                "The Office worker identity could not be prepared",
+                exception
+            );
         }
     }
 
@@ -230,9 +314,11 @@ public class NativeProcessSandbox {
         return List.copyOf(command);
     }
 
-    private void validate(OfficeConversionProperties properties) {
+    private void validate(
+            OfficeConversionProperties properties,
+            long maxAddressSpaceBytes) {
         Duration timeout = properties.getWallTimeout();
-        if (properties.getMaxAddressSpaceBytes() < 64L * 1024L * 1024L
+        if (maxAddressSpaceBytes < 64L * 1024L * 1024L
                 || properties.getCpuTimeSeconds() < 1
                 || properties.getMaxOutputBytes() < 1
                 || properties.getMaxOpenFiles() < 16

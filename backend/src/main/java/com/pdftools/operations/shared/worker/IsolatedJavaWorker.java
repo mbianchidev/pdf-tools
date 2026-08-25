@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,29 @@ public final class IsolatedJavaWorker {
             List<String> arguments,
             Runnable cancellationCheck,
             Runnable poll) {
-        Process worker = start(spec, arguments);
+        return runCommand(
+            spec,
+            command(spec, arguments, null),
+            null,
+            null,
+            cancellationCheck,
+            poll
+        );
+    }
+
+    public static int runCommand(
+            Spec spec,
+            List<String> command,
+            Path workingDirectory,
+            Map<String, String> environment,
+            Runnable cancellationCheck,
+            Runnable poll) {
+        Process worker = start(
+            spec,
+            command,
+            workingDirectory,
+            environment
+        );
         long started = System.nanoTime();
         try {
             while (!worker.waitFor(100, TimeUnit.MILLISECONDS)) {
@@ -114,14 +137,26 @@ public final class IsolatedJavaWorker {
         }
     }
 
-    private static Process start(Spec spec, List<String> arguments) {
-        ProcessBuilder builder = new ProcessBuilder(command(spec, arguments))
+    private static Process start(
+            Spec spec,
+            List<String> command,
+            Path workingDirectory,
+            Map<String, String> environment) {
+        ProcessBuilder builder = new ProcessBuilder(command)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT);
-        builder.environment().remove("JAVA_TOOL_OPTIONS");
-        builder.environment().remove("_JAVA_OPTIONS");
-        builder.environment().remove("JDK_JAVA_OPTIONS");
-        builder.environment().remove("CLASSPATH");
+        if (workingDirectory != null) {
+            builder.directory(workingDirectory.toFile());
+        }
+        if (environment == null) {
+            builder.environment().remove("JAVA_TOOL_OPTIONS");
+            builder.environment().remove("_JAVA_OPTIONS");
+            builder.environment().remove("JDK_JAVA_OPTIONS");
+            builder.environment().remove("CLASSPATH");
+        } else {
+            builder.environment().clear();
+            builder.environment().putAll(environment);
+        }
         try {
             return builder.start();
         } catch (IOException exception) {
@@ -133,9 +168,10 @@ public final class IsolatedJavaWorker {
         }
     }
 
-    private static List<String> command(
+    public static List<String> command(
             Spec spec,
-            List<String> arguments) {
+            List<String> arguments,
+            Path temporaryDirectory) {
         String classpath = System.getProperty(
             "surefire.test.class.path",
             System.getProperty("java.class.path")
@@ -148,7 +184,18 @@ public final class IsolatedJavaWorker {
         ).toString());
         command.add("-Xmx" + spec.maxHeapBytes());
         command.add("-XX:+ExitOnOutOfMemoryError");
+        command.add("-XX:-UsePerfData");
+        command.add("-XX:MaxMetaspaceSize=134217728");
+        command.add("-XX:CompressedClassSpaceSize=67108864");
+        command.add("-XX:ReservedCodeCacheSize=67108864");
+        command.add("-Xss524288");
         command.add("-Djava.awt.headless=true");
+        if (temporaryDirectory != null) {
+            command.add(
+                "-Djava.io.tmpdir="
+                    + temporaryDirectory.toAbsolutePath()
+            );
+        }
         command.add("-cp");
         command.add(classpath);
         if (isBootJarClasspath(classpath)) {

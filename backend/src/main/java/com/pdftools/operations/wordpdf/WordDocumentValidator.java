@@ -7,6 +7,7 @@ import com.pdftools.operations.office.OfficeDocumentValidator;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public class WordDocumentValidator {
             "Word document",
             "word/document.xml",
             "word/vbaProject.bin",
-            "WordDocument",
+            List.of("WordDocument"),
             "INVALID_WORD_DOCUMENT",
             "WORD_EXPANDED_SIZE_LIMIT_EXCEEDED",
             "WORD_MACROS_NOT_SUPPORTED"

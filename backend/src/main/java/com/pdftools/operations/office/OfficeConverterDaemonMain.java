@@ -3,6 +3,11 @@ package com.pdftools.operations.office;
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
+import com.pdftools.operations.excelpdf.ExcelDocumentValidator;
+import com.pdftools.operations.excelpdf.ExcelPlanFactory;
+import com.pdftools.operations.excelpdf.ExcelPreparationService;
+import com.pdftools.operations.excelpdf.ExcelProperties;
+import com.pdftools.operations.excelpdf.LibreOfficeExcelConverter;
 import com.pdftools.operations.pptpdf.LibreOfficePowerPointConverter;
 import com.pdftools.operations.pptpdf.PowerPointDocumentValidator;
 import com.pdftools.operations.wordpdf.LibreOfficeWordConverter;
@@ -68,10 +73,25 @@ public final class OfficeConverterDaemonMain {
                     presentationValidator,
                     officeConverter
                 );
+            ExcelProperties excelProperties = excelProperties();
+            ExcelDocumentValidator excelValidator =
+                new ExcelDocumentValidator(properties);
+            LibreOfficeExcelConverter excelConverter =
+                new LibreOfficeExcelConverter(
+                    excelValidator,
+                    new ExcelPlanFactory(),
+                    new ExcelPreparationService(
+                        excelProperties,
+                        properties,
+                        new NativeProcessSandbox()
+                    ),
+                    officeConverter
+                );
             run(
                 roots,
                 converter,
                 presentationConverter,
+                excelConverter,
                 properties.getQueueRetention(),
                 workRoot
             );
@@ -85,6 +105,7 @@ public final class OfficeConverterDaemonMain {
             Roots roots,
             LibreOfficeWordConverter wordConverter,
             LibreOfficePowerPointConverter presentationConverter,
+            LibreOfficeExcelConverter excelConverter,
             Duration retention,
             Path workRoot) {
         while (!Thread.currentThread().isInterrupted()) {
@@ -116,7 +137,8 @@ public final class OfficeConverterDaemonMain {
                             roots.signals(),
                             workRoot,
                             wordConverter,
-                            presentationConverter
+                            presentationConverter,
+                            excelConverter
                         );
                         processed = true;
                     }
@@ -175,7 +197,8 @@ public final class OfficeConverterDaemonMain {
             Path signalRoot,
             Path workRoot,
             LibreOfficeWordConverter wordConverter,
-            LibreOfficePowerPointConverter presentationConverter) {
+            LibreOfficePowerPointConverter presentationConverter,
+            LibreOfficeExcelConverter excelConverter) {
         String requestId = requestDirectory.getFileName().toString();
         Path work = workRoot.resolve(requestId);
         try {
@@ -228,6 +251,15 @@ public final class OfficeConverterDaemonMain {
                 );
                 case "powerpoint" -> presentationConverter.convert(
                     operationInput,
+                    work,
+                    progress,
+                    cancellation
+                );
+                case "excel" -> excelConverter.convert(
+                    operationInput,
+                    new tools.jackson.databind.ObjectMapper().readTree(
+                        request.optionsJson()
+                    ),
                     work,
                     progress,
                     cancellation
@@ -341,6 +373,10 @@ public final class OfficeConverterDaemonMain {
                 ? "application/vnd.openxmlformats-officedocument."
                     + "presentationml.presentation"
                 : "application/vnd.ms-powerpoint";
+            case "excel" -> request.extension().equals(".xlsx")
+                ? "application/vnd.openxmlformats-officedocument."
+                    + "spreadsheetml.sheet"
+                : "application/vnd.ms-excel";
             default -> "application/octet-stream";
         };
     }
@@ -452,6 +488,35 @@ public final class OfficeConverterDaemonMain {
         properties.setWallTimeout(durationEnvironment(
             "OFFICE_WALL_TIMEOUT",
             Duration.ofMinutes(2)
+        ));
+        return properties;
+    }
+
+    private static ExcelProperties excelProperties() {
+        ExcelProperties properties = new ExcelProperties();
+        properties.setMaxSheets(intEnvironment(
+            "EXCEL_MAX_SHEETS",
+            properties.getMaxSheets()
+        ));
+        properties.setMaxUsedCells(longEnvironment(
+            "EXCEL_MAX_USED_CELLS",
+            properties.getMaxUsedCells()
+        ));
+        properties.setMaxPreparedBytes(longEnvironment(
+            "EXCEL_MAX_PREPARED_BYTES",
+            properties.getMaxPreparedBytes()
+        ));
+        properties.setWorkerHeapBytes(longEnvironment(
+            "EXCEL_PREPARATION_WORKER_HEAP_BYTES",
+            properties.getWorkerHeapBytes()
+        ));
+        properties.setWorkerAddressSpaceBytes(longEnvironment(
+            "EXCEL_PREPARATION_WORKER_ADDRESS_SPACE_BYTES",
+            properties.getWorkerAddressSpaceBytes()
+        ));
+        properties.setWorkerTimeout(durationEnvironment(
+            "EXCEL_PREPARATION_WORKER_TIMEOUT",
+            properties.getWorkerTimeout()
         ));
         return properties;
     }

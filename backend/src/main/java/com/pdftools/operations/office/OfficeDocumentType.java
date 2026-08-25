@@ -23,6 +23,16 @@ public enum OfficeDocumentType {
         "INVALID_POWERPOINT_PDF_OUTPUT",
         ".pptx",
         ".ppt"
+    ),
+    EXCEL(
+        "excel",
+        "EXCEL",
+        "Excel workbook",
+        "calc_pdf_Export",
+        "excel-to-pdf.pdf",
+        "INVALID_EXCEL_PDF_OUTPUT",
+        ".xlsx",
+        ".xls"
     );
 
     private final String key;

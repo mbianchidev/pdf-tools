@@ -43,6 +43,7 @@ inside a deployed instance; the public landing does not upload or process docume
 - **Redact PDF** - Irreversibly rasterize selected regions into a sanitized PDF
 - **Word to PDF** - Convert DOCX/DOC with network-denied, resource-limited LibreOffice
 - **PowerPoint to PDF** - Convert PPTX/PPT slides in the isolated Office sidecar
+- **Excel to PDF** - Convert XLSX/XLS with print-area and orientation controls
 - **Convert to Markdown** - Export PDF content as Markdown
 - **Convert to DOCX** - Export PDF content as Word documents
 

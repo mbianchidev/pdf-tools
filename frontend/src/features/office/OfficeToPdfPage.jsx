@@ -35,6 +35,9 @@ const OfficeToPdfPage = ({
   previewTitle,
   previewDescription,
   fidelityWarning,
+  options = {},
+  renderControls,
+  validationError,
 }) => {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
@@ -122,8 +125,12 @@ const OfficeToPdfPage = ({
       addToast(`Upload ${hint.toLowerCase()} first.`, 'error');
       return;
     }
+    if (validationError) {
+      addToast(validationError, 'error');
+      return;
+    }
     try {
-      await start(operation, [file], {});
+      await start(operation, [file], options);
     } catch (error) {
       console.error(`${title} job error:`, error);
       addToast(
@@ -182,6 +189,8 @@ const OfficeToPdfPage = ({
             </div>
           </div>
 
+          {renderControls?.({ running })}
+
           <div className="sidebar-actions">
             {job && (
               <JobProgress
@@ -203,7 +212,7 @@ const OfficeToPdfPage = ({
             <Button
               onClick={handleSubmit}
               loading={running}
-              disabled={running || !file}
+              disabled={running || !file || Boolean(validationError)}
               icon={<Download size={20} />}
               fullWidth
               size="lg"
