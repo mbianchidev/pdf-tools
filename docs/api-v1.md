@@ -207,3 +207,10 @@ The Docker deployment passes jobs through a volume-backed queue to a separate
 networkless LibreOffice container with no database, storage, or backend-secret
 mounts. Native process limits and a private profile apply inside that boundary. See
 [Word to PDF](operations/word-to-pdf.md).
+
+## PowerPoint to PDF
+
+`operation=powerpoint-to-pdf` accepts one PPTX or PPT file and returns one PDF
+page per slide. It reuses the networkless Office sidecar, one-way queue, private
+tmpfs, non-root converter identity, and native resource limits. See
+[PowerPoint to PDF](operations/powerpoint-to-pdf.md).

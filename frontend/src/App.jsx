@@ -26,6 +26,7 @@ import {
   FileImage,
   PencilRuler,
   FileInput,
+  Presentation,
 } from 'lucide-react';
 import Brand from './components/Brand';
 import './App.css';
@@ -50,6 +51,9 @@ const RedactPage = lazy(() => import('./pages/RedactPage'));
 const ConvertMarkdownPage = lazy(() => import('./pages/ConvertMarkdownPage'));
 const ConvertDocxPage = lazy(() => import('./pages/ConvertDocxPage'));
 const WordToPdfPage = lazy(() => import('./pages/WordToPdfPage'));
+const PowerPointToPdfPage = lazy(
+  () => import('./pages/PowerPointToPdfPage'),
+);
 
 const operations = [
   {
@@ -177,6 +181,13 @@ const operations = [
     group: 'Convert',
     title: 'Word to PDF',
     description: 'Convert DOCX and DOC files with isolated LibreOffice',
+  },
+  {
+    id: 'powerpoint-to-pdf',
+    icon: Presentation,
+    group: 'Convert',
+    title: 'PowerPoint to PDF',
+    description: 'Convert PPTX and PPT slides with isolated LibreOffice',
   },
   {
     id: 'convert-markdown',
@@ -443,6 +454,10 @@ function App() {
         <Route path="/signature" element={<SignaturePage />} />
         <Route path="/redact" element={<RedactPage />} />
         <Route path="/word-to-pdf" element={<WordToPdfPage />} />
+        <Route
+          path="/powerpoint-to-pdf"
+          element={<PowerPointToPdfPage />}
+        />
         <Route path="/convert-markdown" element={<ConvertMarkdownPage />} />
         <Route path="/convert-docx" element={<ConvertDocxPage />} />
       </Routes>

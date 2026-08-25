@@ -50,9 +50,7 @@ final class OfficeQueueProtocol {
                 throw protocolFailure(null);
             }
             Request request = new Request(input.readUTF(), input.readUTF());
-            if (input.read() != -1
-                    || !request.type().equals("word")
-                    || !request.extension().matches("\\.docx?")) {
+            if (input.read() != -1 || !request.valid()) {
                 throw protocolFailure(null);
             }
             return request;
@@ -172,6 +170,13 @@ final class OfficeQueueProtocol {
     }
 
     record Request(String type, String extension) {
+        private boolean valid() {
+            return switch (type) {
+                case "word" -> extension.matches("\\.docx?");
+                case "powerpoint" -> extension.matches("\\.pptx?");
+                default -> false;
+            };
+        }
     }
 
     record Failure(String code, String message) {

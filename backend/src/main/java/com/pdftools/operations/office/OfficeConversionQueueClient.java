@@ -55,6 +55,35 @@ public class OfficeConversionQueueClient {
             Path workspace,
             IntConsumer progress,
             Runnable cancellationCheck) {
+        return convert(
+            input,
+            workspace,
+            OfficeDocumentType.WORD,
+            progress,
+            cancellationCheck
+        );
+    }
+
+    public Path convertPowerPoint(
+            OperationInput input,
+            Path workspace,
+            IntConsumer progress,
+            Runnable cancellationCheck) {
+        return convert(
+            input,
+            workspace,
+            OfficeDocumentType.POWERPOINT,
+            progress,
+            cancellationCheck
+        );
+    }
+
+    private Path convert(
+            OperationInput input,
+            Path workspace,
+            OfficeDocumentType documentType,
+            IntConsumer progress,
+            Runnable cancellationCheck) {
         Roots roots = requireRoots();
         cleanupStale(roots);
         String requestId = UUID.randomUUID().toString();
@@ -62,16 +91,19 @@ public class OfficeConversionQueueClient {
         boolean published = false;
         try {
             Files.createDirectory(request);
-            String extension = input.originalFilename()
-                .toLowerCase(java.util.Locale.ROOT)
-                .endsWith(".docx") ? ".docx" : ".doc";
+            String extension = documentType.extension(
+                input.originalFilename()
+            );
             Files.copy(
                 input.path(),
                 request.resolve(OfficeQueueProtocol.INPUT + extension)
             );
             OfficeQueueProtocol.writeRequest(
                 request.resolve(OfficeQueueProtocol.REQUEST),
-                new OfficeQueueProtocol.Request("word", extension)
+                new OfficeQueueProtocol.Request(
+                    documentType.key(),
+                    extension
+                )
             );
             OfficeQueueProtocol.marker(
                 request.resolve(OfficeQueueProtocol.READY)
@@ -82,7 +114,8 @@ public class OfficeConversionQueueClient {
                 roots,
                 requestId,
                 request,
-                workspace.resolve("word-to-pdf.pdf"),
+                workspace.resolve(documentType.outputFilename()),
+                documentType,
                 progress,
                 cancellationCheck
             );
@@ -102,7 +135,8 @@ public class OfficeConversionQueueClient {
             cleanup(request);
             throw new OperationException(
                 "OFFICE_QUEUE_WRITE_FAILED",
-                "The Word document could not be queued for conversion",
+                "The " + documentType.label()
+                    + " could not be queued for conversion",
                 exception
             );
         }
@@ -113,6 +147,7 @@ public class OfficeConversionQueueClient {
             String requestId,
             Path request,
             Path destination,
+            OfficeDocumentType documentType,
             IntConsumer progress,
             Runnable cancellationCheck) {
         long queuedAt = System.nanoTime();
@@ -139,9 +174,10 @@ public class OfficeConversionQueueClient {
                 copyOutput(
                     response.resolve(OfficeQueueProtocol.OUTPUT),
                     destination,
-                    cancellationCheck
+                    cancellationCheck,
+                    documentType
                 );
-                validatePdf(destination);
+                validatePdf(destination, documentType);
                 acknowledge(roots, requestId, request, response);
                 progress.accept(97);
                 return destination;
@@ -183,9 +219,10 @@ public class OfficeConversionQueueClient {
     private void copyOutput(
             Path source,
             Path destination,
-            Runnable cancellationCheck) {
+            Runnable cancellationCheck,
+            OfficeDocumentType documentType) {
         if (!Files.isRegularFile(source, LinkOption.NOFOLLOW_LINKS)) {
-            throw invalidOutput();
+            throw invalidOutput(documentType);
         }
         Set<OpenOption> options = Set.of(
             StandardOpenOption.READ,
@@ -207,7 +244,7 @@ public class OfficeConversionQueueClient {
         } catch (OutputLimitExceededException exception) {
             deleteDestination(destination);
             throw new OperationException(
-                "WORD_PDF_OUTPUT_LIMIT_EXCEEDED",
+                documentType.code("PDF_OUTPUT_LIMIT_EXCEEDED"),
                 "The converted PDF exceeds the configured output limit",
                 exception
             );
@@ -221,26 +258,28 @@ public class OfficeConversionQueueClient {
         }
     }
 
-    private void validatePdf(Path output) {
+    private void validatePdf(
+            Path output,
+            OfficeDocumentType documentType) {
         try {
             PdfInputValidator.requirePdfHeader(output);
             try (PDDocument document = Loader.loadPDF(output.toFile())) {
                 if (document.isEncrypted()
                         || document.getNumberOfPages() < 1) {
-                    throw invalidOutput();
+                    throw invalidOutput(documentType);
                 }
             }
         } catch (OperationException exception) {
             deleteDestination(output);
             throw new OperationException(
-                "INVALID_WORD_PDF_OUTPUT",
+                documentType.invalidPdfCode(),
                 "The isolated converter returned an unreadable PDF",
                 exception
             );
         } catch (IOException exception) {
             deleteDestination(output);
             throw new OperationException(
-                "INVALID_WORD_PDF_OUTPUT",
+                documentType.invalidPdfCode(),
                 "The isolated converter returned an unreadable PDF",
                 exception
             );
@@ -469,9 +508,10 @@ public class OfficeConversionQueueClient {
         );
     }
 
-    private OperationException invalidOutput() {
+    private OperationException invalidOutput(
+            OfficeDocumentType documentType) {
         return new OperationException(
-            "INVALID_WORD_PDF_OUTPUT",
+            documentType.invalidPdfCode(),
             "The isolated converter returned an unreadable PDF"
         );
     }

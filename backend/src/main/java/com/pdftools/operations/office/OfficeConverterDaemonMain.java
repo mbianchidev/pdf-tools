@@ -3,6 +3,8 @@ package com.pdftools.operations.office;
 import com.pdftools.operations.OperationCancelledException;
 import com.pdftools.operations.OperationException;
 import com.pdftools.operations.OperationInput;
+import com.pdftools.operations.pptpdf.LibreOfficePowerPointConverter;
+import com.pdftools.operations.pptpdf.PowerPointDocumentValidator;
 import com.pdftools.operations.wordpdf.LibreOfficeWordConverter;
 import com.pdftools.operations.wordpdf.WordDocumentValidator;
 
@@ -49,15 +51,27 @@ public final class OfficeConverterDaemonMain {
             );
             WordDocumentValidator validator =
                 new WordDocumentValidator(properties);
+            LibreOfficeConverter officeConverter =
+                new LibreOfficeConverter(
+                    properties,
+                    new NativeProcessSandbox()
+                );
             LibreOfficeWordConverter converter =
                 new LibreOfficeWordConverter(
-                    properties,
                     validator,
-                    new NativeProcessSandbox()
+                    officeConverter
+                );
+            PowerPointDocumentValidator presentationValidator =
+                new PowerPointDocumentValidator(properties);
+            LibreOfficePowerPointConverter presentationConverter =
+                new LibreOfficePowerPointConverter(
+                    presentationValidator,
+                    officeConverter
                 );
             run(
                 roots,
                 converter,
+                presentationConverter,
                 properties.getQueueRetention(),
                 workRoot
             );
@@ -69,7 +83,8 @@ public final class OfficeConverterDaemonMain {
 
     private static void run(
             Roots roots,
-            LibreOfficeWordConverter converter,
+            LibreOfficeWordConverter wordConverter,
+            LibreOfficePowerPointConverter presentationConverter,
             Duration retention,
             Path workRoot) {
         while (!Thread.currentThread().isInterrupted()) {
@@ -100,7 +115,8 @@ public final class OfficeConverterDaemonMain {
                             response,
                             roots.signals(),
                             workRoot,
-                            converter
+                            wordConverter,
+                            presentationConverter
                         );
                         processed = true;
                     }
@@ -158,7 +174,8 @@ public final class OfficeConverterDaemonMain {
             Path responseDirectory,
             Path signalRoot,
             Path workRoot,
-            LibreOfficeWordConverter converter) {
+            LibreOfficeWordConverter wordConverter,
+            LibreOfficePowerPointConverter presentationConverter) {
         String requestId = requestDirectory.getFileName().toString();
         Path work = workRoot.resolve(requestId);
         try {
@@ -185,29 +202,41 @@ public final class OfficeConverterDaemonMain {
                 1,
                 input,
                 "source" + request.extension(),
-                request.extension().equals(".docx")
-                    ? "application/vnd.openxmlformats-officedocument."
-                        + "wordprocessingml.document"
-                    : "application/msword",
+                mediaType(request),
                 Files.size(input),
                 "office-queue"
             );
-            Path output = converter.convert(
-                operationInput,
-                work,
-                progress -> OfficeQueueProtocol.writeProgress(
+            java.util.function.IntConsumer progress =
+                value -> OfficeQueueProtocol.writeProgress(
                     responseDirectory.resolve(OfficeQueueProtocol.PROGRESS),
-                    progress
-                ),
-                () -> {
-                    if (Files.exists(signal(
-                            signalRoot,
-                            requestId,
-                            OfficeQueueProtocol.CANCEL))) {
-                        throw new OperationCancelledException();
-                    }
+                    value
+                );
+            Runnable cancellation = () -> {
+                if (Files.exists(signal(
+                        signalRoot,
+                        requestId,
+                        OfficeQueueProtocol.CANCEL))) {
+                    throw new OperationCancelledException();
                 }
-            );
+            };
+            Path output = switch (request.type()) {
+                case "word" -> wordConverter.convert(
+                    operationInput,
+                    work,
+                    progress,
+                    cancellation
+                );
+                case "powerpoint" -> presentationConverter.convert(
+                    operationInput,
+                    work,
+                    progress,
+                    cancellation
+                );
+                default -> throw new OperationException(
+                    "OFFICE_QUEUE_PROTOCOL_ERROR",
+                    "The Office queue type is invalid"
+                );
+            };
             OfficeQueueProtocol.move(
                 output,
                 responseDirectory.resolve(OfficeQueueProtocol.OUTPUT)
@@ -300,6 +329,20 @@ public final class OfficeConverterDaemonMain {
             code,
             message
         );
+    }
+
+    private static String mediaType(OfficeQueueProtocol.Request request) {
+        return switch (request.type()) {
+            case "word" -> request.extension().equals(".docx")
+                ? "application/vnd.openxmlformats-officedocument."
+                    + "wordprocessingml.document"
+                : "application/msword";
+            case "powerpoint" -> request.extension().equals(".pptx")
+                ? "application/vnd.openxmlformats-officedocument."
+                    + "presentationml.presentation"
+                : "application/vnd.ms-powerpoint";
+            default -> "application/octet-stream";
+        };
     }
 
     private static boolean terminal(Path response) {

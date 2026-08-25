@@ -1,4 +1,4 @@
-.word-security-note {
+.office-security-note {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.7rem;
@@ -7,27 +7,27 @@
   border: 1px solid color-mix(in srgb, var(--iris) 25%, transparent);
 }
 
-.word-security-note > svg {
+.office-security-note > svg {
   color: var(--iris);
 }
 
-.word-security-note h3,
-.word-security-note p {
+.office-security-note h3,
+.office-security-note p {
   margin: 0;
 }
 
-.word-security-note h3 {
+.office-security-note h3 {
   font-size: var(--text-sm);
 }
 
-.word-security-note p {
+.office-security-note p {
   margin-top: 0.25rem;
   color: var(--muted);
   font-size: var(--text-xs);
   line-height: 1.5;
 }
 
-.word-convert-preview {
+.office-convert-preview {
   display: grid;
   width: min(560px, calc(100% - 3rem));
   gap: 1.25rem;
@@ -38,7 +38,7 @@
   box-shadow: var(--shadow-lg);
 }
 
-.word-convert-preview__icon {
+.office-convert-preview__icon {
   display: grid;
   width: 88px;
   height: 88px;
@@ -48,24 +48,24 @@
   border-radius: var(--radius-lg);
 }
 
-.word-convert-preview h2,
-.word-convert-preview p {
+.office-convert-preview h2,
+.office-convert-preview p {
   margin: 0;
 }
 
-.word-convert-preview h2 {
+.office-convert-preview h2 {
   font-family: var(--font-display);
   font-size: var(--text-3xl);
   letter-spacing: -0.04em;
 }
 
-.word-convert-preview p:not(.word-convert-preview__eyebrow) {
+.office-convert-preview p:not(.office-convert-preview__eyebrow) {
   margin-top: 0.75rem;
   color: var(--muted);
   line-height: 1.65;
 }
 
-.word-convert-preview__eyebrow {
+.office-convert-preview__eyebrow {
   margin-bottom: 0.35rem;
   color: var(--iris);
   font-size: var(--text-xs);
@@ -74,7 +74,7 @@
   text-transform: uppercase;
 }
 
-.word-convert-preview__limit {
+.office-convert-preview__limit {
   padding-top: 1rem;
   color: var(--muted);
   border-top: 1px solid var(--line);

@@ -13,6 +13,7 @@ RUN apt-get update \
         fonts-dejavu-core \
         fonts-liberation \
         gosu \
+        libreoffice-impress \
         libreoffice-writer \
         util-linux \
     && rm -rf /var/lib/apt/lists/* \

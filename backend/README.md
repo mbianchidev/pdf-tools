@@ -35,6 +35,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 - **Add Signature** - Add signature images
 - **Redact** - Irreversible raster redaction with document sanitization
 - **Word to PDF** - Sandboxed LibreOffice Writer conversion
+- **PowerPoint to PDF** - Sandboxed LibreOffice Impress conversion
 - **Convert to Markdown** - Extract text as Markdown
 - **Convert to DOCX** - Convert to Word document
 
@@ -78,7 +79,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, and `word-to-pdf`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, and `powerpoint-to-pdf`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -94,6 +95,7 @@ Watermark styling is documented in [`docs/operations/watermark.md`](../docs/oper
 Unified editing is documented in [`docs/operations/edit.md`](../docs/operations/edit.md).
 Secure redaction is documented in [`docs/operations/redact.md`](../docs/operations/redact.md).
 Word conversion is documented in [`docs/operations/word-to-pdf.md`](../docs/operations/word-to-pdf.md).
+Presentation conversion is documented in [`docs/operations/powerpoint-to-pdf.md`](../docs/operations/powerpoint-to-pdf.md).
 
 The following legacy endpoints remain during migration:
 

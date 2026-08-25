@@ -6,6 +6,7 @@ import com.pdftools.operations.OperationInput;
 import com.pdftools.operations.OperationOutput;
 import com.pdftools.operations.OperationSubmission;
 import com.pdftools.operations.office.NativeProcessSandbox;
+import com.pdftools.operations.office.LibreOfficeConverter;
 import com.pdftools.operations.office.OfficeConversionQueueClient;
 import com.pdftools.operations.office.OfficeConversionProperties;
 import org.apache.pdfbox.Loader;
@@ -55,9 +56,11 @@ class WordToPdfOperationTest {
         new WordToPdfConverter(
             properties,
             new LibreOfficeWordConverter(
-                properties,
                 validator,
-                new NativeProcessSandbox()
+                new LibreOfficeConverter(
+                    properties,
+                    new NativeProcessSandbox()
+                )
             ),
             new OfficeConversionQueueClient(properties)
         ),
@@ -154,9 +157,11 @@ class WordToPdfOperationTest {
             new WordToPdfConverter(
                 smallOutput,
                 new LibreOfficeWordConverter(
-                    smallOutput,
                     smallValidator,
-                    new NativeProcessSandbox()
+                    new LibreOfficeConverter(
+                        smallOutput,
+                        new NativeProcessSandbox()
+                    )
                 ),
                 new OfficeConversionQueueClient(smallOutput)
             ),
@@ -179,9 +184,11 @@ class WordToPdfOperationTest {
             new WordToPdfConverter(
                 timed,
                 new LibreOfficeWordConverter(
-                    timed,
                     timedValidator,
-                    new NativeProcessSandbox()
+                    new LibreOfficeConverter(
+                        timed,
+                        new NativeProcessSandbox()
+                    )
                 ),
                 new OfficeConversionQueueClient(timed)
             ),
@@ -221,9 +228,11 @@ class WordToPdfOperationTest {
             new WordDocumentValidator(detached);
         LibreOfficeWordConverter converter =
             new LibreOfficeWordConverter(
-                detached,
                 detachedValidator,
-                new NativeProcessSandbox()
+                new LibreOfficeConverter(
+                    detached,
+                    new NativeProcessSandbox()
+                )
             );
         OperationInput input = context(docx(), "{}").inputs().getFirst();
 
@@ -276,9 +285,11 @@ class WordToPdfOperationTest {
             new WordDocumentValidator(timed);
         LibreOfficeWordConverter converter =
             new LibreOfficeWordConverter(
-                timed,
                 timedValidator,
-                new NativeProcessSandbox()
+                new LibreOfficeConverter(
+                    timed,
+                    new NativeProcessSandbox()
+                )
             );
         OperationInput input = context(docx(), "{}").inputs().getFirst();
 

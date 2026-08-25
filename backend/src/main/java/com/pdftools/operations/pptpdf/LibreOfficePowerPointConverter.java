@@ -1,4 +1,4 @@
-package com.pdftools.operations.wordpdf;
+package com.pdftools.operations.pptpdf;
 
 import com.pdftools.operations.OperationInput;
 import com.pdftools.operations.office.LibreOfficeConverter;
@@ -9,13 +9,13 @@ import java.nio.file.Path;
 import java.util.function.IntConsumer;
 
 @Component
-public class LibreOfficeWordConverter {
+public class LibreOfficePowerPointConverter {
 
-    private final WordDocumentValidator validator;
+    private final PowerPointDocumentValidator validator;
     private final LibreOfficeConverter converter;
 
-    public LibreOfficeWordConverter(
-            WordDocumentValidator validator,
+    public LibreOfficePowerPointConverter(
+            PowerPointDocumentValidator validator,
             LibreOfficeConverter converter) {
         this.validator = validator;
         this.converter = converter;
@@ -34,7 +34,7 @@ public class LibreOfficeWordConverter {
         return converter.convert(
             input,
             workspace,
-            OfficeDocumentType.WORD,
+            OfficeDocumentType.POWERPOINT,
             progress,
             cancellationCheck
         );

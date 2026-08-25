@@ -6,7 +6,7 @@ import {
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, expect, test, vi } from 'vitest';
-import WordToPdfPage from './WordToPdfPage';
+import PowerPointToPdfPage from './PowerPointToPdfPage';
 
 const jobState = vi.hoisted(() => ({
   job: null,
@@ -35,42 +35,45 @@ beforeEach(() => {
   jobState.running = false;
   jobState.connectionError = false;
   jobState.start.mockReset().mockResolvedValue({
-    id: 'word-job',
+    id: 'powerpoint-job',
     status: 'PENDING',
     version: 0,
   });
   jobState.cancel.mockReset().mockResolvedValue(undefined);
   jobState.reset.mockReset();
   jobServiceMock.getDownloadUrl.mockReset().mockReturnValue(
-    'http://localhost/api/v1/jobs/word-job/outputs/output-1',
+    'http://localhost/api/v1/jobs/powerpoint-job/outputs/output-1',
   );
 });
 
-test('submits one DOCX to the Word conversion job', async () => {
+test('submits one PPTX to the PowerPoint conversion job', async () => {
   const user = userEvent.setup();
   const { container } = renderPage();
-  const word = new File(['docx'], 'report.docx', {
+  const presentation = new File(['pptx'], 'slides.pptx', {
     type: 'application/vnd.openxmlformats-officedocument.'
-      + 'wordprocessingml.document',
+      + 'presentationml.presentation',
   });
-  await user.upload(container.querySelector('input[type="file"]'), word);
+  await user.upload(
+    container.querySelector('input[type="file"]'),
+    presentation,
+  );
   await user.click(screen.getByRole('button', {
-    name: 'Convert Word to PDF',
+    name: 'Convert PowerPoint to PDF',
   }));
 
   expect(jobState.start).toHaveBeenCalledWith(
-    'word-to-pdf',
-    [word],
+    'powerpoint-to-pdf',
+    [presentation],
     {},
   );
 });
 
-test('shows converter isolation and fidelity expectations', () => {
+test('shows isolation and presentation fidelity limits', () => {
   renderPage();
 
   expect(screen.getByText(/networkless sidecar/i)).toBeVisible();
   expect(screen.getByText(
-    /fonts unavailable on the server may be substituted/i,
+    /animations, transitions, video, and unavailable fonts/i,
   )).toBeVisible();
 });
 
@@ -82,17 +85,17 @@ test('supports cancellation and native result download', async () => {
   const rendered = renderPage();
   await user.upload(
     rendered.container.querySelector('input[type="file"]'),
-    new File(['docx'], 'report.docx', {
+    new File(['pptx'], 'slides.pptx', {
       type: 'application/vnd.openxmlformats-officedocument.'
-        + 'wordprocessingml.document',
+        + 'presentationml.presentation',
     }),
   );
   jobState.job = {
-    id: 'word-job',
+    id: 'powerpoint-job',
     status: 'RUNNING',
     version: 1,
     progress: 50,
-    message: 'Converting with LibreOffice',
+    message: 'Converting presentation',
     outputs: [],
   };
   jobState.running = true;
@@ -101,15 +104,15 @@ test('supports cancellation and native result download', async () => {
   expect(jobState.cancel).toHaveBeenCalledOnce();
 
   jobState.job = {
-    id: 'word-job',
+    id: 'powerpoint-job',
     status: 'COMPLETED',
     version: 2,
     progress: 100,
     message: 'Completed',
     outputs: [{
       id: 'output-1',
-      filename: 'report.pdf',
-      downloadUrl: '/api/v1/jobs/word-job/outputs/output-1',
+      filename: 'slides.pdf',
+      downloadUrl: '/api/v1/jobs/powerpoint-job/outputs/output-1',
     }],
   };
   jobState.running = false;
@@ -128,6 +131,6 @@ const renderPage = () => render(page());
 
 const page = () => (
   <MemoryRouter>
-    <WordToPdfPage />
+    <PowerPointToPdfPage />
   </MemoryRouter>
 );
