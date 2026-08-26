@@ -52,6 +52,11 @@ project.
 - [PDF to Markdown](operations/pdf-to-markdown.md)
 - [PDF to PDF/A](operations/pdf-to-pdfa.md)
 
+### Legacy workflows
+
+Extract pages, add/edit text, and add signatures remain available through the legacy
+`/api/pdf` routes. See the [backend API guide](../backend/README.md#api-endpoints).
+
 ## Component references
 
 - [Backend](../backend/README.md)
