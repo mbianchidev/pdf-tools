@@ -35,8 +35,7 @@ docker compose up --build
 ```
 
 Open <http://localhost>. Start at <http://localhost/new> to load a document and choose
-a workflow. The backend diagnostic port is available locally at
-<http://localhost:8080>.
+a workflow. The backend API is available locally at <http://localhost:8080/api/v1>.
 
 For local development, configuration, clean builds, and validation commands, follow the
 [development guide](docs/development.md).
