@@ -1,442 +1,61 @@
 # PDF Tools
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-25+-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
-A comprehensive locally hostable PDF manipulation application with a modern React frontend and robust Java Spring Boot backend.
+A self-hosted PDF workbench for organizing, editing, securing, converting, repairing,
+and comparing documents.
 
-The root landing page documents self-hosting and links into the deployed workspace.
-Use `/new` to load a PDF, then switch workflows from the persistent tool topbar.
-Documents are processed by the self-hosted backend, not in the browser.
+PDF Tools keeps processing on infrastructure you control. Its React workspace submits
+cancellable jobs to a Spring Boot service, streams progress, and returns expiring
+artifacts.
+
+## Highlights
+
+- Organize pages with merge, split, extract, remove, rotate, crop, and reorder tools.
+- Mark up and secure files with editing, watermarks, signatures, redaction, and encryption.
+- Convert between PDF, Office, images, HTML, Markdown, and archival PDF/A formats.
+- Run bounded native conversion workers without network access.
+
+See the [operation guides](docs/README.md#operation-guides) for the complete tool catalog
+and behavior details.
+
+## Quick start
+
+Docker with Compose is required.
+
+```bash
+git clone https://github.com/mbianchidev/pdf-tools.git
+cd pdf-tools
+docker compose up --build
+```
+
+Open <http://localhost>. Start at <http://localhost/new> to load a document and choose
+a workflow. The backend diagnostic port is available locally at
+<http://localhost:8080>.
+
+For local development, configuration, clean builds, and validation commands, follow the
+[development guide](docs/development.md).
 
 ## Documentation
 
-- **[Frontend README](frontend/README.md)** - React application documentation
-- **[Backend README](backend/README.md)** - Spring Boot API documentation
-- **[Architecture](docs/architecture.md)** - Jobs, storage, persistence, and operation boundaries
-- **[Jobs API v1](docs/api-v1.md)** - Versioned asynchronous API contract
-- **[Development](docs/development.md)** - Local, Docker, SeaweedFS, and validation workflows
-- **[Product](PRODUCT.md)** - Durable product truth and self-hosting position
-- **[Design system](DESIGN.md)** - Shared img-tools family visual language
-- **[AGENTS.md](AGENTS.md)** - Agent navigation guide for AI assistants
-
-## Features
-
-### PDF Operations
-- **Merge PDFs** - Disk-backed ordered merge with strict validation, limits, progress, and cancellation
-- **Split PDF** - Individual pages, explicit ranges, or fixed groups in one ZIP
-- **Extract Pages** - Extract specific pages from a PDF
-- **Remove Pages** - Strict ranges with duplicate, invalid, and all-page rejection
-- **Rotate PDF** - Whole-document or independent per-page rotation
-- **Organize PDF** - Reorder, rotate, duplicate, and delete pages visually
-- **Crop PDF** - Shared or per-page normalized crop boxes with visual preview
-- **Add Page Numbers** - Ranges, starts, templates, fonts, and visual positions
-- **Protect PDF** - AES-256 passwords and least-privilege user permissions
-- **Unlock PDF** - Authenticated password removal when the password is known
-- **PDF to JPG** - Page ranges with resolution and JPEG quality controls
-- **JPG to PDF** - Ordered images with paper, orientation, and margin controls
-- **Watermark PDF** - Text/image modes, real opacity, styling, and page ranges
-- **Edit PDF** - Text, images, vector shapes, highlights, and notes
-- **Add Text** - Add custom text to PDFs at specific positions
-- **Add Signature** - Add signature images to PDFs
-- **Redact PDF** - Irreversibly rasterize selected regions into a sanitized PDF
-- **Word to PDF** - Convert DOCX/DOC with network-denied, resource-limited LibreOffice
-- **PowerPoint to PDF** - Convert PPTX/PPT slides in the isolated Office sidecar
-- **Excel to PDF** - Convert XLSX/XLS with print-area and orientation controls
-- **HTML to PDF** - Render self-contained HTML in a networkless Chromium sandbox
-- **PDF to Word** - Recover editable text, tables, images, and pagination or preserve pages visually
-- **PDF to PowerPoint** - Create editable slide elements or preserve each page visually
-- **PDF to Excel** - Detect aligned tables into page or table worksheets
-- **PDF to Markdown** - Recover headings, lists, tables, images, page boundaries, and reading order
-- **Compress PDF** - Lossless, recommended, and extreme modes with before/after size comparison
-- **Repair PDF** - qpdf structural recovery with explicit partial-recovery reports
-- **PDF to PDF/A** - Selected archival profiles with independent veraPDF validation
-- **Compare PDF** - Combined text, layout, and rendered-page differences
-
-### Technology Stack
-- **Backend**: Java 25, Spring Boot 4.1, Apache PDFBox, veraPDF, PostgreSQL, Flyway
-- **Frontend**: React 19, Vite 8, react-pdf, Framer Motion, Axios
-- **Storage**: Local streaming storage in development; SeaweedFS S3 in production
-- **Deployment**: Docker Compose, PostgreSQL, Nginx, networkless LibreOffice/Chromium/qpdf workers
-
-## Quick Start
-
-### Prerequisites
-- Docker and Docker Compose installed
-- At least 2GB of available RAM
-- Ports 80 and 8080 available
-
-### Run with Docker Compose
-
-```bash
-# Clone the repository
-git clone https://github.com/mbianchidev/pdf-tools.git
-cd pdf-tools
-
-# Build and start all services
-docker compose up --build
-
-# Access the application
-# Frontend: http://localhost
-# Backend API: http://localhost:8080/api/v1
-```
-
-The application will be available at `http://localhost`. Open
-`http://localhost/new` to load a PDF and choose a workflow from the topbar. The
-frontend automatically proxies API requests to the backend.
-
-### Development Mode
-
-#### Backend
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-Backend will run on `http://localhost:8080`
-
-#### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend will run on `http://localhost:5173`
-
-## API Documentation
-
-New and migrated tools use the asynchronous [`/api/v1/jobs`](docs/api-v1.md)
-contract with persisted progress, cancellation, multiple outputs, and streaming
-downloads. Existing `/api/pdf` routes remain available while tools migrate behind
-feature flags.
-
-### Endpoints
-
-#### Merge PDFs
-```
-POST /api/pdf/merge
-Content-Type: multipart/form-data
-Parameters: files[] (multiple PDF files)
-```
-
-#### Split PDF
-```
-POST /api/pdf/split
-Content-Type: multipart/form-data
-Parameters: file (PDF file)
-```
-
-#### Extract Pages
-```
-POST /api/pdf/extract
-Content-Type: multipart/form-data
-Parameters: 
-  - file (PDF file)
-  - pages (comma-separated page numbers, e.g., "1,3,5")
-```
-
-#### Remove Pages
-```
-POST /api/pdf/remove
-Content-Type: multipart/form-data
-Parameters:
-  - file (PDF file)
-  - pages (comma-separated page numbers to remove)
-```
-
-#### Add Watermark
-```
-POST /api/pdf/watermark
-Content-Type: multipart/form-data
-Parameters:
-  - file (PDF file)
-  - text (watermark text)
-```
-
-#### Add Text
-```
-POST /api/pdf/add-text
-Content-Type: multipart/form-data
-Parameters:
-  - file (PDF file)
-  - text (text to add)
-  - x (x-coordinate, default: 50)
-  - y (y-coordinate, default: 750)
-  - page (page number, default: 1)
-```
-
-#### Add Signature
-```
-POST /api/pdf/add-signature
-Content-Type: multipart/form-data
-Parameters:
-  - file (PDF file)
-  - signature (signature image file)
-  - x (x-coordinate, default: 400)
-  - y (y-coordinate, default: 100)
-  - page (page number, default: 1)
-```
-
-#### Secure Redact PDF
-```
-POST /api/v1/jobs
-Content-Type: multipart/form-data
-Parts:
-  - operation: redact
-  - options: {"areas":[{"page":1,"x":0.1,"y":0.2,"width":0.4,"height":0.2}]}
-  - files: PDF file
-```
-
-The secure operation rasterizes every page into a fresh PDF after burning selected
-normalized visual rectangles to black. Original text, images, annotations, forms,
-attachments, metadata, and prior revisions are not copied. See
-[`docs/operations/redact.md`](docs/operations/redact.md).
-
-#### Legacy Redact Overlay
-```
-POST /api/pdf/redact
-Content-Type: multipart/form-data
-Parameters:
-  - file (PDF file)
-  - x (x-coordinate)
-  - y (y-coordinate)
-  - width (width of redaction box)
-  - height (height of redaction box)
-  - page (page number, default: 1)
-```
-
-#### PDF to Markdown
-```
-POST /api/v1/jobs
-Content-Type: multipart/form-data
-Parts:
-  - operation: pdf-to-markdown
-  - options: {"detectHeadings":true,"detectLists":true,"detectTables":true,"includeImages":true,"preservePageBreaks":true}
-  - files: one text-based, unencrypted PDF
-```
-
-The output is a ZIP containing `document.md` and optional linked PNG images.
-Image-only PDFs are rejected explicitly. See
-[`docs/operations/pdf-to-markdown.md`](docs/operations/pdf-to-markdown.md).
-
-#### Convert to DOCX
-```
-POST /api/pdf/convert/docx
-Content-Type: multipart/form-data
-Parameters: file (PDF file)
-```
-
-#### Download File
-```
-GET /api/pdf/download/{filename}
-```
-
-#### Health Check
-```
-GET /api/pdf/health
-```
-
-## Project Structure
-
-```
-pdf-tools/
-├── backend/                    # Spring Boot backend
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/pdftools/
-│   │   │   │   ├── config/         # Configuration classes
-│   │   │   │   ├── controller/     # REST controllers
-│   │   │   │   ├── dto/            # Data transfer objects
-│   │   │   │   ├── exception/      # Exception handlers
-│   │   │   │   ├── service/        # Business logic
-│   │   │   │   └── PdfToolsApplication.java
-│   │   │   └── resources/
-│   │   │       └── application.properties
-│   │   └── test/
-│   ├── Dockerfile
-│   └── pom.xml
-├── frontend/                   # React frontend
-│   ├── src/
-│   │   ├── components/         # React components
-│   │   ├── services/           # API service layer
-│   │   ├── App.jsx            # Main application
-│   │   └── index.css          # Styles
-│   ├── public/
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   ├── package.json
-│   └── vite.config.js
-├── docker-compose.yml          # Docker orchestration
-├── LICENSE
-└── README.md
-```
-
-## Configuration
-
-### Backend Configuration
-Edit `backend/src/main/resources/application.properties`:
-
-```properties
-# Change port
-server.port=8080
-
-# Change max file size
-spring.servlet.multipart.max-file-size=100MB
-spring.servlet.multipart.max-request-size=100MB
-
-# Change upload directory
-pdf.upload.dir=/tmp/pdf-uploads
-
-# Configure CORS
-cors.allowed-origins=http://localhost:3000,http://localhost:80
-```
-
-### Frontend Configuration
-Edit `frontend/src/services/pdfService.js` to change the API base URL:
-
-```javascript
-const API_BASE_URL = 'http://localhost:8080/api/pdf';
-```
-
-## Building for Production
-
-### Backend JAR
-```bash
-cd backend
-mvn clean package
-java -jar target/pdf-tools-backend-1.0.0.jar
-```
-
-### Frontend Build
-```bash
-cd frontend
-npm run build
-# Output in dist/ directory
-```
-
-### Docker Images
-```bash
-# Build backend
-docker build -t pdf-tools-backend ./backend
-
-# Build frontend
-docker build -t pdf-tools-frontend ./frontend
-
-# Run with Docker Compose
-docker-compose up -d
-```
-
-## Testing
-
-### Backend Tests
-```bash
-cd backend
-mvn test
-```
-
-### Frontend Tests
-```bash
-cd frontend
-npm test
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Port already in use**
-```bash
-# Change ports in docker-compose.yml
-ports:
-  - "8081:8080"  # Backend
-  - "8000:80"    # Frontend
-```
-
-**File upload fails**
-- Check max file size in application.properties
-- Ensure upload directory exists and is writable
-- Verify nginx client_max_body_size in nginx.conf
-
-**CORS errors**
-- Update cors.allowed-origins in application.properties
-- Ensure frontend URL is included
-
-**Backend not accessible from frontend**
-- Check if backend container is running: `docker ps`
-- Verify network connectivity: `docker network inspect pdf-tools_pdf-tools-network`
-- Check backend health: `curl http://localhost:8080/api/pdf/health`
-
-## Performance Considerations
-
-- Maximum file size: 100MB (configurable)
-- Temporary files are stored in `/tmp/pdf-uploads`
-- Files are automatically cleaned up (implement cleanup if needed)
-- For production, consider adding:
-  - File size validation
-  - Rate limiting
-  - Authentication/Authorization
-  - Virus scanning
-  - Cloud storage integration
-
-## Security Notes
-
-- This is a basic implementation suitable for trusted environments
-- For production use, implement:
-  - User authentication
-  - File upload validation
-  - Input sanitization
-  - Rate limiting
-  - HTTPS/TLS
-  - API keys or JWT tokens
-  - File scanning for malware
-
-## 🤝 Contributing
-
-Contributions are welcome! We appreciate your interest in improving PDF Tools.
-
-To get started:
-
-1. Read the [Contributing Guidelines](CONTRIBUTING.md)
-2. Check out [good first issues](https://github.com/mbianchidev/pdf-tools/labels/good%20first%20issue)
-3. Fork the repository and create your feature branch
-4. Submit a pull request
-
-Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions.
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔒 Security
-
-Security is important to us. If you discover a security vulnerability, please follow our [Security Policy](SECURITY.md) to report it responsibly.
-
-## 💬 Support
-
-Need help? Check out our [Support Guide](SUPPORT.md) for:
-
-- Documentation and resources
-- How to report bugs
-- How to request features
-- Community guidelines
-
-For questions and discussions, visit [GitHub Discussions](https://github.com/mbianchidev/pdf-tools/discussions).
-
-## 📋 Code of Conduct
-
-This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
-
-## 🙏 Acknowledgments
-
-- [Apache PDFBox](https://pdfbox.apache.org/) for PDF manipulation
-- [iText](https://itextpdf.com/) for advanced PDF features
-- [Apache POI](https://poi.apache.org/) for DOCX conversion
-- [React](https://react.dev/) and [Vite](https://vitejs.dev/) for modern frontend development
-- All our [contributors](https://github.com/mbianchidev/pdf-tools/graphs/contributors) who help improve this project
-
----
-
-Made with ❤️ by the PDF Tools community
+- [Documentation index](docs/README.md)
+- [Architecture](docs/architecture.md)
+- [Jobs API v1](docs/api-v1.md)
+- [Product principles](docs/product.md)
+- [Design system](docs/design.md)
+- [Backend guide](backend/README.md)
+- [Frontend guide](frontend/README.md)
+- [HTML converter sidecar](html-converter/README.md)
+
+## Stack
+
+React 19 and Vite 8 power the frontend. Java 25 and Spring Boot 4.1 provide the API,
+with PostgreSQL for job metadata and local or S3-compatible streaming artifact storage.
+
+## Project
+
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) ·
+[Code of Conduct](CODE_OF_CONDUCT.md) · [MIT License](LICENSE)
