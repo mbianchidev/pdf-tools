@@ -8,6 +8,8 @@
 A self-hosted PDF workbench for organizing, editing, securing, converting, repairing,
 and comparing documents.
 
+<img width="1325" height="804" alt="image" src="https://github.com/user-attachments/assets/452afb5a-57c0-403b-bbbb-86c211f48ddb" />
+
 PDF Tools keeps processing on infrastructure you control. Its React workspace submits
 cancellable jobs to a Spring Boot service, streams progress, and returns expiring
 artifacts.
