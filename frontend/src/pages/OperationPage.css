@@ -501,11 +501,11 @@
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--gray-200);
-    max-height: 50vh;
+    max-height: 50%;
   }
   
   .operation-preview {
-    min-height: 50vh;
+    min-height: 50%;
   }
 }
 

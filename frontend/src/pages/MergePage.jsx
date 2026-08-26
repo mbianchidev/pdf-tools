@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Combine, Download, Trash2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { Document, Page } from 'react-pdf';
@@ -13,13 +13,16 @@ import JobProgress from '../features/jobs/JobProgress';
 import { usePdfJob } from '../features/jobs/usePdfJob';
 import { jobService, getApiErrorMessage } from '../services/jobService';
 import { downloadBlob } from '../services/pdfService';
+import { useWorkspaceFile } from '../features/navigation/useWorkspaceFile';
 import './OperationPage.css';
 import './MergePage.css';
 
 const MAX_MERGE_BYTES = 100 * 1024 * 1024;
 
 const MergePage = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const workspaceFile = useWorkspaceFile();
   const [files, setFiles] = useState([]);
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [selectedFileUrl, setSelectedFileUrl] = useState(null);
@@ -132,6 +135,7 @@ const MergePage = () => {
     handledJobRef.current = null;
     setFailedOutput(null);
     setFiles(newFiles);
+    workspaceFile?.rememberPdfFile(newFiles[0] || null, location.key);
     let newIndex = selectedFileIndex;
     if (newFiles.length === 0) {
       newIndex = 0;
@@ -141,7 +145,14 @@ const MergePage = () => {
       setSelectedFileIndex(newIndex);
     }
     updatePreviewUrl(newIndex, newFiles);
-  }, [reset, running, selectedFileIndex, updatePreviewUrl]);
+  }, [
+    location.key,
+    reset,
+    running,
+    selectedFileIndex,
+    updatePreviewUrl,
+    workspaceFile,
+  ]);
 
   const moveFile = (fromIndex, toIndex) => {
     if (running || toIndex < 0 || toIndex >= files.length) return;
@@ -152,6 +163,7 @@ const MergePage = () => {
     const [movedFile] = newFiles.splice(fromIndex, 1);
     newFiles.splice(toIndex, 0, movedFile);
     setFiles(newFiles);
+    workspaceFile?.rememberPdfFile(newFiles[0] || null, location.key);
     setSelectedFileIndex(toIndex);
     updatePreviewUrl(toIndex, newFiles);
   };
@@ -163,6 +175,7 @@ const MergePage = () => {
     setFailedOutput(null);
     const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
+    workspaceFile?.rememberPdfFile(newFiles[0] || null, location.key);
     let newIndex = selectedFileIndex;
     if (newFiles.length === 0) {
       newIndex = 0;

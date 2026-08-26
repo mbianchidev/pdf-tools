@@ -1,40 +1,20 @@
 import React, { lazy, Suspense, useState } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Link, Route, Routes } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
   Check,
   Code2,
   Copy,
-  Combine,
-  Scissors,
-  FileOutput,
-  Trash2,
-  Droplet,
-  Type,
-  PenTool,
-  EyeOff,
-  FileText,
-  FileType,
   LockKeyhole,
-  LockOpen,
-  RotateCw,
-  Layers3,
-  Crop as CropIcon,
-  ListOrdered,
-  Images,
-  FileImage,
-  PencilRuler,
-  FileInput,
-  Presentation,
-  Sheet,
-  CodeXml,
-  Minimize2,
-  Wrench,
-  Archive,
-  GitCompareArrows,
 } from 'lucide-react';
 import Brand from './components/Brand';
+import ToolLayout from './features/navigation/ToolLayout';
+import {
+  toolGroups,
+  tools,
+} from './features/navigation/toolCatalog';
+import WorkspaceFileProvider from './features/navigation/WorkspaceFileProvider';
 import './App.css';
 
 const MergePage = lazy(() => import('./pages/MergePage'));
@@ -70,214 +50,7 @@ const CompressPage = lazy(() => import('./pages/CompressPage'));
 const RepairPage = lazy(() => import('./pages/RepairPage'));
 const PdfAPage = lazy(() => import('./pages/PdfAPage'));
 const ComparePage = lazy(() => import('./pages/ComparePage'));
-
-const operations = [
-  {
-    id: 'merge',
-    icon: Combine,
-    group: 'Organize',
-    title: 'Merge PDFs',
-    description: 'Combine multiple PDF files into a single document',
-  },
-  {
-    id: 'split',
-    icon: Scissors,
-    group: 'Organize',
-    title: 'Split PDF',
-    description: 'Split a PDF into multiple documents',
-  },
-  {
-    id: 'extract',
-    icon: FileOutput,
-    group: 'Organize',
-    title: 'Extract Pages',
-    description: 'Extract specific pages from a PDF',
-  },
-  {
-    id: 'remove',
-    icon: Trash2,
-    group: 'Organize',
-    title: 'Remove Pages',
-    description: 'Remove specific pages from a PDF',
-  },
-  {
-    id: 'rotate',
-    icon: RotateCw,
-    group: 'Organize',
-    title: 'Rotate PDF',
-    description: 'Rotate all pages or adjust pages individually',
-  },
-  {
-    id: 'organize',
-    icon: Layers3,
-    group: 'Organize',
-    title: 'Organize PDF',
-    description: 'Reorder, rotate, duplicate, and delete pages',
-  },
-  {
-    id: 'crop',
-    icon: CropIcon,
-    group: 'Organize',
-    title: 'Crop PDF',
-    description: 'Apply shared or independent visual crop boxes',
-  },
-  {
-    id: 'page-numbers',
-    icon: ListOrdered,
-    group: 'Mark up',
-    title: 'Add Page Numbers',
-    description: 'Number ranges with templates, fonts, and positions',
-  },
-  {
-    id: 'protect',
-    icon: LockKeyhole,
-    group: 'Secure',
-    title: 'Protect PDF',
-    description: 'Encrypt with passwords and explicit permissions',
-  },
-  {
-    id: 'unlock',
-    icon: LockOpen,
-    group: 'Secure',
-    title: 'Unlock PDF',
-    description: 'Remove encryption with a known password',
-  },
-  {
-    id: 'pdf-to-jpg',
-    icon: Images,
-    group: 'Convert',
-    title: 'PDF to JPG',
-    description: 'Render page ranges with resolution and quality controls',
-  },
-  {
-    id: 'jpg-to-pdf',
-    icon: FileImage,
-    group: 'Convert',
-    title: 'JPG to PDF',
-    description: 'Order images with page size, orientation, and margins',
-  },
-  {
-    id: 'watermark',
-    icon: Droplet,
-    group: 'Mark up',
-    title: 'Watermark PDF',
-    description: 'Style text or image watermarks on selected pages',
-  },
-  {
-    id: 'edit',
-    icon: PencilRuler,
-    group: 'Mark up',
-    title: 'Edit PDF',
-    description: 'Add text, images, shapes, highlights, and notes',
-  },
-  {
-    id: 'add-text',
-    icon: Type,
-    group: 'Mark up',
-    title: 'Add/Edit Text',
-    description: 'Add or edit custom text at a specific position',
-  },
-  {
-    id: 'add-signature',
-    icon: PenTool,
-    group: 'Mark up',
-    title: 'Add Signature',
-    description: 'Add a signature image to your PDF',
-  },
-  {
-    id: 'redact',
-    icon: EyeOff,
-    group: 'Mark up',
-    title: 'Redact PDF',
-    description: 'Permanently remove regions in a sanitized output',
-  },
-  {
-    id: 'word-to-pdf',
-    icon: FileInput,
-    group: 'Convert',
-    title: 'Word to PDF',
-    description: 'Convert DOCX and DOC files with isolated LibreOffice',
-  },
-  {
-    id: 'powerpoint-to-pdf',
-    icon: Presentation,
-    group: 'Convert',
-    title: 'PowerPoint to PDF',
-    description: 'Convert PPTX and PPT slides with isolated LibreOffice',
-  },
-  {
-    id: 'excel-to-pdf',
-    icon: Sheet,
-    group: 'Convert',
-    title: 'Excel to PDF',
-    description: 'Convert XLSX and XLS with print-area controls',
-  },
-  {
-    id: 'html-to-pdf',
-    icon: CodeXml,
-    group: 'Convert',
-    title: 'HTML to PDF',
-    description: 'Render self-contained HTML with isolated Chromium',
-  },
-  {
-    id: 'pdf-to-markdown',
-    icon: FileText,
-    group: 'Convert',
-    title: 'PDF to Markdown',
-    description: 'Recover structure, tables, images, and reading order',
-  },
-  {
-    id: 'compress',
-    icon: Minimize2,
-    group: 'Organize',
-    title: 'Compress PDF',
-    description: 'Choose lossless, balanced, or extreme compression',
-  },
-  {
-    id: 'repair',
-    icon: Wrench,
-    group: 'Organize',
-    title: 'Repair PDF',
-    description: 'Recover damaged structure with explicit warnings',
-  },
-  {
-    id: 'pdf-to-pdfa',
-    icon: Archive,
-    group: 'Convert',
-    title: 'PDF to PDF/A',
-    description: 'Create veraPDF-validated archival profiles',
-  },
-  {
-    id: 'compare',
-    icon: GitCompareArrows,
-    group: 'Organize',
-    title: 'Compare PDFs',
-    description: 'Inspect text, layout, and rendered-page differences',
-  },
-  {
-    id: 'pdf-to-word',
-    icon: FileType,
-    group: 'Convert',
-    title: 'PDF to Word',
-    description: 'Recover editable structure or preserve pages visually',
-  },
-  {
-    id: 'pdf-to-powerpoint',
-    icon: Presentation,
-    group: 'Convert',
-    title: 'PDF to PowerPoint',
-    description: 'Create editable elements or visual page slides',
-  },
-  {
-    id: 'pdf-to-excel',
-    icon: Sheet,
-    group: 'Convert',
-    title: 'PDF to Excel',
-    description: 'Detect tables into page or table worksheets',
-  },
-];
-
-const toolGroups = ['Organize', 'Mark up', 'Secure', 'Convert'];
+const NewPdfPage = lazy(() => import('./pages/NewPdfPage'));
 const INSTALL_COMMAND = `git clone https://github.com/mbianchidev/pdf-tools.git
 cd pdf-tools
 docker compose up --build`;
@@ -329,10 +102,16 @@ function HomePage() {
               Deploy one open-source workspace to combine, organize, edit,
               convert, and secure documents under your own infrastructure.
             </p>
-            <a className="text-link" href="#self-host">
-              Self-host PDF Tools
-              <ArrowRight aria-hidden="true" />
-            </a>
+            <div className="hero__actions">
+              <Link className="button hero__workspace-link" to="/new">
+                Open a PDF
+                <ArrowRight aria-hidden="true" />
+              </Link>
+              <a className="text-link" href="#self-host">
+                Self-host PDF Tools
+                <ArrowRight aria-hidden="true" />
+              </a>
+            </div>
             <p className="hero__trust">
               <LockKeyhole aria-hidden="true" />
               Open source · self-hosted · server-controlled files
@@ -454,12 +233,11 @@ function HomePage() {
           <div className="shell">
             <div className="section-heading">
               <div>
-                <h2>What your instance provides.</h2>
+                <h2>Choose a PDF workflow.</h2>
               </div>
               <p>
-                The installed workspace collects focused document workflows.
-                Merge already uses persisted progress, cancellation,
-                structured errors, and expiring outputs.
+                Open a tool to upload files, configure the operation, and
+                download the result from your own instance.
               </p>
             </div>
 
@@ -468,16 +246,20 @@ function HomePage() {
                 <section className="tool-group" key={group}>
                   <h3>{group}</h3>
                   <div className="tool-list">
-                    {operations
+                    {tools
                       .filter((operation) => operation.group === group)
-                      .map(({ id, icon: Icon, title, description }) => (
-                        <div className="tool-summary" key={id}>
-                          <Icon aria-hidden="true" />
+                      .map(({ id, icon: Icon, path, title, description }) => (
+                        <Link className="tool-summary" key={id} to={path}>
+                          <Icon className="tool-summary__icon" aria-hidden="true" />
                           <span>
                             <strong>{title}</strong>
                             <small>{description}</small>
                           </span>
-                        </div>
+                          <ArrowRight
+                            className="tool-summary__arrow"
+                            aria-hidden="true"
+                          />
+                        </Link>
                       ))}
                   </div>
                 </section>
@@ -505,48 +287,53 @@ function HomePage() {
 
 function App() {
   return (
-    <Suspense fallback={<div className="route-loading">Loading tool...</div>}>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/merge" element={<MergePage />} />
-        <Route path="/split" element={<SplitPage />} />
-        <Route path="/extract" element={<ExtractPage />} />
-        <Route path="/remove" element={<RemovePage />} />
-        <Route path="/rotate" element={<RotatePage />} />
-        <Route path="/organize" element={<OrganizePage />} />
-        <Route path="/crop" element={<CropPage />} />
-        <Route path="/page-numbers" element={<PageNumbersPage />} />
-        <Route path="/protect" element={<ProtectPage />} />
-        <Route path="/unlock" element={<UnlockPage />} />
-        <Route path="/pdf-to-jpg" element={<PdfToJpgPage />} />
-        <Route path="/jpg-to-pdf" element={<JpgToPdfPage />} />
-        <Route path="/watermark" element={<WatermarkPage />} />
-        <Route path="/edit" element={<EditPage />} />
-        <Route path="/add-text" element={<AddTextPage />} />
-        <Route path="/signature" element={<SignaturePage />} />
-        <Route path="/redact" element={<RedactPage />} />
-        <Route path="/word-to-pdf" element={<WordToPdfPage />} />
-        <Route
-          path="/powerpoint-to-pdf"
-          element={<PowerPointToPdfPage />}
-        />
-        <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
-        <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
-        <Route path="/pdf-to-markdown" element={<PdfToMarkdownPage />} />
-        <Route path="/convert-markdown" element={<PdfToMarkdownPage />} />
-        <Route path="/pdf-to-word" element={<PdfToWordPage />} />
-        <Route
-          path="/pdf-to-powerpoint"
-          element={<PdfToPowerPointPage />}
-        />
-        <Route path="/pdf-to-excel" element={<PdfToExcelPage />} />
-        <Route path="/compress" element={<CompressPage />} />
-        <Route path="/repair" element={<RepairPage />} />
-        <Route path="/pdf-to-pdfa" element={<PdfAPage />} />
-        <Route path="/compare" element={<ComparePage />} />
-        <Route path="/convert-docx" element={<PdfToWordPage />} />
-      </Routes>
-    </Suspense>
+    <WorkspaceFileProvider>
+      <Suspense fallback={<div className="route-loading">Loading tool...</div>}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route element={<ToolLayout />}>
+            <Route path="/new" element={<NewPdfPage />} />
+            <Route path="/merge" element={<MergePage />} />
+            <Route path="/split" element={<SplitPage />} />
+            <Route path="/extract" element={<ExtractPage />} />
+            <Route path="/remove" element={<RemovePage />} />
+            <Route path="/rotate" element={<RotatePage />} />
+            <Route path="/organize" element={<OrganizePage />} />
+            <Route path="/crop" element={<CropPage />} />
+            <Route path="/page-numbers" element={<PageNumbersPage />} />
+            <Route path="/protect" element={<ProtectPage />} />
+            <Route path="/unlock" element={<UnlockPage />} />
+            <Route path="/pdf-to-jpg" element={<PdfToJpgPage />} />
+            <Route path="/jpg-to-pdf" element={<JpgToPdfPage />} />
+            <Route path="/watermark" element={<WatermarkPage />} />
+            <Route path="/edit" element={<EditPage />} />
+            <Route path="/add-text" element={<AddTextPage />} />
+            <Route path="/signature" element={<SignaturePage />} />
+            <Route path="/redact" element={<RedactPage />} />
+            <Route path="/word-to-pdf" element={<WordToPdfPage />} />
+            <Route
+              path="/powerpoint-to-pdf"
+              element={<PowerPointToPdfPage />}
+            />
+            <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
+            <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
+            <Route path="/pdf-to-markdown" element={<PdfToMarkdownPage />} />
+            <Route path="/convert-markdown" element={<PdfToMarkdownPage />} />
+            <Route path="/pdf-to-word" element={<PdfToWordPage />} />
+            <Route
+              path="/pdf-to-powerpoint"
+              element={<PdfToPowerPointPage />}
+            />
+            <Route path="/pdf-to-excel" element={<PdfToExcelPage />} />
+            <Route path="/compress" element={<CompressPage />} />
+            <Route path="/repair" element={<RepairPage />} />
+            <Route path="/pdf-to-pdfa" element={<PdfAPage />} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="/convert-docx" element={<PdfToWordPage />} />
+          </Route>
+        </Routes>
+      </Suspense>
+    </WorkspaceFileProvider>
   );
 }
 

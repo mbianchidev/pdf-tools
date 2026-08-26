@@ -11,7 +11,7 @@ import {
   FileJson,
   GitCompareArrows,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import FileUpload from '../components/FileUpload';
 import ToastContainer from '../components/Toast';
@@ -19,6 +19,7 @@ import JobProgress from '../features/jobs/JobProgress';
 import { startBrowserDownload } from '../features/jobs/startBrowserDownload';
 import { useJobJsonReport } from '../features/jobs/useJobJsonReport';
 import { usePdfJob } from '../features/jobs/usePdfJob';
+import { useWorkspaceFile } from '../features/navigation/useWorkspaceFile';
 import { getApiErrorMessage, jobService } from '../services/jobService';
 import './OperationPage.css';
 import './ComparePage.css';
@@ -28,7 +29,9 @@ const PDF_ACCEPT = {
 };
 
 const ComparePage = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const workspaceFile = useWorkspaceFile();
   const [baseline, setBaseline] = useState(null);
   const [candidate, setCandidate] = useState(null);
   const [renderDpi, setRenderDpi] = useState(120);
@@ -117,12 +120,32 @@ const ComparePage = () => {
     };
   }, [addToast, downloadOutput, job]);
 
-  const replaceFile = useCallback((setter, files) => {
+  const replaceFile = useCallback((role, files) => {
     if (running) return;
-    setter(files[0] || null);
+    const nextFile = files[0] || null;
+    if (role === 'baseline') {
+      setBaseline(nextFile);
+      workspaceFile?.rememberPdfFile(
+        nextFile || candidate,
+        location.key,
+      );
+    } else {
+      setCandidate(nextFile);
+      workspaceFile?.rememberPdfFile(
+        baseline || nextFile,
+        location.key,
+      );
+    }
     handledJobRef.current = null;
     reset();
-  }, [reset, running]);
+  }, [
+    baseline,
+    candidate,
+    location.key,
+    reset,
+    running,
+    workspaceFile,
+  ]);
 
   const handleSubmit = async () => {
     if (!baseline || !candidate) {
@@ -171,7 +194,7 @@ const ComparePage = () => {
           <div className="sidebar-section">
             <h3 className="sidebar-title">1. Baseline PDF</h3>
             <FileUpload
-              onFilesChange={(files) => replaceFile(setBaseline, files)}
+              onFilesChange={(files) => replaceFile('baseline', files)}
               files={baseline ? [baseline] : []}
               accept={PDF_ACCEPT}
               multiple={false}
@@ -182,7 +205,7 @@ const ComparePage = () => {
           <div className="sidebar-section">
             <h3 className="sidebar-title">2. Candidate PDF</h3>
             <FileUpload
-              onFilesChange={(files) => replaceFile(setCandidate, files)}
+              onFilesChange={(files) => replaceFile('candidate', files)}
               files={candidate ? [candidate] : []}
               accept={PDF_ACCEPT}
               multiple={false}

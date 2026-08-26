@@ -1,0 +1,129 @@
+.new-pdf-page {
+  overflow-y: auto;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 80% 10%, var(--iris-soft), transparent 34%),
+    var(--surface-muted);
+}
+
+.new-pdf-page__inner {
+  display: grid;
+  width: min(940px, calc(100% - 40px));
+  min-height: 100%;
+  align-content: center;
+  margin: 0 auto;
+  padding: 56px 0;
+  grid-template-columns: minmax(0, 0.8fr) minmax(360px, 1.2fr);
+  gap: 48px;
+}
+
+.new-pdf-page__intro {
+  align-self: center;
+}
+
+.new-pdf-page__intro h1 {
+  margin: 0 0 20px;
+  font-size: var(--text-4xl);
+  font-variation-settings: "wdth" 88;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+
+.new-pdf-page__intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+.new-pdf-page__upload {
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: var(--shadow-md);
+}
+
+.new-pdf-page__upload-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.new-pdf-page__upload-heading h2 {
+  margin: 0 0 5px;
+  font-size: var(--text-xl);
+}
+
+.new-pdf-page__upload-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.new-pdf-page__icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  place-items: center;
+  color: white;
+  background: var(--iris);
+  border-radius: var(--radius-lg);
+  box-shadow: 4px 4px 0 var(--iris-soft);
+}
+
+.new-pdf-page__icon svg {
+  width: 22px;
+}
+
+.new-pdf-page__ready {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 13px 14px;
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-lg);
+}
+
+.new-pdf-page__ready > svg {
+  width: 21px;
+  flex-shrink: 0;
+}
+
+.new-pdf-page__ready div {
+  display: grid;
+  gap: 2px;
+}
+
+.new-pdf-page__ready span {
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 760px) {
+  .new-pdf-page__inner {
+    align-content: start;
+    padding: 36px 0;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .new-pdf-page__intro h1 {
+    font-size: var(--text-4xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .new-pdf-page__inner {
+    width: min(calc(100% - 24px), 940px);
+    padding: 24px 0;
+  }
+
+  .new-pdf-page__upload {
+    padding: 20px;
+  }
+}
