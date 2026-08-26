@@ -137,8 +137,8 @@ pdf-tools/
 - **Legacy frontend API**: `frontend/src/services/pdfService.js`
 
 ### When modifying UI/styling:
-- **Visual authority**: `DESIGN.md`
-- **Product truth**: `PRODUCT.md`
+- **Visual authority**: `docs/design.md`
+- **Product truth**: `docs/product.md`
 - **Global tokens and typography**: `frontend/src/index.css`
 - **Landing surface**: `frontend/src/App.jsx`, `frontend/src/App.css`
 - **Shared operation page styles**: `frontend/src/pages/OperationPage.css`
