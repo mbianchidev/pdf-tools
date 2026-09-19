@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { FOUR_PAGE_PDF } from './fixtures';
 
 test('merges files in the selected order and downloads the job output', async ({ page }) => {
   await page.route('**/api/v1/jobs', async (route) => {
@@ -61,12 +62,12 @@ data: ${JSON.stringify({
     {
       name: 'first.pdf',
       mimeType: 'application/pdf',
-      buffer: Buffer.from('%PDF-first'),
+      buffer: FOUR_PAGE_PDF,
     },
     {
       name: 'second.pdf',
       mimeType: 'application/pdf',
-      buffer: Buffer.from('%PDF-second'),
+      buffer: FOUR_PAGE_PDF,
     },
   ]);
   await page.getByRole('button', { name: 'Move second.pdf up' }).click();
