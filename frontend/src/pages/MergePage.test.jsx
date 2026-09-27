@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { jobService } from '../services/jobService';
 import MergePage from './MergePage';
 
@@ -49,6 +49,13 @@ beforeEach(() => {
   jobState.cancel.mockReset().mockResolvedValue(undefined);
   jobState.reset.mockReset();
   jobService.download.mockReset();
+  vi.spyOn(URL, 'createObjectURL')
+    .mockImplementation((blob) => `blob:${blob.name ?? 'mock-blob'}`);
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 test('submits files in the visible deterministic order', async () => {
