@@ -49,6 +49,10 @@ beforeEach(() => {
   jobState.cancel.mockReset().mockResolvedValue(undefined);
   jobState.reset.mockReset();
   jobService.download.mockReset();
+  vi.stubGlobal('URL', {
+    createObjectURL: vi.fn((file) => `blob:${file.name}`),
+    revokeObjectURL: vi.fn(),
+  });
 });
 
 test('submits files in the visible deterministic order', async () => {

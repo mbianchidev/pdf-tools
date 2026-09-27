@@ -56,6 +56,10 @@ beforeEach(() => {
   jobServiceMock.getDownloadUrl.mockReset().mockReturnValue(
     'http://localhost/api/v1/jobs/remove-job/outputs/output-1',
   );
+  vi.stubGlobal('URL', {
+    createObjectURL: vi.fn((file) => `blob:${file.name}`),
+    revokeObjectURL: vi.fn(),
+  });
 });
 
 test('submits validated page ranges and toggles page thumbnails', async () => {
