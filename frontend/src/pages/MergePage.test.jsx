@@ -50,7 +50,7 @@ beforeEach(() => {
   jobState.reset.mockReset();
   jobService.download.mockReset();
   vi.spyOn(URL, 'createObjectURL')
-    .mockImplementation((file) => `blob:${file.name}`);
+    .mockImplementation((blob) => `blob:${blob.name ?? 'mock-blob'}`);
   vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 });
 

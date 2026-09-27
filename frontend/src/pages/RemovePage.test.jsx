@@ -57,7 +57,7 @@ beforeEach(() => {
     'http://localhost/api/v1/jobs/remove-job/outputs/output-1',
   );
   vi.spyOn(URL, 'createObjectURL')
-    .mockImplementation((file) => `blob:${file.name}`);
+    .mockImplementation((blob) => `blob:${blob.name ?? 'mock-blob'}`);
   vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 });
 
