@@ -37,6 +37,9 @@ options, and fidelity limits.
 
 - Git and Docker with Compose v2 or later, configured to run Linux containers.
   macOS and Windows hosts need a Linux container VM.
+- The runtime must support Linux capability controls, CPU/memory/PID limits, and
+  custom seccomp profiles for the converter sidecars. A compatible Docker CLI
+  alone is not sufficient.
 - `curl` for the optional health-check and API examples.
 - Available host ports **80** for the frontend and **127.0.0.1:8080** for backend
   diagnostics.
