@@ -22,7 +22,7 @@
         <java.version>25</java.version>
         <log4j2.version>2.26.1</log4j2.version>
         <pdfbox.version>3.0.8</pdfbox.version>
-        <aws.sdk.version>2.55.16</aws.sdk.version>
+        <aws.sdk.version>2.57.1</aws.sdk.version>
         <h2.version>2.3.232</h2.version>
         <verapdf.version>1.30.3</verapdf.version>
     </properties>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>5.5.1</version>
+            <version>6.0.0</version>
         </dependency>
 
         <!-- Markdown -->
