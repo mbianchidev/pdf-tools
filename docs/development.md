@@ -2,11 +2,22 @@
 
 ## Prerequisites
 
-- Java 25
+- Java 27
 - Maven 3.9+
-- Node.js 22+
+- Node.js 26.12.1 (selected in the root `.nvmrc`)
 - Docker with Compose
 - qpdf 11+ for local Repair PDF development
+
+CI and Docker use Node.js 26.12.1 and Eclipse Temurin Java 27. The backend is
+compiled for Java 27; rebuild existing JARs and upgrade native JREs when updating.
+The Java build image uses Maven 3.10.0 because the older Maven 3.9.12 image does
+not provide a Temurin 27 variant. Spring Boot remains on 4.1.1, and React and
+React DOM remain on the already-current 19.3.1 release.
+
+The HTML converter retains its version-matched Playwright/Chromium image and
+copies Node.js 26.12.1 and its bundled npm from the official Debian-based Node
+image. Its `engines.node` compatibility floor remains `>=22`; `.nvmrc`, CI, and
+containers select the current stable runtime without dropping that compatibility.
 
 ## Docker Compose
 

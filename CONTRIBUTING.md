@@ -32,7 +32,7 @@ This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDU
 
 ### Backend Development
 
-1. **Prerequisites**: Java 17+, Maven 3.6+
+1. **Prerequisites**: Java 27+, Maven 3.9+
 2. **Setup**:
    ```bash
    cd backend
@@ -46,7 +46,7 @@ This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDU
 
 ### Frontend Development
 
-1. **Prerequisites**: Node.js 18+, npm 9+
+1. **Prerequisites**: Node.js 26.12.1 (root `.nvmrc`), npm 11+
 2. **Setup**:
    ```bash
    cd frontend

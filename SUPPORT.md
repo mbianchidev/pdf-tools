@@ -101,12 +101,12 @@ docker compose logs -f
 ### Development Issues
 
 **Backend won't start:**
-- Verify Java 17+ is installed
+- Verify Java 27+ is installed
 - Check Maven dependencies: `mvn clean install`
 - Review logs for specific errors
 
 **Frontend won't start:**
-- Verify Node.js 18+ is installed
+- Verify Node.js 26.12.1 from the root `.nvmrc` is installed
 - Clear node_modules: `rm -rf node_modules && npm install`
 - Check for port conflicts
 
