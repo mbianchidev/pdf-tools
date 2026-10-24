@@ -237,3 +237,21 @@ docker compose build --no-cache
 ```
 
 Tests use generated or synthetic fixtures only. Do not add customer or personal data.
+
+### GitHub Actions
+
+The `Tests` workflow runs on pull requests targeting `main`, including drafts and
+subsequent commits, and on pushes to `main`. Backend Tests, Frontend Checks, HTML Converter
+Checks, and Docker Compose Build run independently; a successful container build
+does not replace any test or dependency audit. The Compose build remains
+cache-disabled.
+
+New runs cancel obsolete runs of the same pull request, without canceling other
+pull requests or pushes to `main`. Dependency download caches remain optional:
+each job still performs its normal locked installation or Maven build.
+
+Browser checks use Chromium's headless shell, with two Playwright workers for the
+frontend suite. CI installs it with
+`npx playwright install --with-deps --only-shell chromium`; local headed debugging
+still requires the full browser from `npx playwright install chromium`. GitHub's
+managed CodeQL setup and repository review requirements are unchanged.
