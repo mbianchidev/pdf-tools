@@ -48,7 +48,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| React | 19.2 | UI framework |
+| React | 19.3.1 | UI framework |
 | Vite | 8.x | Build tool |
 | react-pdf | latest | PDF rendering |
 | react-router-dom | 7.x | Routing |
@@ -59,8 +59,8 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 22+
-- npm 10+
+- Node.js 26.12.1 (see the root `.nvmrc`)
+- npm 11+ (bundled with Node.js 26)
 
 ### Installation
 

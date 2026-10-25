@@ -3,12 +3,16 @@
 This image consumes the HTML conversion queue and renders self-contained UTF-8
 documents with Playwright and Chromium.
 
+Use Node.js 26.12.1 from the root `.nvmrc` for local development and validation.
+The package retains its Node.js `>=22` compatibility floor.
+
 ```bash
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts
 npm test
 ```
 
-The runtime image is pinned to the same Playwright version as `package.json`.
+The runtime image is pinned to the same Playwright version as `package.json`,
+with Node.js 26.12.1 and its bundled npm copied from the official Node image.
 Chromium runs as UID 10001 with its internal sandbox enabled. Docker Compose
 adds a networkless namespace, read-only root, private tmpfs, cgroup limits,
 `no-new-privileges`, and one-way queue mounts.

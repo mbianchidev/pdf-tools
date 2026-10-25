@@ -14,7 +14,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 | Apache POI | 5.5 | Office document generation |
 | qpdf | 11+ | Structural PDF repair and rewriting |
 | veraPDF | 1.30 | PDF/A conformance validation |
-| Java | 25 | Runtime |
+| Java | 27 | Runtime |
 
 ## Features
 
@@ -53,7 +53,7 @@ A Java Spring Boot REST API for PDF manipulation operations.
 ## Getting Started
 
 ### Prerequisites
-- Java 25 or higher
+- Java 27 or higher
 - Maven 3.9+
 - PostgreSQL 18
 

@@ -1,7 +1,7 @@
 # PDF Tools
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/Java-25+-orange.svg)](https://www.oracle.com/java/)
+[![Java](https://img.shields.io/badge/Java-27+-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
@@ -11,7 +11,7 @@ on infrastructure you control, rather than sending files to a third-party PDF se
 
 <img width="1325" height="804" alt="PDF Tools interface" src="https://github.com/user-attachments/assets/452afb5a-57c0-403b-bbbb-86c211f48ddb" />
 
-React 19 and Vite 8 power the frontend. Java 25, Spring Boot 4.1, PDFBox, and Apache
+React 19 and Vite 8 power the frontend. Java 27, Spring Boot 4.1, PDFBox, and Apache
 POI provide document processing, with PostgreSQL 18 and Flyway for job metadata.
 Artifacts use local streaming storage by default or an S3-compatible service such as
 SeaweedFS.
@@ -153,7 +153,7 @@ configuration reference.
 
 ## Development and documentation
 
-For native development, use Java 25, Maven 3.9+, Node.js 22.12+, and PostgreSQL 18.
+For native development, use Java 27, Maven 3.9+, Node.js 26.12.1, and PostgreSQL 18.
 Native conversion tools and sidecar setup are also required for the relevant
 operations; running only the API and frontend does not provide the complete stack.
 Follow the [development guide](docs/development.md) for setup and validation commands.

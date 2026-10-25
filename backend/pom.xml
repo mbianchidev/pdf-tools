@@ -19,7 +19,7 @@
     <description>Backend for PDF manipulation application</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>27</java.version>
         <log4j2.version>2.26.1</log4j2.version>
         <pdfbox.version>3.0.8</pdfbox.version>
         <aws.sdk.version>2.55.16</aws.sdk.version>

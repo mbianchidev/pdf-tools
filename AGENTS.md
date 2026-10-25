@@ -10,7 +10,7 @@ This document provides comprehensive project information for AI agents to effici
 |--------|---------|
 | **Type** | Full-stack web application |
 | **Frontend** | React 19 + Vite 8 |
-| **Backend** | Java 25 + Spring Boot 4.1 |
+| **Backend** | Java 27 + Spring Boot 4.1 |
 | **Persistence** | PostgreSQL 18 + Flyway |
 | **Storage** | Local streaming storage / SeaweedFS S3 |
 | **Deployment** | Docker Compose |
@@ -84,7 +84,7 @@ pdf-tools/
 ### Frontend
 | Library | Version | Purpose |
 |---------|---------|---------|
-| React | 19.2 | UI framework |
+| React | 19.3.1 | UI framework |
 | Vite | 8.x | Build tool |
 | react-pdf | latest | PDF rendering |
 | react-router-dom | 7.x | Routing |
@@ -213,10 +213,10 @@ docker compose down
 
 ### Local development
 ```bash
-# Backend (requires Java 25 & Maven)
+# Backend (requires Java 27 & Maven 3.9+)
 cd backend && mvn spring-boot:run
 
-# Frontend (requires Node.js)
+# Frontend (uses Node.js 26.12.1 from .nvmrc)
 cd frontend && npm ci && npm run dev
 ```
 
