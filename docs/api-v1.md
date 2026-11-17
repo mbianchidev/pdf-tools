@@ -229,6 +229,17 @@ plus paper size, orientation, background, and margin controls. It returns one
 PDF from a dedicated networkless Playwright/Chromium sidecar. External URLs and
 local-file access are blocked. See [HTML to PDF](operations/html-to-pdf.md).
 
+## Markdown to PDF
+
+`operation=markdown-to-pdf` accepts one UTF-8 `.md` or `.markdown` document, or
+one `.zip` bundle with `document.md` (or a single top-level Markdown file) plus
+images, such as `pdf-to-markdown` output. It takes the same paper size,
+orientation, background, and margin options as HTML to PDF and returns one PDF.
+An isolated worker renders GitHub-flavored Markdown to self-contained HTML with
+raw HTML escaped, unsafe links dropped, and bundled PNG, JPEG, GIF, or WebP
+images inlined, then the HTML sidecar prints it. See
+[Markdown to PDF](operations/markdown-to-pdf.md).
+
 ## PDF to Word
 
 `operation=pdf-to-word` accepts one unencrypted PDF and returns one DOCX.

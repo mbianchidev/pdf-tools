@@ -26,6 +26,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 - **PowerPoint to PDF** - Upload PPTX/PPT files for isolated slide conversion
 - **Excel to PDF** - Configure workbook print areas and page orientation
 - **HTML to PDF** - Render self-contained HTML with isolated Chromium
+- **Markdown to PDF** - Print uploaded or pasted Markdown, or Markdown ZIP bundles
 - **PDF to Word** - Choose editable extraction or visual page preservation
 - **PDF to PowerPoint** - Choose editable slide elements or visual page slides
 - **PDF to Excel** - Build page worksheets or one sheet per detected table

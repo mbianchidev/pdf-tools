@@ -61,6 +61,7 @@ pdf-tools/
 │   │   │   ├── RedactPage.jsx           # Redact content
 │   │   │   ├── PdfToWordPage.jsx        # PDF to Word
 │   │   │   ├── PdfToMarkdownPage.jsx    # Structured Markdown bundle
+│   │   │   ├── MarkdownToPdfPage.jsx    # Markdown upload/paste to PDF
 │   │   │   ├── CompressPage.jsx         # PDF size reduction
 │   │   │   ├── RepairPage.jsx           # qpdf recovery reports
 │   │   │   ├── PdfAPage.jsx             # veraPDF archival profiles
@@ -127,6 +128,7 @@ pdf-tools/
 - **Excel-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/excelpdf/`
 - **HTML-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/htmlpdf/`
 - **HTML converter sidecar**: `html-converter/`
+- **Markdown-to-PDF implementation**: `backend/src/main/java/com/pdftools/operations/markdownpdf/`
 - **PDF-to-Word implementation**: `backend/src/main/java/com/pdftools/operations/pdfword/`
 - **PDF-to-PowerPoint implementation**: `backend/src/main/java/com/pdftools/operations/pdfppt/`
 - **PDF-to-Excel implementation**: `backend/src/main/java/com/pdftools/operations/pdfexcel/`

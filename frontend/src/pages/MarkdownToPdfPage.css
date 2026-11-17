@@ -1,0 +1,33 @@
+.markdown-paste-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.markdown-paste-field label {
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.markdown-paste-field textarea {
+  width: 100%;
+  min-height: 14rem;
+  padding: 0.65rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font-family: ui-monospace, monospace;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.markdown-paste-field > span {
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+}
+
+.markdown-paste-field > span.is-error {
+  color: var(--danger);
+}

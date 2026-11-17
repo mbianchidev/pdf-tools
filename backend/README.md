@@ -90,7 +90,7 @@ Versioned tools use the asynchronous jobs API documented in
 | DELETE | `/api/v1/jobs/{jobId}` | Request cancellation |
 | GET | `/api/v1/jobs/{jobId}/outputs/{outputId}` | Stream an artifact |
 
-The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, `compress`, `repair`, `pdf-to-pdfa`, and `compare`. Their contracts and fidelity limits are
+The Docker deployment enables `merge`, `split`, `remove`, `rotate`, `organize`, `crop`, `page-numbers`, `protect`, `unlock`, `pdf-to-jpg`, `jpg-to-pdf`, `watermark`, `edit`, `redact`, `word-to-pdf`, `powerpoint-to-pdf`, `excel-to-pdf`, `html-to-pdf`, `markdown-to-pdf`, `pdf-to-word`, `pdf-to-powerpoint`, `pdf-to-excel`, `pdf-to-markdown`, `compress`, `repair`, `pdf-to-pdfa`, and `compare`. Their contracts and fidelity limits are
 documented in [`docs/operations/merge.md`](../docs/operations/merge.md) and
 [`docs/operations/split.md`](../docs/operations/split.md), with Remove Pages documented
 in [`docs/operations/remove.md`](../docs/operations/remove.md).
@@ -109,6 +109,7 @@ Word conversion is documented in [`docs/operations/word-to-pdf.md`](../docs/oper
 Presentation conversion is documented in [`docs/operations/powerpoint-to-pdf.md`](../docs/operations/powerpoint-to-pdf.md).
 Workbook conversion is documented in [`docs/operations/excel-to-pdf.md`](../docs/operations/excel-to-pdf.md).
 HTML conversion is documented in [`docs/operations/html-to-pdf.md`](../docs/operations/html-to-pdf.md).
+Markdown conversion is documented in [`docs/operations/markdown-to-pdf.md`](../docs/operations/markdown-to-pdf.md).
 PDF-to-Word conversion is documented in [`docs/operations/pdf-to-word.md`](../docs/operations/pdf-to-word.md).
 PDF-to-PowerPoint conversion is documented in [`docs/operations/pdf-to-powerpoint.md`](../docs/operations/pdf-to-powerpoint.md).
 PDF-to-Excel conversion is documented in [`docs/operations/pdf-to-excel.md`](../docs/operations/pdf-to-excel.md).

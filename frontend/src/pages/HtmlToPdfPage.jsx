@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
 import { CodeXml } from 'lucide-react';
 import OfficeToPdfPage from '../features/office/OfficeToPdfPage';
-import '../features/office/IsolatedConversionControls.css';
+import PrintSettingsControls from '../features/office/PrintSettingsControls';
+import { usePrintSettings } from '../features/office/usePrintSettings';
 
 const HTML_ACCEPT = {
   'text/html': ['.html', '.htm'],
@@ -9,22 +9,7 @@ const HTML_ACCEPT = {
 };
 
 const HtmlToPdfPage = () => {
-  const [pageSize, setPageSize] = useState('a4');
-  const [orientation, setOrientation] = useState('portrait');
-  const [printBackground, setPrintBackground] = useState(true);
-  const [marginMm, setMarginMm] = useState('10');
-  const parsedMargin = Number(marginMm);
-  const validationError = !Number.isInteger(parsedMargin)
-    || parsedMargin < 0
-    || parsedMargin > 50
-    ? 'Margin must be a whole number from 0 to 50 mm.'
-    : null;
-  const options = useMemo(() => ({
-    pageSize,
-    orientation,
-    printBackground,
-    marginMm: parsedMargin,
-  }), [orientation, pageSize, parsedMargin, printBackground]);
+  const { options, validationError, settings } = usePrintSettings();
 
   return (
     <OfficeToPdfPage
@@ -47,61 +32,11 @@ const HtmlToPdfPage = () => {
       options={options}
       validationError={validationError}
       renderControls={({ running }) => (
-        <div className="sidebar-section conversion-controls">
-          <h3 className="sidebar-title">Print settings</h3>
-          <label>
-            Paper size
-            <select
-              aria-label="Paper size"
-              value={pageSize}
-              onChange={(event) => setPageSize(event.target.value)}
-              disabled={running}
-            >
-              <option value="a4">A4</option>
-              <option value="letter">Letter</option>
-              <option value="legal">Legal</option>
-            </select>
-          </label>
-          <label>
-            Orientation
-            <select
-              aria-label="Page orientation"
-              value={orientation}
-              onChange={(event) => setOrientation(event.target.value)}
-              disabled={running}
-            >
-              <option value="portrait">Portrait</option>
-              <option value="landscape">Landscape</option>
-            </select>
-          </label>
-          <label>
-            Margin (mm)
-            <input
-              aria-label="Page margin"
-              type="number"
-              min="0"
-              max="50"
-              step="1"
-              value={marginMm}
-              onChange={(event) => setMarginMm(event.target.value)}
-              disabled={running}
-            />
-          </label>
-          <label className="conversion-toggle">
-            <input
-              type="checkbox"
-              checked={printBackground}
-              onChange={(event) => setPrintBackground(event.target.checked)}
-              disabled={running}
-            />
-            Print CSS backgrounds
-          </label>
-          {validationError && (
-            <p className="conversion-error" role="alert">
-              {validationError}
-            </p>
-          )}
-        </div>
+        <PrintSettingsControls
+          settings={settings}
+          running={running}
+          error={validationError}
+        />
       )}
     />
   );

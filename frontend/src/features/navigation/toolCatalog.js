@@ -1,5 +1,6 @@
 import {
   Archive,
+  BookText,
   CodeXml,
   Combine,
   Crop,
@@ -177,6 +178,13 @@ export const tools = [
     group: 'Convert',
     title: 'HTML to PDF',
     description: 'Render self-contained HTML with isolated Chromium',
+  },
+  {
+    id: 'markdown-to-pdf',
+    icon: BookText,
+    group: 'Convert',
+    title: 'Markdown to PDF',
+    description: 'Print Markdown, pasted text, or Markdown ZIP bundles',
   },
   {
     id: 'pdf-to-markdown',
