@@ -36,7 +36,8 @@ public class MarkdownToPdfConverter {
             Path workspace,
             IntConsumer progress,
             Runnable cancellationCheck) {
-        HtmlPlanFactory.HtmlPlan plan = planFactory.create(options);
+        HtmlPlanFactory.HtmlPlan plan = planFactory.create(options)
+            .withRenderMath();
         progress.accept(5);
         Path html = engine.render(input, workspace, cancellationCheck);
         progress.accept(RENDERED_PROGRESS);

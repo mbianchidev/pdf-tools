@@ -59,6 +59,35 @@ test('rejects trailing bytes and invalid plans', async () => {
   });
 });
 
+test('accepts only a boolean math flag', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'html-protocol-'));
+  const request = async (name, renderMath) => {
+    const file = path.join(directory, name);
+    await writeFile(file, Buffer.concat([
+      int32(2),
+      utf('html'),
+      utf('.html'),
+      utf(JSON.stringify({
+        pageSize: 'A4',
+        landscape: false,
+        printBackground: true,
+        marginMm: 10,
+        renderMath,
+      })),
+    ]));
+    return file;
+  };
+
+  assert.equal(
+    (await readRequest(await request('math.bin', true))).options.renderMath,
+    true,
+  );
+  await assert.rejects(
+    async () => readRequest(await request('bad.bin', 'yes')),
+    { code: 'HTML_QUEUE_PROTOCOL_ERROR' },
+  );
+});
+
 const int32 = (value) => {
   const bytes = Buffer.alloc(4);
   bytes.writeInt32BE(value);

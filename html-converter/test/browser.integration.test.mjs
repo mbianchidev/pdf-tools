@@ -15,6 +15,46 @@ import { convert } from '../src/converter.mjs';
 const execute = promisify(execFile);
 const enabled = process.env.HTML_BROWSER_INTEGRATION === '1';
 
+test('typesets Markdown math with embedded KaTeX fonts', {
+  skip: !enabled,
+  timeout: 60_000,
+}, async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'html-math-integration-'),
+  );
+  try {
+    const source = path.join(directory, 'math.html');
+    const output = path.join(directory, 'math.pdf');
+    await writeFile(source, `<!doctype html><html><head>
+      <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; font-src data:; style-src 'unsafe-inline'">
+      </head><body>
+      <p>Inline <span class="math math-inline">x^2 &lt; y</span></p>
+      <p><span class="math math-display">\\int_0^1 f(x)\\,dx</span></p>
+      </body></html>`);
+
+    await convert({
+      sourcePath: source,
+      outputPath: output,
+      plan: {
+        pageSize: 'A4',
+        landscape: false,
+        printBackground: true,
+        marginMm: 10,
+        renderMath: true,
+      },
+      timeoutMs: 45_000,
+      chromiumSandbox: false,
+    });
+
+    const { stdout: fonts } = await execute('pdffonts', [output]);
+    assert.match(fonts, /KaTeX_Main/);
+    assert.match(fonts, /KaTeX_Size\d/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('renders the HTML golden fixture', {
   skip: !enabled,
   timeout: 60_000,

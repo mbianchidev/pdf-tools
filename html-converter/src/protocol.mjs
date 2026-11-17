@@ -120,7 +120,9 @@ const validateHtmlOptions = (options) => {
     && typeof options.printBackground === 'boolean'
     && Number.isInteger(options.marginMm)
     && options.marginMm >= 0
-    && options.marginMm <= 50;
+    && options.marginMm <= 50
+    && (options.renderMath === undefined
+      || typeof options.renderMath === 'boolean');
   if (!valid) throw protocolError();
 };
 

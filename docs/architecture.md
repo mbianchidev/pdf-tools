@@ -100,7 +100,8 @@ crop-box offsets and page rotations of 0, 90, 180, or 270 degrees.
   limits.
 - Markdown conversion parses untrusted Markdown in a capped Java subprocess,
   escapes raw HTML, inlines only bundled raster images, and sends the resulting
-  script-free HTML through the same sidecar queue.
+  script-free HTML through the same sidecar queue, where KaTeX typesets any
+  GitHub math before Chromium prints it.
 - qpdf repair runs as a bounded non-root native process with the shared
   architecture-pinned network-deny filter and emits a separate structured
   recovery report.

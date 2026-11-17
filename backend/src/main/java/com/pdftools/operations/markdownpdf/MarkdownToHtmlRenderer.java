@@ -1,6 +1,7 @@
 package com.pdftools.operations.markdownpdf;
 
 import com.pdftools.operations.OperationException;
+import com.vladsch.flexmark.ast.FencedCodeBlock;
 import com.vladsch.flexmark.ast.Heading;
 import com.vladsch.flexmark.ast.Image;
 import com.vladsch.flexmark.ast.ImageRef;
@@ -62,6 +63,7 @@ final class MarkdownToHtmlRenderer {
     static final String CONTENT_SECURITY_POLICY = String.join("; ",
         "default-src 'none'",
         "img-src data:",
+        "font-src data:",
         "style-src 'unsafe-inline'",
         "base-uri 'none'",
         "form-action 'none'"
@@ -79,6 +81,7 @@ final class MarkdownToHtmlRenderer {
         options.set(Parser.EXTENSIONS, List.of(
             TablesExtension.create(),
             TableParagraphSplitter.EXTENSION,
+            GitHubMath.EXTENSION,
             GitHubStrikethroughExtension.create(),
             TaskListExtension.create(),
             AutolinkExtension.create(),
@@ -209,7 +212,9 @@ final class MarkdownToHtmlRenderer {
                 new NodeRenderingHandler<>(Link.class, this::render),
                 new NodeRenderingHandler<>(LinkRef.class, this::render),
                 new NodeRenderingHandler<>(GitHubAlert.class, this::render),
-                new NodeRenderingHandler<>(Emoji.class, this::render)
+                new NodeRenderingHandler<>(Emoji.class, this::render),
+                new NodeRenderingHandler<>(GitHubMath.class, this::render),
+                new NodeRenderingHandler<>(FencedCodeBlock.class, this::render)
             );
         }
 
@@ -247,6 +252,43 @@ final class MarkdownToHtmlRenderer {
             } else {
                 renderUnlinked(node, url, context, html);
             }
+        }
+
+        /**
+         * Emits escaped TeX in a marker span that the HTML sidecar typesets
+         * with KaTeX for Markdown jobs.
+         */
+        private void render(
+                GitHubMath node,
+                NodeRendererContext context,
+                HtmlWriter html) {
+            renderMath(node.tex(), node.display(), html);
+        }
+
+        private void render(
+                FencedCodeBlock node,
+                NodeRendererContext context,
+                HtmlWriter html) {
+            if (!"math".equalsIgnoreCase(node.getInfo().toString().strip())) {
+                context.delegateRender();
+                return;
+            }
+            html.line();
+            html.attr("class", "math-block").withAttr().tag("div");
+            renderMath(node.getContentChars().toString().strip(), true, html);
+            html.tag("/div").line();
+        }
+
+        private static void renderMath(
+                String tex,
+                boolean display,
+                HtmlWriter html) {
+            html.attr(
+                "class",
+                display ? "math math-display" : "math math-inline"
+            ).withAttr().tag("span");
+            html.text(tex);
+            html.tag("/span");
         }
 
         /** Lets resolved shortcode emoji prefer the color emoji font. */

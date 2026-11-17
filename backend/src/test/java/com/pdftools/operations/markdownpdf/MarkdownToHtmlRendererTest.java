@@ -207,6 +207,38 @@ class MarkdownToHtmlRendererTest {
     }
 
     @Test
+    void marksGithubMathForTypesetting() {
+        String html = render("""
+            Inline $a_1 * b_2^{n} < c$ and $`\\sqrt{x}`$ cost $5 and $10, \\$3, $ x $.
+
+            $$
+            \\frac{a}{b} \\le c
+            $$
+
+            ```math
+            E = mc^2
+            ```
+            """);
+
+        assertTrue(html.contains(
+            "<span class=\"math math-inline\">a_1 * b_2^{n} &lt; c</span>"
+        ));
+        assertTrue(html.contains(
+            "<span class=\"math math-inline\">\\sqrt{x}</span>"
+        ));
+        assertFalse(html.contains("<em>"));
+        assertTrue(html.contains("cost $5 and $10, $3, $ x $."));
+        assertTrue(html.contains(
+            "<span class=\"math math-display\">\\frac{a}{b} \\le c</span>"
+        ));
+        assertTrue(html.contains(
+            "<div class=\"math-block\"><span class=\"math math-display\">"
+                + "E = mc^2</span></div>"
+        ));
+        assertTrue(html.contains("font-src data:"));
+    }
+
+    @Test
     void rendersGithubTableVariants() {
         String html = render("""
             | One | Dash |

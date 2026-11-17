@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
+import { renderMath } from './math.mjs';
 
 const CONTENT_SECURITY_POLICY = [
   "default-src 'none'",
@@ -55,13 +56,14 @@ export const convert = async ({
   chromiumSandbox = true,
 }) => {
   const source = await readFile(sourcePath);
-  const html = new TextDecoder('utf-8', { fatal: true }).decode(source);
-  if (html.includes('\u0000')) {
+  const decoded = new TextDecoder('utf-8', { fatal: true }).decode(source);
+  if (decoded.includes('\u0000')) {
     throw codedError(
       'INVALID_HTML_DOCUMENT',
       'The file is not a readable HTML document',
     );
   }
+  const html = plan.renderMath ? renderMath(decoded) : decoded;
 
   let browser;
   try {

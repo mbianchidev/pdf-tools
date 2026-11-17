@@ -197,6 +197,9 @@ class MarkdownToPdfJobIntegrationTest {
                             String html = Files.readString(request.resolve(
                                 ConversionQueueProtocol.INPUT + ".html"
                             ));
+                            assertTrue(ConversionQueueProtocol.readRequest(
+                                request.resolve(ConversionQueueProtocol.REQUEST)
+                            ).optionsJson().endsWith(",\"renderMath\":true}"));
                             Path response = queueRoot.resolve("responses")
                                 .resolve(request.getFileName().toString());
                             Files.createDirectories(response);

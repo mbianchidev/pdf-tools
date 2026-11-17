@@ -51,7 +51,16 @@ GitHub alerts (`> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, and
 `> [!CAUTION]`, with the marker alone on the first quote line) render as
 titled, colored callouts with an icon. Emoji shortcodes such as `:rocket:` or
 `:warning:` render as color emoji; unknown shortcodes stay as text. Both
-`~one~` and `~~two~~` tildes strike text through, as on GitHub. YAML front
+`~one~` and `~~two~~` tildes strike text through, as on GitHub.
+
+GitHub math is typeset with KaTeX: inline `$...$` or `` $`...`$ ``, and display
+`$$...$$` or a ` ```math ` fenced block. Dollar signs follow pandoc's rules, so
+`$5 and $10` stays text: the opening `$` needs a non-space after it, and the
+closing `$` needs a non-space before it and no digit after it. Escape a
+literal dollar as `\$`. TeX source is protected from Markdown processing, and
+unsupported commands print in red like on GitHub. KaTeX runs in the HTML
+sidecar with untrusted commands such as `\href` disabled, and its fonts are
+embedded in the PDF. YAML front
 matter is parsed and not printed. A fixed print stylesheet handles typography,
 code blocks, tables, block quotes, task lists, footnotes, and page-break hints.
 The document title comes from the first level-one heading.
@@ -70,7 +79,7 @@ Untrusted content is constrained before Chromium sees it:
   WebP. SVG, remote, missing, out-of-bundle, and unsupported images are printed
   as their alt text. Nothing is fetched.
 - The generated page has no scripts and carries its own Content Security Policy
-  (`default-src 'none'; img-src data:; style-src 'unsafe-inline'`), in addition
+  (`default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'`), in addition
   to the sidecar's injected policy and request blocking.
 
 ## Isolation and limits
@@ -101,6 +110,7 @@ sidecar must be running.
 
 Output follows a fixed stylesheet, not a specific Markdown site theme. Fonts
 come from the sidecar image, so emoji and uncommon scripts depend on installed
-system fonts. There is no syntax highlighting, math, Mermaid, or other
-diagram rendering, and raw HTML, including tags GitHub allows such as
+system fonts. Math follows KaTeX's supported LaTeX subset, which is close
+to but not identical to GitHub's MathJax. There is no syntax highlighting,
+Mermaid, or other diagram rendering, and raw HTML, including tags GitHub allows such as
 `<details>`, `<kbd>`, and `<sub>`, never renders as markup.

@@ -10,6 +10,7 @@
     "test": "node --test"
   },
   "dependencies": {
+    "katex": "0.19.1",
     "playwright": "1.62.1"
   }
 }
