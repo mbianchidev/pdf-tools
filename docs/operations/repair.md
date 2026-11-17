@@ -78,6 +78,17 @@ The repaired output is additionally limited to 1,000 pages with bounded page
 tree depth, nodes, and content streams. Docker images include qpdf; local
 development requires qpdf on `PATH` or `QPDF_BINARY`.
 
+qpdf always reads a private `repair-input.pdf` copy of the stored job input.
+Ubuntu 26.04 and later ship an enforcing AppArmor profile,
+`/etc/apparmor.d/qpdf`, that only lets qpdf open `.pdf`, `.json`, and `.qdf`
+files under `/tmp`, `/var/tmp`, home directories, `/mnt`, and `/media`.
+The default `PDF_JOB_WORK_ROOT` (`/tmp/pdf-work`) satisfies it. When running
+the backend natively on such a host with a work root elsewhere, allow that
+path in `/etc/apparmor.d/local/qpdf` and reload the profile; qpdf otherwise
+fails with `Permission denied` and the backend logs a hint. Docker containers
+normally run under the container runtime's AppArmor profile instead, and the
+Compose work root stays under `/tmp` either way.
+
 ## Fidelity and licensing
 
 Structural repair cannot recreate bytes, page content, fonts, images,

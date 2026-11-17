@@ -16,9 +16,7 @@ concurrency:
 jobs:
   backend-tests:
     name: Backend Tests
-    # ubuntu-26.04 (ubuntu-latest since Nov 2026) denies qpdf access to the
-    # repair test workspace; keep the last verified image until that is fixed.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend

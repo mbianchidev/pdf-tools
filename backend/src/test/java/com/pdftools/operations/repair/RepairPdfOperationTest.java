@@ -101,6 +101,25 @@ class RepairPdfOperationTest {
     }
 
     @Test
+    void repairsStoredBinInputThroughPrivatePdfCopy() throws Exception {
+        Path stored = temporaryDirectory.resolve("input-0001.bin");
+        Files.copy(textPdf(null), stored);
+        byte[] original = Files.readAllBytes(stored);
+        OperationContext context = context(stored);
+
+        List<OperationOutput> outputs = operation.execute(context);
+
+        try (PDDocument repaired =
+                 Loader.loadPDF(outputs.getFirst().path().toFile())) {
+            assertEquals(1, repaired.getNumberOfPages());
+        }
+        assertArrayEquals(original, Files.readAllBytes(stored));
+        assertFalse(Files.exists(
+            context.workspace().resolve("repair-input.pdf")
+        ));
+    }
+
+    @Test
     void validatesSubmissionAndRejectsEncryptedPdf() throws Exception {
         operation.validateSubmission(new OperationSubmission(
             objectMapper.readTree("{}"),
