@@ -4,6 +4,8 @@ import com.pdftools.operations.OperationException;
 import com.vladsch.flexmark.ast.Heading;
 import com.vladsch.flexmark.ast.Image;
 import com.vladsch.flexmark.ast.ImageRef;
+import com.vladsch.flexmark.ast.Link;
+import com.vladsch.flexmark.ast.LinkRef;
 import com.vladsch.flexmark.ast.Reference;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
@@ -30,6 +32,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Renders untrusted Markdown into one self-contained, script-free HTML
@@ -38,13 +41,17 @@ import java.util.Set;
 final class MarkdownToHtmlRenderer {
 
     /**
-     * Links outside http(s), mailto, in-document fragments, www autolinks,
-     * and bare e-mail autolinks render as plain text. flexmark leaves the URL
-     * of {@code <user@example.com>} mail links empty, so empty URLs pass.
-     * Images bypass this pattern and are handled by {@link SafeImageRenderer}.
+     * Autolinks outside http(s), mailto, in-document fragments, www, and bare
+     * e-mail addresses render as plain text. flexmark leaves the URL of
+     * {@code <user@example.com>} mail links empty, so empty URLs pass. flexmark
+     * matches this against the raw source, so inline and reference links are
+     * re-checked after entity decoding by {@link SafeNodeRenderer}.
      */
     static final String SUPPRESSED_LINKS =
-        "(?is)(?!(?:https?://|mailto:|#|www\\.)|[^\\s:/?#@]+@[^\\s:/?#@]+$|$).*";
+        "(?is)(?!(?:https?://|mailto:|#|www\\.)|[^\\s:/?#@&\\\\]+@[^\\s:/?#@&\\\\]+$|$).*";
+
+    private static final Pattern ALLOWED_HREF =
+        Pattern.compile("^(?:https?://|mailto:|#)", Pattern.CASE_INSENSITIVE);
 
     static final String CONTENT_SECURITY_POLICY = String.join("; ",
         "default-src 'none'",
@@ -80,7 +87,7 @@ final class MarkdownToHtmlRenderer {
         options.set(HtmlRenderer.SOFT_BREAK, "\n");
         this.parser = Parser.builder(options).build();
         this.renderer = HtmlRenderer.builder(options)
-            .nodeRendererFactory(ignored -> new SafeImageRenderer(images))
+            .nodeRendererFactory(ignored -> new SafeNodeRenderer(images))
             .build();
     }
 
@@ -143,11 +150,15 @@ final class MarkdownToHtmlRenderer {
         }
     }
 
-    private static final class SafeImageRenderer implements NodeRenderer {
+    static boolean allowedHref(String url) {
+        return ALLOWED_HREF.matcher(url).find();
+    }
+
+    private static final class SafeNodeRenderer implements NodeRenderer {
 
         private final MarkdownImageEmbedder images;
 
-        private SafeImageRenderer(MarkdownImageEmbedder images) {
+        private SafeNodeRenderer(MarkdownImageEmbedder images) {
             this.images = images;
         }
 
@@ -155,8 +166,43 @@ final class MarkdownToHtmlRenderer {
         public Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
             return Set.of(
                 new NodeRenderingHandler<>(Image.class, this::render),
-                new NodeRenderingHandler<>(ImageRef.class, this::render)
+                new NodeRenderingHandler<>(ImageRef.class, this::render),
+                new NodeRenderingHandler<>(Link.class, this::render),
+                new NodeRenderingHandler<>(LinkRef.class, this::render)
             );
+        }
+
+        /**
+         * flexmark checks {@link #SUPPRESSED_LINKS} against the raw URL but
+         * emits the entity-decoded one, so the decoded href is allowlisted
+         * here before delegating to the core renderer.
+         */
+        private void render(
+                Link node,
+                NodeRendererContext context,
+                HtmlWriter html) {
+            if (allowedHref(node.getUrl().unescape())) {
+                context.delegateRender();
+            } else {
+                context.renderChildren(node);
+            }
+        }
+
+        private void render(
+                LinkRef node,
+                NodeRendererContext context,
+                HtmlWriter html) {
+            Reference reference = node.isDefined()
+                ? node.getReferenceNode(
+                    Parser.REFERENCES.get(context.getDocument())
+                )
+                : null;
+            if (reference == null
+                    || allowedHref(reference.getUrl().unescape())) {
+                context.delegateRender();
+            } else {
+                context.renderChildren(node);
+            }
         }
 
         private void render(

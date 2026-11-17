@@ -44,6 +44,12 @@ class MarkdownToHtmlRendererTest {
             [section](#report) [script](javascript:alert(1))
             [file](file:///etc/passwd) [relative](docs/other.md)
             <https://example.com/auto> <team@example.com>
+            [encoded](javascript&colon;alert(1);'@x')
+            [encodedFile](file&colon;&sol;&sol;&sol;etc&sol;passwd&num;@x)
+            [bareAt](foo@bar) [goodRef][good] [badRef][bad]
+
+            [good]: https://example.com/ref
+            [bad]: javascript&colon;alert(2)
             """);
 
         assertTrue(html.contains("href=\"https://example.com/a?b=1\""));
@@ -51,10 +57,14 @@ class MarkdownToHtmlRendererTest {
         assertTrue(html.contains("href=\"#report\""));
         assertTrue(html.contains("href=\"https://example.com/auto\""));
         assertTrue(html.contains("href=\"mailto:team@example.com\">team@"));
+        assertTrue(html.contains("href=\"https://example.com/ref\""));
         assertFalse(html.contains("javascript:"));
         assertFalse(html.contains("file:"));
         assertFalse(html.contains("docs/other.md"));
+        assertFalse(html.contains("href=\"foo@bar\""));
         assertTrue(html.contains("relative"));
+        assertTrue(html.contains("encodedFile"));
+        assertTrue(html.contains("badRef"));
     }
 
     @Test
