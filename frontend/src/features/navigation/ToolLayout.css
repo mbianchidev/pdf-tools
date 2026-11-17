@@ -161,6 +161,44 @@
   font-size: var(--text-xs);
 }
 
+.tool-topbar__search {
+  position: relative;
+  display: block;
+  margin-top: 16px;
+}
+
+.tool-topbar__search svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 17px;
+  color: var(--muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.tool-topbar__search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px 0 38px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+.tool-topbar__search input:focus-visible {
+  border-color: var(--iris);
+}
+
+.tool-topbar__empty {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 .tool-topbar__groups {
   display: grid;
   align-items: start;

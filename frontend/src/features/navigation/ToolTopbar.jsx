@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, FilePlus2 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, FilePlus2, Search } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import Brand from '../../components/Brand';
 import { findToolByPath, toolGroups, tools } from './toolCatalog';
 import './ToolLayout.css';
@@ -9,13 +9,48 @@ const getToolGroupId = (group) => (
   `tool-group-${group.toLowerCase().replace(/\s+/g, '-')}`
 );
 
+const matchesQuery = (tool, terms) => {
+  const words = [tool.title, tool.description, tool.group]
+    .join(' ')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/);
+  return terms.every((term) => words.some((word) => word.startsWith(term)));
+};
+
 const ToolTopbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const selectorRef = useRef(null);
   const triggerRef = useRef(null);
   const menuRef = useRef(null);
   const currentTool = findToolByPath(location.pathname);
+  const matchingTools = useMemo(() => {
+    const terms = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+    return terms.length
+      ? tools.filter((tool) => matchesQuery(tool, terms))
+      : tools;
+  }, [query]);
+  const visibleGroups = toolGroups.filter(
+    (group) => matchingTools.some((tool) => tool.group === group),
+  );
+
+  const closeMenu = () => {
+    setOpen(false);
+    setQuery('');
+  };
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === 'Enter' && matchingTools.length > 0) {
+      event.preventDefault();
+      closeMenu();
+      navigate(matchingTools[0].path);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      menuRef.current?.querySelector('a')?.focus();
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -23,17 +58,19 @@ const ToolTopbar = () => {
     }
 
     const focusFrame = requestAnimationFrame(() => {
-      menuRef.current?.querySelector('a')?.focus();
+      menuRef.current?.querySelector('input')?.focus();
     });
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setOpen(false);
+        setQuery('');
         requestAnimationFrame(() => triggerRef.current?.focus());
       }
     };
     const handlePointerDown = (event) => {
       if (!selectorRef.current?.contains(event.target)) {
         setOpen(false);
+        setQuery('');
       }
     };
 
@@ -70,7 +107,10 @@ const ToolTopbar = () => {
             aria-describedby="current-tool-name"
             aria-expanded={open}
             aria-label="Choose a tool"
-            onClick={() => setOpen((current) => !current)}
+            onClick={() => {
+              setOpen((current) => !current);
+              setQuery('');
+            }}
           >
             <span>
               <small>Tool</small>
@@ -94,8 +134,30 @@ const ToolTopbar = () => {
                 <strong>Switch workflow</strong>
                 <span>Your PDF stays available between PDF tools.</span>
               </div>
-              <div className="tool-topbar__groups">
-                {toolGroups.map((group) => (
+              <label className="tool-topbar__search">
+                <Search aria-hidden="true" />
+                <input
+                  type="search"
+                  aria-label="Search tools"
+                  aria-controls="tool-switcher-results"
+                  placeholder="Search tools"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                />
+              </label>
+              {matchingTools.length === 0 && (
+                <p className="tool-topbar__empty" role="status">
+                  No tools match “{query.trim()}”.
+                </p>
+              )}
+              <div
+                className="tool-topbar__groups"
+                id="tool-switcher-results"
+              >
+                {visibleGroups.map((group) => (
                   <div
                     className="tool-topbar__group"
                     role="group"
@@ -108,7 +170,7 @@ const ToolTopbar = () => {
                     >
                       {group}
                     </span>
-                    {tools
+                    {matchingTools
                       .filter((tool) => tool.group === group)
                       .map(({ icon: Icon, id, path, title }) => (
                         <NavLink
@@ -119,7 +181,7 @@ const ToolTopbar = () => {
                             currentTool?.id === id ? 'is-active' : ''
                           }`}
                           key={id}
-                          onClick={() => setOpen(false)}
+                          onClick={closeMenu}
                           to={path}
                         >
                           <Icon aria-hidden="true" />

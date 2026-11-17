@@ -39,6 +39,7 @@ A modern, production-ready React application for PDF manipulation with a clean, 
 ### UI Features
 - Documentation-first self-hosting landing page
 - Shared visual identity with `mbianchidev/img-tools`
+- Searchable tool switcher in the workspace topbar
 - Drag-and-drop file upload
 - Real-time PDF preview
 - Success/error toast notifications

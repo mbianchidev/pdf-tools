@@ -178,7 +178,16 @@ td {
 
 th {
   font-weight: 600;
+  text-align: left;
   background: var(--surface);
+}
+
+th[align="center"] {
+  text-align: center;
+}
+
+th[align="right"] {
+  text-align: right;
 }
 
 tr {

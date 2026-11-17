@@ -15,7 +15,8 @@ test('starts with a PDF and carries it into a selected tool', async ({ page }) =
   const toolSwitcher = page.getByRole('button', { name: 'Choose a tool' });
   await toolSwitcher.click();
   await expect(toolSwitcher).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByRole('link', { name: /Merge PDFs/ })).toBeFocused();
+  await expect(page.getByRole('searchbox', { name: 'Search tools' }))
+    .toBeFocused();
 
   await page.keyboard.press('Escape');
   await expect(toolSwitcher).toBeFocused();
@@ -41,6 +42,23 @@ test('switches directly between tool pages', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Compress PDF' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Choose a tool' }))
     .toContainText('Compress PDF');
+});
+
+test('searches tools and opens the first match', async ({ page }) => {
+  await page.goto('/merge');
+
+  await page.getByRole('button', { name: 'Choose a tool' }).click();
+  const search = page.getByRole('searchbox', { name: 'Search tools' });
+  await search.fill('markdown');
+  await expect(page.getByRole('link', { name: /Merge PDFs/ })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /PDF to Markdown/ }))
+    .toBeVisible();
+  await search.fill('markdown to pdf');
+  await search.press('Enter');
+
+  await expect(page).toHaveURL('/markdown-to-pdf');
+  await expect(page.getByRole('heading', { name: 'Markdown to PDF' }))
+    .toBeVisible();
 });
 
 test('keeps the tool switcher usable on mobile', async ({ page }) => {

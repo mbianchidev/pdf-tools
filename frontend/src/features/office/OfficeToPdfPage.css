@@ -1,13 +1,17 @@
 .office-security-note {
   display: grid;
   grid-template-columns: auto 1fr;
+  align-items: start;
   gap: 0.7rem;
+  padding: 0.9rem 1rem;
   color: var(--ink);
   background: var(--iris-soft);
   border: 1px solid color-mix(in srgb, var(--iris) 25%, transparent);
 }
 
 .office-security-note > svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
   color: var(--iris);
 }
 

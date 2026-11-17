@@ -134,6 +134,54 @@ class MarkdownToHtmlRendererTest {
     }
 
     @Test
+    void rendersGithubTableVariants() {
+        String html = render("""
+            | One | Dash |
+            |-|:-:|
+            | a | b |
+
+            Intro with **bold** and https://example.com/intro
+            | Name | Qty |
+            | ---- | --: |
+            | Pens | 2 |
+            [not a caption]
+
+            | First | Row |
+            | Second | Row |
+            | --- | --- |
+            | x | y |
+
+            | Col |
+            | --- |
+            | - |
+            """);
+
+        assertEquals(4, count(html, "<table>"));
+        assertTrue(html.contains("<th align=\"center\">Dash</th>"));
+        assertTrue(html.contains(
+            "<p>Intro with <strong>bold</strong> and "
+                + "<a href=\"https://example.com/intro\">"
+        ));
+        assertTrue(html.contains("<th>Name</th>"));
+        assertFalse(html.contains("<caption>"));
+        assertTrue(html.contains("[not a caption]"));
+        assertTrue(html.contains("<p>| First | Row |</p>"));
+        assertTrue(html.contains("<th>Second</th>"));
+        assertTrue(html.contains("<th>Col</th>"));
+        assertTrue(html.contains("<td>-</td>"));
+    }
+
+    private static int count(String text, String needle) {
+        int count = 0;
+        for (int index = text.indexOf(needle);
+                index >= 0;
+                index = text.indexOf(needle, index + 1)) {
+            count++;
+        }
+        return count;
+    }
+
+    @Test
     void rejectsEmbeddedImagesBeyondTheRenderedSizeLimit() {
         String png = Base64.getEncoder().encodeToString(PNG);
         String markdown = ("![a](data:image/png;base64," + png + ")\n")

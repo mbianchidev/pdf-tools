@@ -70,6 +70,7 @@ final class MarkdownToHtmlRenderer {
         MutableDataSet options = new MutableDataSet();
         options.set(Parser.EXTENSIONS, List.of(
             TablesExtension.create(),
+            TableParagraphSplitter.EXTENSION,
             StrikethroughExtension.create(),
             TaskListExtension.create(),
             AutolinkExtension.create(),
@@ -80,6 +81,10 @@ final class MarkdownToHtmlRenderer {
         options.set(TablesExtension.APPEND_MISSING_COLUMNS, true);
         options.set(TablesExtension.DISCARD_EXTRA_COLUMNS, true);
         options.set(TablesExtension.HEADER_SEPARATOR_COLUMN_MATCH, true);
+        options.set(TablesExtension.MIN_SEPARATOR_DASHES, 1);
+        options.set(TablesExtension.MIN_HEADER_ROWS, 1);
+        options.set(TablesExtension.MAX_HEADER_ROWS, 1);
+        options.set(TablesExtension.WITH_CAPTION, false);
         options.set(HtmlRenderer.ESCAPE_HTML, true);
         options.set(HtmlRenderer.SUPPRESSED_LINKS, SUPPRESSED_LINKS);
         options.set(HtmlRenderer.GENERATE_HEADER_ID, true);

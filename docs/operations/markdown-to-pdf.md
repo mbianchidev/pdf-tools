@@ -41,7 +41,11 @@ name with `.pdf`.
 ## Rendering
 
 Markdown is parsed with flexmark using CommonMark plus GitHub-style tables,
-strikethrough, task lists, autolinks, footnotes, and heading IDs. YAML front
+strikethrough, task lists, autolinks, footnotes, and heading IDs. Tables
+follow GitHub's rules: one header row, delimiter cells with a single dash
+(`|-|:-:|`), rows with or without outer pipes, and tables that start directly
+under a line of paragraph text. A `[text]` line under a table stays a
+paragraph rather than becoming a caption. YAML front
 matter is parsed and not printed. A fixed print stylesheet handles typography,
 code blocks, tables, block quotes, task lists, footnotes, and page-break hints.
 The document title comes from the first level-one heading.
