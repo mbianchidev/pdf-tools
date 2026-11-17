@@ -60,7 +60,8 @@ class MarkdownToHtmlRendererTest {
         assertTrue(html.contains("href=\"https://example.com/ref\""));
         assertFalse(html.contains("javascript:"));
         assertFalse(html.contains("file:"));
-        assertFalse(html.contains("docs/other.md"));
+        assertFalse(html.contains("href=\"docs/other.md\""));
+        assertTrue(html.contains("(docs/other.md)"));
         assertFalse(html.contains("href=\"foo@bar\""));
         assertTrue(html.contains("relative"));
         assertTrue(html.contains("encodedFile"));
@@ -131,6 +132,78 @@ class MarkdownToHtmlRendererTest {
         assertTrue(html.contains("class=\"language-java\""));
         assertTrue(html.contains("1 &lt; 2"));
         assertTrue(html.contains("footnote"));
+    }
+
+    @Test
+    void rendersGithubAlerts() {
+        String html = render("""
+            > [!NOTE]
+            > Useful **information**.
+
+            > [!tip]
+            > Helpful advice.
+
+            > [!IMPORTANT]
+            > Key information.
+            >
+            > Second paragraph.
+
+            > [!WARNING]
+            > Urgent info.
+
+            > [!CAUTION]
+            > Negative consequences.
+
+            > [!NOTE] text on the marker line
+
+            > [!WARNING]
+
+            > Plain quote.
+            """);
+
+        assertTrue(html.contains(
+            "<div class=\"markdown-alert markdown-alert-note\">"
+        ));
+        assertTrue(html.contains("Useful <strong>information</strong>."));
+        for (String type : new String[] {"tip", "important", "warning", "caution"}) {
+            assertTrue(html.contains("markdown-alert-" + type + "\""), type);
+        }
+        assertTrue(html.contains("<p>Second paragraph.</p>"));
+        assertEquals(5, count(html, "class=\"markdown-alert-title\""));
+        assertFalse(html.contains("[!tip]"));
+        assertFalse(html.contains("[!IMPORTANT]"));
+        assertTrue(html.contains("[!NOTE] text on the marker line"));
+        assertTrue(html.contains("<p>[!WARNING]</p>"));
+        assertEquals(3, count(html, "<blockquote>"));
+    }
+
+    @Test
+    void rendersEmojiShortcodesStrikethroughAndRelativeLinks() {
+        String html = render("""
+            :warning: :white_check_mark: :not_an_emoji_code:
+            ~single~ ~~double~~ ~~~triple~~~ about ~5 minutes
+            [setup guide](docs/setup.md) [ref][guide]
+
+            [guide]: ../guide.md#install
+            """);
+
+        assertTrue(html.contains("\u26a0"));
+        assertTrue(html.contains("\u2705"));
+        assertTrue(html.contains("<span class=\"emoji\">\u26a0"));
+        assertTrue(html.contains(":not_an_emoji_code:"));
+        assertFalse(html.contains("<span class=\"emoji\">:"));
+        assertTrue(html.contains("<del>single</del>"));
+        assertTrue(html.contains("<del>double</del>"));
+        assertTrue(html.contains("~~~triple~~~"));
+        assertTrue(html.contains("~5 minutes"));
+        assertTrue(html.contains(
+            "setup guide <span class=\"link-target\">(docs/setup.md)</span>"
+        ));
+        assertTrue(html.contains(
+            "ref <span class=\"link-target\">(../guide.md#install)</span>"
+        ));
+        assertFalse(html.contains("href=\"docs"));
+        assertFalse(html.contains("href=\"../"));
     }
 
     @Test

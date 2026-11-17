@@ -8,8 +8,12 @@ import com.vladsch.flexmark.ast.Link;
 import com.vladsch.flexmark.ast.LinkRef;
 import com.vladsch.flexmark.ast.Reference;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
+import com.vladsch.flexmark.ext.emoji.Emoji;
+import com.vladsch.flexmark.ext.emoji.EmojiExtension;
+import com.vladsch.flexmark.ext.emoji.EmojiImageType;
+import com.vladsch.flexmark.ext.emoji.EmojiShortcutType;
+import com.vladsch.flexmark.ext.emoji.internal.EmojiResolvedShortcut;
 import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
-import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughExtension;
 import com.vladsch.flexmark.ext.gfm.tasklist.TaskListExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
 import com.vladsch.flexmark.ext.yaml.front.matter.YamlFrontMatterExtension;
@@ -52,6 +56,8 @@ final class MarkdownToHtmlRenderer {
 
     private static final Pattern ALLOWED_HREF =
         Pattern.compile("^(?:https?://|mailto:|#)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern URL_SCHEME =
+        Pattern.compile("^[A-Za-z][A-Za-z0-9+.\\-]*:");
 
     static final String CONTENT_SECURITY_POLICY = String.join("; ",
         "default-src 'none'",
@@ -61,6 +67,8 @@ final class MarkdownToHtmlRenderer {
         "form-action 'none'"
     );
 
+    private static final EmojiShortcutType EMOJI_SHORTCUTS =
+        EmojiShortcutType.ANY_GITHUB_PREFERRED;
     private static final String STYLESHEET = loadStylesheet();
 
     private final Parser parser;
@@ -71,12 +79,15 @@ final class MarkdownToHtmlRenderer {
         options.set(Parser.EXTENSIONS, List.of(
             TablesExtension.create(),
             TableParagraphSplitter.EXTENSION,
-            StrikethroughExtension.create(),
+            GitHubStrikethroughExtension.create(),
             TaskListExtension.create(),
             AutolinkExtension.create(),
             FootnoteExtension.create(),
-            YamlFrontMatterExtension.create()
+            YamlFrontMatterExtension.create(),
+            EmojiExtension.create()
         ));
+        options.set(EmojiExtension.USE_SHORTCUT_TYPE, EMOJI_SHORTCUTS);
+        options.set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY);
         options.set(TablesExtension.COLUMN_SPANS, false);
         options.set(TablesExtension.APPEND_MISSING_COLUMNS, true);
         options.set(TablesExtension.DISCARD_EXTRA_COLUMNS, true);
@@ -99,6 +110,7 @@ final class MarkdownToHtmlRenderer {
     String render(String markdown) {
         try {
             Document document = parser.parse(markdown);
+            GitHubAlert.apply(document);
             String body = renderer.render(document);
             return "<!doctype html>\n<html>\n<head>\n"
                 + "<meta charset=\"utf-8\">\n"
@@ -159,6 +171,28 @@ final class MarkdownToHtmlRenderer {
         return ALLOWED_HREF.matcher(url).find();
     }
 
+    /** Document-relative targets cannot resolve inside a standalone PDF. */
+    private static boolean relativeHref(String url) {
+        String trimmed = url.strip();
+        return !trimmed.isEmpty()
+            && !trimmed.startsWith("//")
+            && !URL_SCHEME.matcher(trimmed).find();
+    }
+
+    private static void renderUnlinked(
+            Node node,
+            String url,
+            NodeRendererContext context,
+            HtmlWriter html) {
+        context.renderChildren(node);
+        if (relativeHref(url)) {
+            html.text(" ");
+            html.attr("class", "link-target").withAttr().tag("span");
+            html.text("(" + url.strip() + ")");
+            html.tag("/span");
+        }
+    }
+
     private static final class SafeNodeRenderer implements NodeRenderer {
 
         private final MarkdownImageEmbedder images;
@@ -173,7 +207,9 @@ final class MarkdownToHtmlRenderer {
                 new NodeRenderingHandler<>(Image.class, this::render),
                 new NodeRenderingHandler<>(ImageRef.class, this::render),
                 new NodeRenderingHandler<>(Link.class, this::render),
-                new NodeRenderingHandler<>(LinkRef.class, this::render)
+                new NodeRenderingHandler<>(LinkRef.class, this::render),
+                new NodeRenderingHandler<>(GitHubAlert.class, this::render),
+                new NodeRenderingHandler<>(Emoji.class, this::render)
             );
         }
 
@@ -186,10 +222,11 @@ final class MarkdownToHtmlRenderer {
                 Link node,
                 NodeRendererContext context,
                 HtmlWriter html) {
-            if (allowedHref(node.getUrl().unescape())) {
+            String url = node.getUrl().unescape();
+            if (allowedHref(url)) {
                 context.delegateRender();
             } else {
-                context.renderChildren(node);
+                renderUnlinked(node, url, context, html);
             }
         }
 
@@ -202,12 +239,52 @@ final class MarkdownToHtmlRenderer {
                     Parser.REFERENCES.get(context.getDocument())
                 )
                 : null;
-            if (reference == null
-                    || allowedHref(reference.getUrl().unescape())) {
+            String url = reference == null
+                ? null
+                : reference.getUrl().unescape();
+            if (url == null || allowedHref(url)) {
                 context.delegateRender();
             } else {
-                context.renderChildren(node);
+                renderUnlinked(node, url, context, html);
             }
+        }
+
+        /** Lets resolved shortcode emoji prefer the color emoji font. */
+        private void render(
+                Emoji node,
+                NodeRendererContext context,
+                HtmlWriter html) {
+            EmojiResolvedShortcut shortcut = EmojiResolvedShortcut.getEmojiText(
+                node,
+                EMOJI_SHORTCUTS,
+                EmojiImageType.UNICODE_ONLY,
+                ""
+            );
+            if (shortcut.emoji == null || !shortcut.isUnicode) {
+                context.delegateRender();
+                return;
+            }
+            html.attr("class", "emoji").withAttr().tag("span");
+            context.delegateRender();
+            html.tag("/span");
+        }
+
+        private void render(
+                GitHubAlert node,
+                NodeRendererContext context,
+                HtmlWriter html) {
+            GitHubAlert.Type type = node.type();
+            html.line();
+            html.attr("class", "markdown-alert markdown-alert-" + type.cssName())
+                .withAttr()
+                .tag("div")
+                .line();
+            html.attr("class", "markdown-alert-title").withAttr().tag("p");
+            html.raw(type.icon());
+            html.text(type.title());
+            html.tag("/p").line();
+            context.renderChildren(node);
+            html.tag("/div").line();
         }
 
         private void render(

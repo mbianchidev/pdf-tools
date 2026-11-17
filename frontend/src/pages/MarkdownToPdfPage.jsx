@@ -55,7 +55,7 @@ const MarkdownToPdfPage = () => {
       successMessage="Rendered Markdown download started!"
       previewEyebrow="flexmark + Chromium"
       previewTitle="Print GitHub-flavored Markdown"
-      previewDescription="Headings, tables, task lists, code blocks, footnotes, and bundled images render with a clean print stylesheet."
+      previewDescription="Headings, tables, alerts, task lists, code blocks, footnotes, emoji, links, and bundled images render with a clean print stylesheet."
       fidelityWarning="Raw HTML is shown as text. Remote images are not fetched; ZIP bundles such as PDF to Markdown output embed their PNG, JPEG, GIF, or WebP images."
       securityTitle="Isolated rendering"
       securityDescription="Markdown is parsed in a memory- and time-capped worker, then printed by Chromium in a networkless, read-only sidecar."

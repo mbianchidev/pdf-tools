@@ -128,6 +128,62 @@ blockquote {
   border-left: 0.25em solid var(--border);
 }
 
+.markdown-alert {
+  margin: 0 0 0.9em;
+  padding: 0.5em 1em;
+  color: inherit;
+  border-left: 0.25em solid var(--alert-color);
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.markdown-alert > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.4em;
+  color: var(--alert-color);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.markdown-alert-icon {
+  flex-shrink: 0;
+}
+
+.markdown-alert-note {
+  --alert-color: #0969da;
+}
+
+.markdown-alert-tip {
+  --alert-color: #1a7f37;
+}
+
+.markdown-alert-important {
+  --alert-color: #8250df;
+}
+
+.markdown-alert-warning {
+  --alert-color: #9a6700;
+}
+
+.markdown-alert-caution {
+  --alert-color: #d1242f;
+}
+
+.emoji {
+  font-family: "Noto Color Emoji", sans-serif;
+}
+
+.link-target {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
 code,
 kbd,
 pre {
