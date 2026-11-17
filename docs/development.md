@@ -130,6 +130,13 @@ Important settings:
 | `HTML_MAX_INPUT_BYTES` | `10485760` | UTF-8 HTML input byte limit |
 | `HTML_MAX_OUTPUT_BYTES` | `67108864` | Rendered PDF byte limit |
 | `HTML_MAX_PAGES` | `200` | Rendered PDF page limit |
+| `MARKDOWN_MAX_INPUT_BYTES` | `2097152` | Markdown text byte limit, uploaded or bundled |
+| `MARKDOWN_MAX_BUNDLE_BYTES` | `16777216` | Markdown ZIP bundle upload limit |
+| `MARKDOWN_MAX_BUNDLE_ENTRIES` | `500` | Markdown ZIP entry limit |
+| `MARKDOWN_MAX_IMAGES` | `200` | Embedded image limit |
+| `MARKDOWN_MAX_TOTAL_IMAGE_BYTES` | `6291456` | Embedded image bytes; base64 HTML must fit `HTML_MAX_INPUT_BYTES` |
+| `MARKDOWN_WORKER_HEAP_BYTES` | `268435456` | Isolated Markdown renderer heap cap |
+| `MARKDOWN_WORKER_TIMEOUT` | `1m` | Isolated Markdown renderer wall-time cap |
 | `PDF_WORD_MAX_INPUT_BYTES` | `52428800` | PDF-to-Word input byte limit |
 | `PDF_WORD_MAX_PAGES` | `200` | PDF-to-Word page limit |
 | `PDF_WORD_MAX_TEXT_CHARACTERS` | `2000000` | Extracted text character limit |

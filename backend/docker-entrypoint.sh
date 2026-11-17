@@ -26,7 +26,9 @@ fi
 
 chown -R pdftools:pdftools \
     "$legacy_root" "$jobs_root" "$work_root" "$multipart_root"
-chmod 0700 "$multipart_root"
+# Run as the owner: root needs CAP_FOWNER to chmod another user's directory,
+# and locked-down sidecars such as office-converter drop it.
+gosu pdftools chmod 0700 "$multipart_root"
 
 case "${1:-}" in
     ""|-*)

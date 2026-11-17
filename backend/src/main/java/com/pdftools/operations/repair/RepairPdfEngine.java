@@ -57,8 +57,10 @@ public class RepairPdfEngine {
         Path output = workspace.resolve("repaired.pdf");
         Path report = workspace.resolve("repair-report.json");
         Path networkFilter = workspace.resolve(".repair-network.bpf");
+        Path qpdfInput = workspace.resolve("repair-input.pdf");
         List<String> warnings = new ArrayList<>();
         try {
+            stageInput(source, qpdfInput);
             progress.accept(5);
             PhaseResult encryption = run(
                 "encryption",
@@ -66,7 +68,7 @@ public class RepairPdfEngine {
                 networkFilter,
                 List.of(
                     "--is-encrypted",
-                    source.toAbsolutePath().toString()
+                    qpdfInput.toAbsolutePath().toString()
                 ),
                 properties.getCheckTimeout(),
                 properties.getMaxLogBytes(),
@@ -88,7 +90,7 @@ public class RepairPdfEngine {
                     "--object-streams=generate",
                     "--compress-streams=y",
                     "--recompress-flate",
-                    source.toAbsolutePath().toString(),
+                    qpdfInput.toAbsolutePath().toString(),
                     output.toAbsolutePath().toString()
                 ),
                 properties.getRewriteTimeout(),
@@ -128,7 +130,7 @@ public class RepairPdfEngine {
             progress.accept(90);
             List<String> normalized = normalizedWarnings(
                 warnings,
-                source,
+                qpdfInput,
                 output,
                 workspace
             );
@@ -161,7 +163,21 @@ public class RepairPdfEngine {
             );
             cleanup(output, report, failure);
             throw failure;
+        } finally {
+            deleteIfExists(qpdfInput, null);
         }
+    }
+
+    /**
+     * Gives qpdf a private {@code .pdf} copy of the job input. Distribution
+     * AppArmor profiles, such as Ubuntu 26.04's {@code /etc/apparmor.d/qpdf},
+     * only let qpdf open PDF, JSON, and QDF extensions, while stored job
+     * inputs use {@code .bin}. The copy also keeps the stored input outside
+     * the native tool's reach.
+     */
+    private void stageInput(Path source, Path qpdfInput) throws IOException {
+        Files.deleteIfExists(qpdfInput);
+        Files.copy(source, qpdfInput);
     }
 
     private PhaseResult run(
@@ -263,7 +279,7 @@ public class RepairPdfEngine {
 
     private List<String> normalizedWarnings(
             List<String> warnings,
-            Path source,
+            Path input,
             Path output,
             Path workspace) {
         Set<String> unique = new LinkedHashSet<>();
@@ -273,7 +289,7 @@ public class RepairPdfEngine {
                 break;
             }
             String normalized = warning
-                .replace(source.toAbsolutePath().toString(), "input.pdf")
+                .replace(input.toAbsolutePath().toString(), "input.pdf")
                 .replace(output.toAbsolutePath().toString(), "repaired.pdf")
                 .replace(workspace.toAbsolutePath().toString(), ".");
             if (normalized.length()
@@ -446,6 +462,14 @@ public class RepairPdfEngine {
             result.exitCode(),
             diagnostics
         );
+        if (diagnostics.contains("permission denied")) {
+            logger.error(
+                "qpdf was denied access to the job workspace. On hosts "
+                    + "with a qpdf AppArmor profile (Ubuntu 26.04+), keep "
+                    + "pdf.jobs.work-root under /tmp or /var/tmp, or allow "
+                    + "it in /etc/apparmor.d/local/qpdf"
+            );
+        }
         if (diagnostics.contains("invalid password")
                 || diagnostics.contains("requires a password")) {
             return new OperationException(

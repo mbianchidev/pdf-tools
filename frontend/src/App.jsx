@@ -46,6 +46,7 @@ const PowerPointToPdfPage = lazy(
 );
 const ExcelToPdfPage = lazy(() => import('./pages/ExcelToPdfPage'));
 const HtmlToPdfPage = lazy(() => import('./pages/HtmlToPdfPage'));
+const MarkdownToPdfPage = lazy(() => import('./pages/MarkdownToPdfPage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
 const RepairPage = lazy(() => import('./pages/RepairPage'));
 const PdfAPage = lazy(() => import('./pages/PdfAPage'));
@@ -317,6 +318,7 @@ function App() {
             />
             <Route path="/excel-to-pdf" element={<ExcelToPdfPage />} />
             <Route path="/html-to-pdf" element={<HtmlToPdfPage />} />
+            <Route path="/markdown-to-pdf" element={<MarkdownToPdfPage />} />
             <Route path="/pdf-to-markdown" element={<PdfToMarkdownPage />} />
             <Route path="/convert-markdown" element={<PdfToMarkdownPage />} />
             <Route path="/pdf-to-word" element={<PdfToWordPage />} />

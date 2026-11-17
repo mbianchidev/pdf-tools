@@ -42,7 +42,7 @@ services:
       - PDF_STORAGE_S3_CREATE_BUCKET=${PDF_STORAGE_S3_CREATE_BUCKET:-false}
       - PDF_OPTIONS_ENCRYPTION_KEY=${PDF_OPTIONS_ENCRYPTION_KEY:-}
       - PDF_SECURITY_MAX_OUTPUT_BYTES=${PDF_SECURITY_MAX_OUTPUT_BYTES:-134217728}
-      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact,word-to-pdf,powerpoint-to-pdf,excel-to-pdf,html-to-pdf,pdf-to-word,pdf-to-powerpoint,pdf-to-excel,pdf-to-markdown,compress,repair,pdf-to-pdfa,compare}
+      - PDF_ENABLED_OPERATIONS=${PDF_ENABLED_OPERATIONS:-merge,split,remove,rotate,organize,crop,page-numbers,protect,unlock,pdf-to-jpg,jpg-to-pdf,watermark,edit,redact,word-to-pdf,powerpoint-to-pdf,excel-to-pdf,html-to-pdf,markdown-to-pdf,pdf-to-word,pdf-to-powerpoint,pdf-to-excel,pdf-to-markdown,compress,repair,pdf-to-pdfa,compare}
       - PDF_TO_JPG_MAX_DOCUMENT_PAGES=${PDF_TO_JPG_MAX_DOCUMENT_PAGES:-1000}
       - PDF_TO_JPG_MAX_SELECTED_PAGES=${PDF_TO_JPG_MAX_SELECTED_PAGES:-500}
       - PDF_TO_JPG_MAX_DPI=${PDF_TO_JPG_MAX_DPI:-300}
@@ -113,6 +113,13 @@ services:
       - HTML_MAX_INPUT_BYTES=${HTML_MAX_INPUT_BYTES:-10485760}
       - HTML_MAX_OUTPUT_BYTES=${HTML_MAX_OUTPUT_BYTES:-67108864}
       - HTML_MAX_PAGES=${HTML_MAX_PAGES:-200}
+      - MARKDOWN_MAX_INPUT_BYTES=${MARKDOWN_MAX_INPUT_BYTES:-2097152}
+      - MARKDOWN_MAX_BUNDLE_BYTES=${MARKDOWN_MAX_BUNDLE_BYTES:-16777216}
+      - MARKDOWN_MAX_BUNDLE_ENTRIES=${MARKDOWN_MAX_BUNDLE_ENTRIES:-500}
+      - MARKDOWN_MAX_IMAGES=${MARKDOWN_MAX_IMAGES:-200}
+      - MARKDOWN_MAX_TOTAL_IMAGE_BYTES=${MARKDOWN_MAX_TOTAL_IMAGE_BYTES:-6291456}
+      - MARKDOWN_WORKER_HEAP_BYTES=${MARKDOWN_WORKER_HEAP_BYTES:-268435456}
+      - MARKDOWN_WORKER_TIMEOUT=${MARKDOWN_WORKER_TIMEOUT:-1m}
       - PDF_WORD_MAX_INPUT_BYTES=${PDF_WORD_MAX_INPUT_BYTES:-52428800}
       - PDF_WORD_MAX_PAGES=${PDF_WORD_MAX_PAGES:-200}
       - PDF_WORD_MAX_TEXT_CHARACTERS=${PDF_WORD_MAX_TEXT_CHARACTERS:-2000000}

@@ -23,7 +23,7 @@ SeaweedFS.
 | Organize | Merge, split, extract, remove, rotate, reorder, duplicate, and crop pages |
 | Mark up | Add text, images, shapes, highlights, notes, page numbers, watermarks, and signature images |
 | Secure | Password protection, unlocking with a known password, and permanent rasterized redaction |
-| Convert | Word, PowerPoint, Excel, and JPG to/from PDF; self-contained HTML to PDF; PDF to Markdown and validated PDF/A-1b, PDF/A-2b, or PDF/A-3b |
+| Convert | Word, PowerPoint, Excel, and JPG to/from PDF; self-contained HTML and Markdown to PDF; PDF to Markdown and validated PDF/A-1b, PDF/A-2b, or PDF/A-3b |
 | Optimize and inspect | Compress files, attempt structural repair with qpdf, and compare text, layout, or rendered pages |
 
 Most tools use asynchronous, cancellable jobs with progress updates and streaming

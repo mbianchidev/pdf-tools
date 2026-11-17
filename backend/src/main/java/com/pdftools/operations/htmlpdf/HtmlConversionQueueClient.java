@@ -42,6 +42,7 @@ public class HtmlConversionQueueClient {
         return "{\"pageSize\":\"" + plan.pageSize()
             + "\",\"landscape\":" + plan.landscape()
             + ",\"printBackground\":" + plan.printBackground()
-            + ",\"marginMm\":" + plan.marginMm() + "}";
+            + ",\"marginMm\":" + plan.marginMm()
+            + (plan.renderMath() ? ",\"renderMath\":true" : "") + "}";
     }
 }

@@ -17,6 +17,13 @@ Chromium runs as UID 10001 with its internal sandbox enabled. Docker Compose
 adds a networkless namespace, read-only root, private tmpfs, cgroup limits,
 `no-new-privileges`, and one-way queue mounts.
 
+Markdown to PDF requests set an internal `renderMath` option. The converter
+then typesets `<span class="math math-inline|math-display">` markers with
+KaTeX 0.19.1 (MIT) in Node before Chromium loads the page, and inlines KaTeX's
+WOFF2 fonts as `data:` URLs. KaTeX runs with `trust: false`, so TeX commands
+cannot add links, classes, or other HTML. HTML to PDF requests never set the
+option and are not typeset.
+
 `seccomp_profile.json` is based on the Playwright v1.62.1 Docker profile from
 <https://github.com/microsoft/playwright/blob/v1.62.1/utils/docker/seccomp_profile.json>.
 It includes Chromium's user-namespace calls plus current glibc syscall

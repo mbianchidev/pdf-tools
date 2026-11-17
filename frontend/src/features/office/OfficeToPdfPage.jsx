@@ -40,10 +40,13 @@ const OfficeToPdfPage = ({
   options = {},
   renderControls,
   renderResult,
+  renderSource,
+  sourceFile,
   validationError,
 }) => {
   const navigate = useNavigate();
-  const [file, setFile] = useState(null);
+  const [uploadedFile, setFile] = useState(null);
+  const file = sourceFile === undefined ? uploadedFile : sourceFile;
   const [toasts, setToasts] = useState([]);
   const handledJobRef = useRef(null);
   const {
@@ -116,6 +119,10 @@ const OfficeToPdfPage = ({
     };
   }, [addToast, downloadOutput, job, title]);
 
+  const clearResult = useCallback(() => {
+    if (!running) reset();
+  }, [reset, running]);
+
   const handleFilesChange = useCallback((files) => {
     if (running) return;
     setFile(files[0] || null);
@@ -152,6 +159,17 @@ const OfficeToPdfPage = ({
     }
   };
 
+  const upload = (
+    <FileUpload
+      onFilesChange={handleFilesChange}
+      files={uploadedFile ? [uploadedFile] : []}
+      accept={accept}
+      multiple={false}
+      disabled={running}
+      hint={hint}
+    />
+  );
+
   return (
     <div className="operation-page isolated-conversion-page">
       <ToastContainer toasts={toasts} removeToast={removeToast} />
@@ -171,14 +189,9 @@ const OfficeToPdfPage = ({
         <aside className="operation-sidebar">
           <div className="sidebar-section">
             <h3 className="sidebar-title">{uploadTitle}</h3>
-            <FileUpload
-              onFilesChange={handleFilesChange}
-              files={file ? [file] : []}
-              accept={accept}
-              multiple={false}
-              disabled={running}
-              hint={hint}
-            />
+            {renderSource
+              ? renderSource({ running, upload, clearResult })
+              : upload}
           </div>
 
           <div className="sidebar-section office-security-note">

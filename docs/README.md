@@ -42,6 +42,7 @@ project.
 - [PowerPoint to PDF](operations/powerpoint-to-pdf.md)
 - [Excel to PDF](operations/excel-to-pdf.md)
 - [HTML to PDF](operations/html-to-pdf.md)
+- [Markdown to PDF](operations/markdown-to-pdf.md)
 
 ### Convert from PDF
 

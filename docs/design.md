@@ -331,7 +331,7 @@ Large surfaces are square or nearly square: the deployment terminal, capability 
 
 ### Operation Workbench
 
-- **Workspace topbar:** A persistent paper bar exposes `/new` and a grouped tool switcher, marks the current workflow, and retains the active PDF between compatible tools. Its dropdown becomes a scrollable single-column list on narrow screens.
+- **Workspace topbar:** A persistent paper bar exposes `/new` and a grouped tool switcher, marks the current workflow, and retains the active PDF between compatible tools. The dropdown opens with focus in a search field that filters tools by name, description, and group; Enter opens the first match and ArrowDown moves into the results. It becomes a scrollable single-column list on narrow screens.
 - **Header:** A compact paper bar combines a bordered back control, Bricolage operation title, and right-aligned description.
 - **Control rail:** A 360px white sidebar uses uppercase labels, compact groups, clear dividers, and a pinned action region.
 - **Preview:** Ink canvas and darker preview chrome use white or lavender-gray status text; empty states remain subdued.

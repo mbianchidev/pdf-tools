@@ -36,6 +36,7 @@ scheduler isolated from storage cleanup.
 | `operations.pdfppt` | Isolated page-to-slide extraction and visual fallback |
 | `operations.pdfexcel` | Isolated table detection and workbook generation |
 | `operations.pdfmarkdown` | Isolated structured Markdown and linked-image bundle generation |
+| `operations.markdownpdf` | Isolated Markdown-to-HTML rendering handed to the HTML sidecar |
 | `operations.compress` | Isolated lossless or image-aware PDF size reduction |
 | `operations.repair` | Sandboxed qpdf structural recovery and warning reports |
 | `operations.pdfa` | Isolated LibreOffice PDF/A conversion and veraPDF conformance validation |
@@ -97,6 +98,10 @@ crop-box offsets and page rotations of 0, 90, 180, or 270 degrees.
 - HTML conversion uses a separate networkless, read-only Playwright sidecar with
   a non-root Chromium sandbox, version-matched seccomp policy, tmpfs, and cgroup
   limits.
+- Markdown conversion parses untrusted Markdown in a capped Java subprocess,
+  escapes raw HTML, inlines only bundled raster images, and sends the resulting
+  script-free HTML through the same sidecar queue, where KaTeX typesets any
+  GitHub math before Chromium prints it.
 - qpdf repair runs as a bounded non-root native process with the shared
   architecture-pinned network-deny filter and emits a separate structured
   recovery report.
