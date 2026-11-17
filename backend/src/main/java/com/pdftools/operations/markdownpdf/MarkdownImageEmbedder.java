@@ -21,10 +21,15 @@ import java.util.regex.Pattern;
  */
 final class MarkdownImageEmbedder {
 
-    @FunctionalInterface
     interface ImageSource {
+        /** Up to {@code length} leading bytes, or null when absent. */
+        byte[] header(String path, int length);
+
         byte[] read(String path, long maxBytes);
     }
+
+    private static final int HEADER_BYTES = 12;
+    private static final int HEADER_BASE64_CHARACTERS = 16;
 
     private static final Pattern SCHEME =
         Pattern.compile("^[A-Za-z][A-Za-z0-9+.\\-]*:");
@@ -95,26 +100,42 @@ final class MarkdownImageEmbedder {
         return dataUri.get();
     }
 
+    /*
+     * Missing, malformed, and unsupported images fall back to alt text before
+     * any count or byte budget applies; only accepted images use budgets.
+     */
     private String fromBundle(String path) {
+        byte[] header = source.header(path, HEADER_BYTES);
+        if (header == null || mediaType(header) == null) {
+            return null;
+        }
         requireImageSlot();
-        byte[] bytes = source.read(path, maxTotalBytes - imageBytes);
-        return bytes == null ? null : encode(bytes);
+        return encode(source.read(path, maxTotalBytes - imageBytes));
     }
 
     private String fromDataUri(String payload) {
-        requireImageSlot();
         String compact = payload.replaceAll("\\s", "");
+        if (mediaType(decode(compact.substring(
+                0,
+                Math.min(compact.length(), HEADER_BASE64_CHARACTERS)
+            ))) == null) {
+            return null;
+        }
+        requireImageSlot();
         if ((long) compact.length() / 4L * 3L
                 > maxTotalBytes - imageBytes + 3L) {
             throw imagesTooLarge();
         }
-        byte[] bytes;
+        byte[] bytes = decode(compact);
+        return bytes.length == 0 ? null : encode(bytes);
+    }
+
+    private static byte[] decode(String base64) {
         try {
-            bytes = Base64.getDecoder().decode(compact);
+            return Base64.getDecoder().decode(base64);
         } catch (IllegalArgumentException exception) {
-            return null;
+            return new byte[0];
         }
-        return encode(bytes);
     }
 
     private String encode(byte[] bytes) {

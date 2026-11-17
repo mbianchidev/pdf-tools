@@ -131,6 +131,37 @@ class MarkdownToHtmlWorkerTest {
     }
 
     @Test
+    void rejectedImagesFallBackToAltTextWithoutUsingImageBudgets()
+            throws Exception {
+        String svgAsWebp = Base64.getEncoder().encodeToString(
+            "<svg xmlns='http://www.w3.org/2000/svg'/>".getBytes(
+                StandardCharsets.UTF_8
+            )
+        );
+        Path bundle = zip("rejected.zip", Map.of(
+            "document.md",
+            "![ok](ok.png) ![missing](missing.png) ![big text](big.txt) "
+                + "![fake](data:image/webp;base64," + svgAsWebp + ") "
+                + "![broken](data:image/png;base64,***)",
+            "ok.png", MarkdownToHtmlRendererTest.PNG,
+            "big.txt", "x".repeat(4096)
+        ));
+
+        String html = convert(
+            bundle,
+            MarkdownSourceKind.BUNDLE,
+            limits(10, 1, MarkdownToHtmlRendererTest.PNG.length)
+        );
+
+        assertTrue(html.contains("alt=\"ok\""));
+        for (String alt : new String[] {"missing", "big text", "fake", "broken"}) {
+            assertTrue(html.contains(
+                "<span class=\"image-unavailable\">" + alt + "</span>"
+            ), alt);
+        }
+    }
+
+    @Test
     void rejectsInvalidMarkdownText() throws Exception {
         Path invalid = workspace.resolve("invalid.md");
         Files.write(invalid, new byte[] {'#', ' ', (byte) 0xC3, 0x28});

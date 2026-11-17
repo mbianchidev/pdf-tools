@@ -26,7 +26,7 @@ final class MarkdownToHtmlWorker {
                 );
                 html = render(
                     markdown,
-                    bundle::readFile,
+                    bundle,
                     bundle.markdownDirectory(),
                     limits
                 );

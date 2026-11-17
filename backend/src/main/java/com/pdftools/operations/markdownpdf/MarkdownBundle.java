@@ -22,7 +22,8 @@ import java.util.zip.ZipFile;
  * and images it references are ever decompressed, each through a bounded
  * stream, so unreferenced or oversized entries cannot exhaust memory.
  */
-final class MarkdownBundle implements Closeable {
+final class MarkdownBundle
+        implements Closeable, MarkdownImageEmbedder.ImageSource {
 
     private static final String PREFERRED_DOCUMENT = "document.md";
 
@@ -106,11 +107,25 @@ final class MarkdownBundle implements Closeable {
         );
     }
 
+    @Override
+    public byte[] header(String name, int length) {
+        ZipEntry entry = files.get(name);
+        if (entry == null) {
+            return null;
+        }
+        try (InputStream input = zip.getInputStream(entry)) {
+            return input.readNBytes(length);
+        } catch (IOException exception) {
+            return null;
+        }
+    }
+
     /**
      * Returns the entry bytes, or {@code null} when the bundle has no such
      * file.
      */
-    byte[] readFile(String name, long maxBytes) {
+    @Override
+    public byte[] read(String name, long maxBytes) {
         ZipEntry entry = files.get(name);
         if (entry == null) {
             return null;
